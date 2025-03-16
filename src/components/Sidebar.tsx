@@ -1,11 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { Plus, MessageSquare, User2, Stethoscope, History, FolderPlus } from "lucide-react";
+import { Plus, MessageSquare, User2, Stethoscope, History, FolderPlus, PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 import { useChatStore } from "@/store/chat-store";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 interface SidebarProps {
   open: boolean;
@@ -13,14 +15,39 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ open, setOpen }: SidebarProps) => {
-  const { chats, startNewChat, setCurrentChat } = useChatStore();
+  const { chats, startNewChat, setCurrentChat, updateChatTitle } = useChatStore();
   const [activeSection, setActiveSection] = useState("chats");
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
 
   // Close sidebar on mobile when chat is selected
   const handleChatSelect = (chatId: string) => {
     setCurrentChat(chatId);
     if (window.innerWidth < 768) {
       setOpen(false);
+    }
+  };
+
+  const startEditing = (chatId: string, currentTitle: string) => {
+    setEditingChatId(chatId);
+    setEditTitle(currentTitle);
+  };
+
+  const saveTitle = () => {
+    if (editingChatId && editTitle.trim()) {
+      updateChatTitle(editingChatId, editTitle.trim());
+      setEditingChatId(null);
+      toast.success("Título do chat atualizado");
+    } else if (!editTitle.trim()) {
+      toast.error("O título não pode estar vazio");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      saveTitle();
+    } else if (e.key === "Escape") {
+      setEditingChatId(null);
     }
   };
 
@@ -98,16 +125,39 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
                         "sidebar-item p-2 cursor-pointer",
                         chat.isCurrent && "active"
                       )}
-                      onClick={() => handleChatSelect(chat.id)}
                     >
-                      <div className="flex items-center gap-2">
-                        {chat.type === "chest-pain" ? (
-                          <Stethoscope className="h-4 w-4 text-iatros-blue" />
-                        ) : (
-                          <MessageSquare className="h-4 w-4" />
-                        )}
-                        <span className="text-sm truncate flex-1">{chat.title}</span>
-                      </div>
+                      {editingChatId === chat.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            autoFocus
+                            value={editTitle}
+                            onChange={(e) => setEditTitle(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            onBlur={saveTitle}
+                            className="h-7 text-sm"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2" onClick={() => handleChatSelect(chat.id)}>
+                          {chat.type === "chest-pain" ? (
+                            <Stethoscope className="h-4 w-4 text-iatros-blue" />
+                          ) : (
+                            <MessageSquare className="h-4 w-4" />
+                          )}
+                          <span className="text-sm truncate flex-1">{chat.title}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditing(chat.id, chat.title);
+                            }}
+                          >
+                            <PenLine className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

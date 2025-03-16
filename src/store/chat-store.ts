@@ -274,11 +274,11 @@ export const useChatStore = create<ChatState>()(
       updateChatTitle: (chatId, title) => {
         set((state) => ({
           chats: state.chats.map((chat) =>
-            chat.id === chatId ? { ...chat, title } : chat
+            chat.id === chatId ? { ...chat, title, updatedAt: new Date() } : chat
           ),
           currentChat:
             state.currentChat?.id === chatId
-              ? { ...state.currentChat, title }
+              ? { ...state.currentChat, title, updatedAt: new Date() }
               : state.currentChat,
         }));
       },

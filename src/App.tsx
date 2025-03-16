@@ -18,6 +18,36 @@ const App = () => {
     document.title = "IatrosGPT - Assistente para Dor Torácica";
   }, []);
 
+  // Add CSS for sidebar edit functionality
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .sidebar-item {
+        position: relative;
+        display: flex;
+        border-radius: 0.375rem;
+      }
+      
+      .sidebar-item:hover, .sidebar-item.active {
+        background-color: hsl(var(--muted) / 0.5);
+      }
+      
+      .sidebar-item button {
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      
+      .sidebar-item:hover button, .sidebar-item:focus-within button {
+        opacity: 1;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
