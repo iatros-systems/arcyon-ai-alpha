@@ -39,6 +39,15 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
               Um assistente especializado para auxiliar médicos de urgência e emergência
               a tomar decisões para pacientes com dor torácica.
             </p>
+            <div className="p-4 border border-muted rounded-lg bg-muted/20 text-sm max-w-md">
+              <p className="mb-2 font-medium">Como começar:</p>
+              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                <li>Forneça os dados do paciente (idade, gênero, histórico)</li>
+                <li>Descreva os sintomas e características da dor torácica</li>
+                <li>Informe os sinais vitais e resultados de exames</li>
+                <li>Receba orientações baseadas em protocolos médicos</li>
+              </ol>
+            </div>
           </div>
         ) : (
           <div className="space-y-4 py-4">

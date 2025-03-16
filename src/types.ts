@@ -24,6 +24,17 @@ export interface ChestPainDetails {
   riskFactors?: string[];
   ecgFindings?: string;
   troponinLevel?: string;
+  painLocation?: string;
+  painIntensity?: number;
+  painCharacteristics?: string;
+  painModifyingFactors?: string;
+  vitals?: {
+    bloodPressure?: string;
+    heartRate?: number;
+    respiratoryRate?: number;
+    oxygenSaturation?: number;
+    temperature?: number;
+  };
 }
 
 export type GeminiResponse = {
