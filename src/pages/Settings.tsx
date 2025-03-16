@@ -1,0 +1,287 @@
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { ArrowLeft, Key, Thermometer, Zap, Settings as SettingsIcon, MessageSquare, Save, RefreshCw } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
+
+const Settings = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [apiKey, setApiKeyState] = useState("");
+  const [temperature, setTemperature] = useState(0.3);
+  const [topP, setTopP] = useState(0.85);
+  const [topK, setTopK] = useState(40);
+  const [maxTokens, setMaxTokens] = useState(4096);
+  const [isSaving, setIsSaving] = useState(false);
+  const [advancedMode, setAdvancedMode] = useState(false);
+  
+  useEffect(() => {
+    // Load existing API key if available
+    if (hasApiKey()) {
+      setApiKeyState(getApiKey());
+    }
+    
+    // Load other settings from localStorage
+    const savedTemperature = localStorage.getItem("gemini-temperature");
+    const savedTopP = localStorage.getItem("gemini-topP");
+    const savedTopK = localStorage.getItem("gemini-topK");
+    const savedMaxTokens = localStorage.getItem("gemini-maxTokens");
+    const savedAdvancedMode = localStorage.getItem("gemini-advancedMode");
+    
+    if (savedTemperature) setTemperature(parseFloat(savedTemperature));
+    if (savedTopP) setTopP(parseFloat(savedTopP));
+    if (savedTopK) setTopK(parseInt(savedTopK));
+    if (savedMaxTokens) setMaxTokens(parseInt(savedMaxTokens));
+    if (savedAdvancedMode) setAdvancedMode(savedAdvancedMode === "true");
+  }, []);
+  
+  const handleSave = () => {
+    setIsSaving(true);
+    try {
+      // Save API key
+      setApiKey(apiKey);
+      
+      // Save other settings to localStorage
+      localStorage.setItem("gemini-temperature", temperature.toString());
+      localStorage.setItem("gemini-topP", topP.toString());
+      localStorage.setItem("gemini-topK", topK.toString());
+      localStorage.setItem("gemini-maxTokens", maxTokens.toString());
+      localStorage.setItem("gemini-advancedMode", advancedMode.toString());
+      
+      toast({
+        title: "Configurações salvas",
+        description: "Suas configurações foram salvas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      toast({
+        title: "Erro ao salvar configurações",
+        description: "Ocorreu um erro ao salvar suas configurações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  const handleReset = () => {
+    setTemperature(0.3);
+    setTopP(0.85);
+    setTopK(40);
+    setMaxTokens(4096);
+    setAdvancedMode(false);
+  };
+  
+  return (
+    <div className="container max-w-4xl py-8">
+      <div className="flex items-center gap-2 mb-6">
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-bold">Configurações</h1>
+      </div>
+      
+      <Tabs defaultValue="api" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="api">
+            <Key className="mr-2 h-4 w-4" />
+            API e Conexão
+          </TabsTrigger>
+          <TabsTrigger value="model">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Configurações do Modelo
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="api">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração da API Gemini</CardTitle>
+              <CardDescription>
+                Configure sua chave de API do Gemini para utilizar o assistente.
+                Obtenha sua chave em{" "}
+                <a
+                  href="https://ai.google.dev/tutorials/setup"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-primary underline"
+                >
+                  ai.google.dev
+                </a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="api-key">Chave da API</Label>
+                  <Input
+                    id="api-key"
+                    type="password"
+                    value={apiKey}
+                    onChange={(e) => setApiKeyState(e.target.value)}
+                    placeholder="AIzaSyA..."
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Sua chave é armazenada apenas em seu dispositivo e nunca é enviada para nossos servidores.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => navigate("/chat")}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={!apiKey || isSaving}
+              >
+                {isSaving ? "Salvando..." : "Salvar"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="model">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações do Modelo</CardTitle>
+              <CardDescription>
+                Ajuste os parâmetros do modelo Gemini para personalizar as respostas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1">
+                    <Label htmlFor="advanced-mode" className="cursor-pointer">Modo Avançado</Label>
+                    <span className="text-xs text-muted-foreground">
+                      Habilita opções avançadas de configuração
+                    </span>
+                  </div>
+                  <Switch 
+                    id="advanced-mode" 
+                    checked={advancedMode}
+                    onCheckedChange={setAdvancedMode}
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="temperature">
+                        <div className="flex items-center gap-2">
+                          <Thermometer className="h-4 w-4" />
+                          <span>Temperatura</span>
+                        </div>
+                      </Label>
+                      <span className="text-sm font-medium">{temperature}</span>
+                    </div>
+                    <Slider
+                      id="temperature"
+                      min={0}
+                      max={1}
+                      step={0.1}
+                      value={[temperature]}
+                      onValueChange={(values) => setTemperature(values[0])}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Valores mais baixos geram respostas mais consistentes e determinísticas.
+                      Valores mais altos geram respostas mais diversas e criativas.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="max-tokens">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          <span>Tokens Máximos</span>
+                        </div>
+                      </Label>
+                      <span className="text-sm font-medium">{maxTokens}</span>
+                    </div>
+                    <Slider
+                      id="max-tokens"
+                      min={1024}
+                      max={8192}
+                      step={512}
+                      value={[maxTokens]}
+                      onValueChange={(values) => setMaxTokens(values[0])}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Limite máximo de tokens (palavras) que o modelo pode gerar em uma resposta.
+                    </p>
+                  </div>
+                  
+                  {advancedMode && (
+                    <>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="top-p">Top P</Label>
+                          <span className="text-sm font-medium">{topP}</span>
+                        </div>
+                        <Slider
+                          id="top-p"
+                          min={0.1}
+                          max={1}
+                          step={0.05}
+                          value={[topP]}
+                          onValueChange={(values) => setTopP(values[0])}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Controla a diversidade da resposta (nucleação de probabilidade).
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="top-k">Top K</Label>
+                          <span className="text-sm font-medium">{topK}</span>
+                        </div>
+                        <Slider
+                          id="top-k"
+                          min={1}
+                          max={100}
+                          step={1}
+                          value={[topK]}
+                          onValueChange={(values) => setTopK(values[0])}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Limita a seleção de palavras às K mais prováveis.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={handleReset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Redefinir
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? "Salvando..." : "Salvar Configurações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default Settings;

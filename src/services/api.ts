@@ -30,6 +30,12 @@ export const sendMessageToGemini = async (
     throw new Error("API key is required");
   }
 
+  // Get model parameters from localStorage or use defaults
+  const temperature = parseFloat(localStorage.getItem("gemini-temperature") || "0.3");
+  const topP = parseFloat(localStorage.getItem("gemini-topP") || "0.85");
+  const topK = parseInt(localStorage.getItem("gemini-topK") || "40");
+  const maxOutputTokens = parseInt(localStorage.getItem("gemini-maxTokens") || "4096");
+
   try {
     // Format messages for Gemini API
     const formattedMessages = messages.map(msg => {
@@ -55,10 +61,10 @@ export const sendMessageToGemini = async (
         body: JSON.stringify({
           contents: formattedMessages,
           generationConfig: {
-            temperature: 0.3,
-            topP: 0.85,
-            topK: 40,
-            maxOutputTokens: 4096,
+            temperature,
+            topP,
+            topK,
+            maxOutputTokens,
           },
           safetySettings: [
             {

@@ -1,15 +1,18 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
 
 interface ApiKeyDialogProps {
@@ -18,6 +21,7 @@ interface ApiKeyDialogProps {
 }
 
 const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
+  const navigate = useNavigate();
   const [apiKey, setApiKeyState] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,6 +42,11 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
     } finally {
       setIsSaving(false);
     }
+  };
+  
+  const handleOpenSettings = () => {
+    onOpenChange(false);
+    navigate("/settings");
   };
 
   return (
@@ -70,24 +79,34 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
               className="w-full"
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSaving}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!apiKey || isSaving}
-            >
-              {isSaving ? "Salvando..." : "Salvar"}
-            </Button>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Sua chave é armazenada apenas em seu dispositivo e nunca é enviada para nossos servidores.
-          </div>
+        </div>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSaving}
+            className="sm:order-1"
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!apiKey || isSaving}
+            className="sm:order-2"
+          >
+            {isSaving ? "Salvando..." : "Salvar"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleOpenSettings}
+            className="w-full sm:w-auto sm:order-3"
+          >
+            <Settings className="mr-2 h-4 w-4" />
+            Configurações Avançadas
+          </Button>
+        </DialogFooter>
+        <div className="text-xs text-muted-foreground mt-2">
+          Sua chave é armazenada apenas em seu dispositivo e nunca é enviada para nossos servidores.
         </div>
       </DialogContent>
     </Dialog>
