@@ -3,16 +3,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import SettingsAuth from "./components/SettingsAuth";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+  const [isSettingsAuthenticated, setIsSettingsAuthenticated] = useState(false);
+  
   // Set document title
   useEffect(() => {
     document.title = "IatrosGPT - Assistente para Dor Torácica";
@@ -48,6 +51,22 @@ const App = () => {
     };
   }, []);
 
+  // Função para autenticar acesso às configurações
+  const handleAuthenticate = () => {
+    setIsSettingsAuthenticated(true);
+  };
+
+  // Tempo de expiração da autenticação (30 minutos)
+  useEffect(() => {
+    if (isSettingsAuthenticated) {
+      const timer = setTimeout(() => {
+        setIsSettingsAuthenticated(false);
+      }, 30 * 60 * 1000); // 30 minutos
+
+      return () => clearTimeout(timer);
+    }
+  }, [isSettingsAuthenticated]);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -57,7 +76,14 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/chat" element={<Chat />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route 
+              path="/settings" 
+              element={
+                isSettingsAuthenticated ? 
+                <Settings /> : 
+                <SettingsAuth onAuthenticate={handleAuthenticate} />
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

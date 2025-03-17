@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Key, Thermometer, Zap, Settings as SettingsIcon, MessageSquare, Save, RefreshCw } from "lucide-react";
+import { ArrowLeft, Key, Thermometer, Zap, Settings as SettingsIcon, MessageSquare, Save, RefreshCw, ShieldCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
 
@@ -23,6 +23,11 @@ const Settings = () => {
   const [maxTokens, setMaxTokens] = useState(4096);
   const [isSaving, setIsSaving] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
+  
+  // Novos estados para gerenciamento de senha
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   
   useEffect(() => {
     // Load existing API key if available
@@ -81,6 +86,49 @@ const Settings = () => {
     setAdvancedMode(false);
   };
   
+  const handleChangePassword = () => {
+    const storedPassword = localStorage.getItem("settings-password") || "admin123";
+    
+    if (currentPassword !== storedPassword) {
+      toast({
+        title: "Senha atual incorreta",
+        description: "A senha atual informada não corresponde à senha armazenada.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Senhas não conferem",
+        description: "A nova senha e a confirmação não são iguais.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      toast({
+        title: "Senha muito curta",
+        description: "A nova senha deve ter pelo menos 6 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    localStorage.setItem("settings-password", newPassword);
+    
+    toast({
+      title: "Senha alterada",
+      description: "Sua senha de acesso às configurações foi alterada com sucesso.",
+    });
+    
+    // Limpar campos
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  };
+  
   return (
     <div className="container max-w-4xl py-8">
       <div className="flex items-center gap-2 mb-6">
@@ -91,7 +139,7 @@ const Settings = () => {
       </div>
       
       <Tabs defaultValue="api" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="api">
             <Key className="mr-2 h-4 w-4" />
             API e Conexão
@@ -99,6 +147,10 @@ const Settings = () => {
           <TabsTrigger value="model">
             <MessageSquare className="mr-2 h-4 w-4" />
             Configurações do Modelo
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Segurança
           </TabsTrigger>
         </TabsList>
         
@@ -277,6 +329,91 @@ const Settings = () => {
                 {isSaving ? "Salvando..." : "Salvar Configurações"}
               </Button>
             </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="security">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações de Segurança</CardTitle>
+              <CardDescription>
+                Altere a senha de acesso às configurações e defina preferências de segurança.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Alterar Senha</h3>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="current-password">Senha Atual</Label>
+                      <Input
+                        id="current-password"
+                        type="password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Digite a senha atual"
+                      />
+                    </div>
+                    
+                    <div className="grid gap-2">
+                      <Label htmlFor="new-password">Nova Senha</Label>
+                      <Input
+                        id="new-password"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Digite a nova senha"
+                      />
+                    </div>
+                    
+                    <div className="grid gap-2">
+                      <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirme a nova senha"
+                      />
+                    </div>
+                    
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">
+                        A senha padrão é "admin123". Recomendamos que você altere para uma senha mais segura.
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        A senha deve ter pelo menos 6 caracteres e é usada para proteger o acesso às configurações do sistema.
+                      </p>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleChangePassword}
+                      disabled={!currentPassword || !newPassword || !confirmPassword}
+                      className="w-full"
+                    >
+                      Alterar Senha
+                    </Button>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Informações de Segurança</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    As configurações do sistema são protegidas por senha para evitar acesso não autorizado. 
+                    A autenticação expira após 30 minutos de inatividade.
+                  </p>
+                  <div className="p-4 bg-muted rounded-md">
+                    <p className="text-sm">
+                      <strong>Dica de segurança:</strong> Nunca compartilhe sua senha ou API key com terceiros. 
+                      Todas as configurações são armazenadas localmente em seu dispositivo.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
