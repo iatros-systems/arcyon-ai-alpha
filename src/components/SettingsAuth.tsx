@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Key, Shield } from "lucide-react";
+import { ArrowLeft, Key, Shield, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import PasswordRecovery from "./PasswordRecovery";
 
 interface SettingsAuthProps {
   onAuthenticate: () => void;
@@ -16,6 +17,7 @@ const SettingsAuth = ({ onAuthenticate }: SettingsAuthProps) => {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
   
   const handleAuthenticate = () => {
     setIsAuthenticating(true);
@@ -42,6 +44,15 @@ const SettingsAuth = ({ onAuthenticate }: SettingsAuthProps) => {
       handleAuthenticate();
     }
   };
+
+  const handleRecoverySuccess = () => {
+    setShowRecovery(false);
+    toast.success("Senha redefinida com sucesso");
+  };
+
+  if (showRecovery) {
+    return <PasswordRecovery onCancel={() => setShowRecovery(false)} onSuccess={handleRecoverySuccess} />;
+  }
 
   return (
     <div className="container max-w-md py-8">
@@ -83,9 +94,19 @@ const SettingsAuth = ({ onAuthenticate }: SettingsAuthProps) => {
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Cancelar
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate(-1)}>
+              Cancelar
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowRecovery(true)}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Recuperar Senha
+            </Button>
+          </div>
           <Button 
             onClick={handleAuthenticate} 
             disabled={!password || isAuthenticating}
