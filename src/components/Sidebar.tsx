@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChatStore } from "@/store/chat-store";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -60,11 +60,6 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
     }
   };
 
-  // Toggle sidebar
-  const toggleSidebar = () => {
-    setOpen(!open);
-  };
-
   // Group chats by date
   const groupedChats = chats.reduce((acc: Record<string, typeof chats>, chat) => {
     const date = new Date(chat.createdAt).toLocaleDateString();
@@ -77,17 +72,30 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
 
   return (
     <div className="relative flex h-full">
-      {/* Collapse button - fixed positioned outside the sidebar */}
+      {/* Collapse button - absolutely positioned above the sidebar */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          "fixed z-50 top-2 bg-background rounded-md shadow-sm",
-          open ? "left-64 md:left-[17rem]" : "left-2"
+          "absolute z-50 -right-10 top-3 bg-background rounded-md shadow-sm",
+          open ? "block" : "hidden"
         )}
-        onClick={toggleSidebar}
+        onClick={() => setOpen(false)}
       >
-        {open ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+        <ChevronLeft size={18} />
+      </Button>
+
+      {/* Expand button - only shown when sidebar is collapsed */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "fixed z-50 left-4 top-3 bg-background rounded-md shadow-sm",
+          open ? "hidden" : "block"
+        )}
+        onClick={() => setOpen(true)}
+      >
+        <ChevronRight size={18} />
       </Button>
 
       {/* Full sidebar */}
