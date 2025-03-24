@@ -1,7 +1,14 @@
 
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ChevronDown, ExternalLink, CreditCard, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 const WorkspaceBilling = () => {
   return (
@@ -25,10 +32,29 @@ const WorkspaceBilling = () => {
                 <h3 className="font-semibold mb-1">Licença de Time</h3>
                 <p className="text-sm text-muted-foreground">Se renova em 14 de abril de 2025</p>
               </div>
-              <Button variant="outline" size="sm" className="gap-1">
-                <ChevronDown className="h-4 w-4" />
-                Administrar licença
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <ChevronDown className="h-4 w-4" />
+                    Administrar licença
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Forma de pago</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>Cronograma de facturación</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-circle-x"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                    <span>Cancelar suscripción</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Participants Information */}
