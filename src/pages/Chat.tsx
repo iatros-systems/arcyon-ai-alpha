@@ -5,6 +5,7 @@ import { useApiKeyDialog } from "@/hooks/useApiKeyDialog";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import ChatLayout from "@/components/chat/ChatLayout";
+import { hasApiKey } from "@/services/api";
 
 const Chat = () => {
   const { currentChat, startNewChat } = useChatStore();
@@ -18,6 +19,14 @@ const Chat = () => {
       startNewChat();
     }
   }, [currentChat, startNewChat]);
+
+  // Check if API key exists when component mounts
+  useEffect(() => {
+    // This will check localStorage and memory cache
+    if (!hasApiKey()) {
+      setApiKeyDialogOpen(true);
+    }
+  }, [setApiKeyDialogOpen]);
 
   return (
     <ChatLayout

@@ -1,4 +1,3 @@
-
 import { GeminiResponse } from "@/types";
 import { getStoredApiKey, setStoredApiKey, hasStoredApiKey, getStoredModelSettings } from "@/utils/settingsStorage";
 
@@ -19,7 +18,15 @@ export const getApiKey = () => {
 };
 
 export const hasApiKey = () => {
-  return hasStoredApiKey();
+  if (GEMINI_API_KEY) return true;
+  
+  const storedKey = getStoredApiKey();
+  if (storedKey) {
+    GEMINI_API_KEY = storedKey;
+    return true;
+  }
+  
+  return false;
 };
 
 export const sendMessageToGemini = async (

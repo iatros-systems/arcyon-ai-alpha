@@ -7,6 +7,7 @@ export const useApiKeyDialog = () => {
   
   // Check if API key is configured on initial load
   useEffect(() => {
+    // Only open the dialog if no API key exists
     if (!hasApiKey()) {
       setApiKeyDialogOpen(true);
     }

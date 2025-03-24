@@ -30,18 +30,24 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
 
   useEffect(() => {
     // Load existing API key if available
-    if (hasApiKey()) {
-      setApiKeyState(getApiKey());
-    }
-    
-    // Reset state when dialog opens
     if (open) {
+      const existingKey = getApiKey();
+      if (existingKey) {
+        setApiKeyState(existingKey);
+      }
+      
+      // Reset other states
       setShowSettingsAuth(false);
       setPassword("");
     }
   }, [open]);
 
   const handleSave = () => {
+    if (!apiKey.trim()) {
+      toast.error("Por favor, insira uma chave de API válida");
+      return;
+    }
+    
     setIsSaving(true);
     try {
       setApiKey(apiKey);
