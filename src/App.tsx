@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import { useEffect, useState } from "react";
 import SettingsAuth from "./components/SettingsAuth";
+import { SettingsProvider } from "./contexts/SettingsContext";
 
 const queryClient = new QueryClient();
 
@@ -69,23 +70,25 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route 
-              path="/settings" 
-              element={
-                isSettingsAuthenticated ? 
-                <Settings /> : 
-                <SettingsAuth onAuthenticate={handleAuthenticate} />
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <SettingsProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route 
+                path="/settings" 
+                element={
+                  isSettingsAuthenticated ? 
+                  <Settings /> : 
+                  <SettingsAuth onAuthenticate={handleAuthenticate} />
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

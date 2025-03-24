@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import PasswordRecovery from "./PasswordRecovery";
+import { validatePassword } from "@/utils/settingsStorage";
 
 interface SettingsAuthProps {
   onAuthenticate: () => void;
@@ -24,11 +24,7 @@ const SettingsAuth = ({ onAuthenticate }: SettingsAuthProps) => {
     
     // Simular uma pequena latência para dar sensação de processamento
     setTimeout(() => {
-      // Verificar senha (a senha padrão é "admin123")
-      // Em uma implementação real, isso deveria usar hash e comparação segura
-      const storedPassword = localStorage.getItem("settings-password") || "admin123";
-      
-      if (password === storedPassword) {
+      if (validatePassword(password)) {
         toast.success("Autenticação bem-sucedida");
         onAuthenticate();
       } else {

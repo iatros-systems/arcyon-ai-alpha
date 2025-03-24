@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -6,38 +5,25 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Thermometer, Zap, RefreshCw, Save } from "lucide-react";
+import { useSettingsContext } from "@/contexts/SettingsContext";
 
-interface ModelSettingsTabProps {
-  temperature: number;
-  setTemperature: (value: number) => void;
-  topP: number;
-  setTopP: (value: number) => void;
-  topK: number;
-  setTopK: (value: number) => void;
-  maxTokens: number;
-  setMaxTokens: (value: number) => void;
-  advancedMode: boolean;
-  setAdvancedMode: (value: boolean) => void;
-  handleSave: () => void;
-  handleReset: () => void;
-  isSaving: boolean;
-}
+const ModelSettingsTab = () => {
+  const {
+    temperature,
+    setTemperature,
+    topP,
+    setTopP,
+    topK,
+    setTopK,
+    maxTokens,
+    setMaxTokens,
+    advancedMode,
+    setAdvancedMode,
+    handleSave,
+    handleReset,
+    isSaving
+  } = useSettingsContext();
 
-const ModelSettingsTab = ({
-  temperature,
-  setTemperature,
-  topP,
-  setTopP,
-  topK,
-  setTopK,
-  maxTokens,
-  setMaxTokens,
-  advancedMode,
-  setAdvancedMode,
-  handleSave,
-  handleReset,
-  isSaving
-}: ModelSettingsTabProps) => {
   return (
     <Card>
       <CardHeader>

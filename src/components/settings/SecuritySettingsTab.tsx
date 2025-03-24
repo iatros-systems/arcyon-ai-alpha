@@ -4,26 +4,19 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useSettingsContext } from "@/contexts/SettingsContext";
 
-interface SecuritySettingsTabProps {
-  currentPassword: string;
-  setCurrentPassword: (value: string) => void;
-  newPassword: string;
-  setNewPassword: (value: string) => void;
-  confirmPassword: string;
-  setConfirmPassword: (value: string) => void;
-  handleChangePassword: () => void;
-}
+const SecuritySettingsTab = () => {
+  const {
+    currentPassword,
+    setCurrentPassword,
+    newPassword,
+    setNewPassword,
+    confirmPassword,
+    setConfirmPassword,
+    handleChangePassword
+  } = useSettingsContext();
 
-const SecuritySettingsTab = ({
-  currentPassword,
-  setCurrentPassword,
-  newPassword,
-  setNewPassword,
-  confirmPassword,
-  setConfirmPassword,
-  handleChangePassword
-}: SecuritySettingsTabProps) => {
   return (
     <Card>
       <CardHeader>

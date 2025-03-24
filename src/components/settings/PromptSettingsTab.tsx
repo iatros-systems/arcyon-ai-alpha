@@ -7,24 +7,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { UploadCloud, Save, FileText, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useRef } from "react";
+import { useSettingsContext } from "@/contexts/SettingsContext";
 
-interface PromptSettingsTabProps {
-  pathology: string;
-  setPathology: (value: string) => void;
-  systemInstructions: string;
-  setSystemInstructions: (value: string) => void;
-  handleSave: () => void;
-  isSaving: boolean;
-}
-
-const PromptSettingsTab = ({
-  pathology,
-  setPathology,
-  systemInstructions,
-  setSystemInstructions,
-  handleSave,
-  isSaving
-}: PromptSettingsTabProps) => {
+const PromptSettingsTab = () => {
+  const {
+    pathology,
+    setPathology,
+    systemInstructions,
+    setSystemInstructions,
+    handleSave,
+    isSaving
+  } = useSettingsContext();
+  
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

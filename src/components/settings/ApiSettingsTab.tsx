@@ -4,22 +4,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { NavigateFunction } from "react-router-dom";
+import { useSettingsContext } from "@/contexts/SettingsContext";
 
 interface ApiSettingsTabProps {
-  apiKey: string;
-  setApiKeyState: (value: string) => void;
-  handleSave: () => void;
-  isSaving: boolean;
   navigate: NavigateFunction;
 }
 
-const ApiSettingsTab = ({
-  apiKey,
-  setApiKeyState,
-  handleSave,
-  isSaving,
-  navigate
-}: ApiSettingsTabProps) => {
+const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
+  const { apiKey, setApiKeyState, handleSave, isSaving } = useSettingsContext();
+
   return (
     <Card>
       <CardHeader>
