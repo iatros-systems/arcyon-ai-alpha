@@ -1,19 +1,9 @@
-
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 import { Chat, Message } from "@/types";
+import * as chatService from "@/services/chat-service";
 
-interface ChatState {
-  chats: Chat[];
-  currentChat: Chat | null;
-  startNewChat: () => void;
-  addMessage: (content: string, role: "user" | "assistant" | "system") => void;
-  setCurrentChat: (chatId: string) => void;
-  setChats: (chats: Chat[]) => void;
-  updateChatTitle: (chatId: string, title: string) => void;
-}
-
+// System prompt for chest pain
 const CHEST_PAIN_SYSTEM_PROMPT = `# **EMERGENCY-001-CHEST-PAIN-CDS**
 ## Característica do Prompt
 - **Super veloz, ágil, direto, conciso e prático** para auxiliar o médico na tomada de decisão em **tempo real (≤5s)** sobre dor torácica em ambientes de urgência/emergência.
@@ -176,115 +166,176 @@ O Agente IA deve fornecer um diagnóstico baseado nos achados clínicos e protoc
 O Agente IA deve recomendar monitorização contínua dos sinais vitais, preparar para complicações como arritmias e hipotensão, e monitorar a glicemia capilar regularmente, especialmente em pacientes com uso de insulina.
 - **Tempo de resposta**: ≤5s para cada orientação adicional.`;
 
-export const useChatStore = create<ChatState>()(
-  persist(
-    (set, get) => ({
-      chats: [],
-      currentChat: null,
+interface ChatState {
+  chats: Chat[];
+  currentChat: Chat | null;
+  isLoading: boolean;
+  startNewChat: () => Promise<void>;
+  addMessage: (content: string, role: "user" | "assistant" | "system") => Promise<void>;
+  setCurrentChat: (chatId: string) => Promise<void>;
+  setChats: (chats: Chat[]) => void;
+  updateChatTitle: (chatId: string, title: string) => Promise<void>;
+  fetchChats: () => Promise<void>;
+  fetchCurrentChat: () => Promise<void>;
+}
+
+export const useChatStore = create<ChatState>()((set, get) => ({
+  chats: [],
+  currentChat: null,
+  isLoading: false,
+  
+  startNewChat: async () => {
+    set({ isLoading: true });
+    try {
+      const newChat: Omit<Chat, "id"> = {
+        title: "Nova conversa",
+        messages: [
+          {
+            id: uuidv4(),
+            content: CHEST_PAIN_SYSTEM_PROMPT,
+            role: "system",
+            createdAt: new Date(),
+          }
+        ],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isCurrent: true,
+        type: "chest-pain",
+      };
+
+      const createdChat = await chatService.createChat(newChat);
       
-      startNewChat: () => {
-        const newChatId = uuidv4();
-        const newChat: Chat = {
-          id: newChatId,
-          title: "Nova conversa",
-          messages: [
-            {
-              id: uuidv4(),
-              content: CHEST_PAIN_SYSTEM_PROMPT,
-              role: "system",
-              createdAt: new Date(),
-            }
-          ],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isCurrent: true,
-          type: "chest-pain",
-        };
-
-        set((state) => ({
-          chats: [
-            ...state.chats.map((chat) => ({
-              ...chat,
-              isCurrent: false,
-            })),
-            newChat,
-          ],
-          currentChat: newChat,
-        }));
-      },
-
-      addMessage: (content, role) => {
-        const message: Message = {
-          id: uuidv4(),
-          content,
-          role,
-          createdAt: new Date(),
-        };
-
-        set((state) => {
-          if (!state.currentChat) return state;
-
-          // Update current chat with new message
-          const updatedChat = {
-            ...state.currentChat,
-            messages: [...state.currentChat.messages, message],
-            updatedAt: new Date(),
-          };
-
-          // If this is the first user message, update the title
-          const isFirstUserMessage = 
-            state.currentChat.messages.filter(m => m.role === "user").length === 0 && 
-            role === "user";
-          
-          const newTitle = isFirstUserMessage 
-            ? content.slice(0, 30) + (content.length > 30 ? "..." : "") 
-            : updatedChat.title;
-
-          const finalUpdatedChat = {
-            ...updatedChat,
-            title: newTitle,
-          };
-
-          // Update chats array
-          const updatedChats = state.chats.map((chat) =>
-            chat.id === state.currentChat?.id ? finalUpdatedChat : chat
-          );
-
-          return {
-            chats: updatedChats,
-            currentChat: finalUpdatedChat,
-          };
-        });
-      },
-
-      setCurrentChat: (chatId) => {
-        set((state) => ({
-          chats: state.chats.map((chat) => ({
+      set((state) => ({
+        chats: [
+          ...state.chats.map((chat) => ({
             ...chat,
-            isCurrent: chat.id === chatId,
+            isCurrent: false,
           })),
-          currentChat: state.chats.find((chat) => chat.id === chatId) || null,
-        }));
-      },
-
-      setChats: (chats) => {
-        set({ chats });
-      },
-
-      updateChatTitle: (chatId, title) => {
-        set((state) => ({
-          chats: state.chats.map((chat) =>
-            chat.id === chatId ? { ...chat, title, updatedAt: new Date() } : chat
-          ),
-          currentChat:
-            state.currentChat?.id === chatId
-              ? { ...state.currentChat, title, updatedAt: new Date() }
-              : state.currentChat,
-        }));
-      },
-    }),
-    {
-      name: "chat-store",
+          createdChat,
+        ],
+        currentChat: createdChat,
+      }));
+    } catch (error) {
+      console.error("Failed to start new chat:", error);
+    } finally {
+      set({ isLoading: false });
     }
-  )
-);
+  },
+
+  addMessage: async (content, role) => {
+    set({ isLoading: true });
+    try {
+      if (!get().currentChat) return;
+      
+      const message: Omit<Message, "id"> = {
+        content,
+        role,
+        createdAt: new Date(),
+      };
+
+      const savedMessage = await chatService.saveMessage(get().currentChat.id, message);
+      
+      // Update current chat with new message
+      const updatedChat = {
+        ...get().currentChat!,
+        messages: [...get().currentChat!.messages, savedMessage],
+        updatedAt: new Date(),
+      };
+
+      // If this is the first user message, update the title
+      const isFirstUserMessage = 
+        get().currentChat!.messages.filter(m => m.role === "user").length === 0 && 
+        role === "user";
+      
+      if (isFirstUserMessage) {
+        const newTitle = content.slice(0, 30) + (content.length > 30 ? "..." : "");
+        await chatService.updateChatTitle(get().currentChat!.id, newTitle);
+        updatedChat.title = newTitle;
+      }
+
+      // Update chats array
+      const updatedChats = get().chats.map((chat) =>
+        chat.id === get().currentChat?.id ? updatedChat : chat
+      );
+
+      set({
+        chats: updatedChats,
+        currentChat: updatedChat,
+      });
+    } catch (error) {
+      console.error("Failed to add message:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  setCurrentChat: async (chatId) => {
+    set({ isLoading: true });
+    try {
+      await chatService.setCurrentChat(chatId);
+      
+      set((state) => ({
+        chats: state.chats.map((chat) => ({
+          ...chat,
+          isCurrent: chat.id === chatId,
+        })),
+        currentChat: state.chats.find((chat) => chat.id === chatId) || null,
+      }));
+    } catch (error) {
+      console.error("Failed to set current chat:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  setChats: (chats) => {
+    set({ chats });
+  },
+
+  updateChatTitle: async (chatId, title) => {
+    set({ isLoading: true });
+    try {
+      await chatService.updateChatTitle(chatId, title);
+      
+      set((state) => ({
+        chats: state.chats.map((chat) =>
+          chat.id === chatId ? { ...chat, title, updatedAt: new Date() } : chat
+        ),
+        currentChat:
+          state.currentChat?.id === chatId
+            ? { ...state.currentChat, title, updatedAt: new Date() }
+            : state.currentChat,
+      }));
+    } catch (error) {
+      console.error("Failed to update chat title:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchChats: async () => {
+    set({ isLoading: true });
+    try {
+      const chats = await chatService.getChats();
+      set({ chats });
+    } catch (error) {
+      console.error("Failed to fetch chats:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchCurrentChat: async () => {
+    set({ isLoading: true });
+    try {
+      const currentChat = await chatService.getCurrentChat();
+      if (currentChat) {
+        set({ currentChat });
+      }
+    } catch (error) {
+      console.error("Failed to fetch current chat:", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  }
+}));
