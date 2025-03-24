@@ -1,5 +1,4 @@
 
-
 .sidebar-item {
   position: relative;
   display: flex;
@@ -70,4 +69,3 @@
 .sidebar-item svg + span {
   margin-left: 0.5rem;
 }
-
