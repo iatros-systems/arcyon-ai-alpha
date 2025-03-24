@@ -89,7 +89,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md md:max-w-2xl lg:max-w-3xl">
+      <DialogContent className="sm:max-w-md md:max-w-3xl lg:max-w-4xl">
         <DialogHeader className="mb-4">
           <DialogTitle>Configurações</DialogTitle>
           <DialogDescription className="sr-only">

@@ -78,11 +78,13 @@ const SettingsSidebar = ({ activeSection, setActiveSection }: SettingsSidebarPro
         
         <Button 
           variant={activeSection === "invites" ? "secondary" : "ghost"} 
-          className="w-full justify-start"
+          className="w-full justify-start flex-col items-start pt-2 pb-2 h-auto"
           onClick={() => setActiveSection("invites")}
         >
-          <Mail className="mr-2 h-4 w-4" />
-          Convites para registros
+          <div className="flex items-center w-full">
+            <Mail className="mr-2 h-4 w-4" />
+            <span className="text-left leading-tight">Convites<br />para registro</span>
+          </div>
         </Button>
         
         <Button 

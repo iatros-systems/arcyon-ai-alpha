@@ -144,10 +144,10 @@ const InvitesSettings = () => {
 
       <Card className="mt-8 bg-blue-50 border-blue-100">
         <CardContent className="p-6">
-          <h3 className="text-xl font-semibold text-blue-700 mb-4">Como funciona?</h3>
-          <div className="space-y-2 text-blue-700">
+          <h3 className="text-lg font-semibold text-blue-700 mb-2">Como funciona?</h3>
+          <div className="space-y-1 text-sm text-blue-700">
             <p>O fluxo de convites permite adicionar novos usuários ao sistema de forma segura:</p>
-            <ol className="list-decimal pl-6 space-y-2">
+            <ol className="list-decimal pl-6 space-y-1">
               <li>Crie um convite e o sistema enviará um email com link seguro e código OTP ao usuário</li>
               <li>O usuário recebe o email e clica no link, sendo redirecionado para a página de validação</li>
               <li>Após validar o código OTP, o usuário pode criar sua conta com uma senha segura</li>
