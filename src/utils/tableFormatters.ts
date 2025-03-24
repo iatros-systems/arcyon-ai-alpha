@@ -39,26 +39,9 @@ export const formatMedicalTable = (content: string) => {
         );
         
         // Create HTML for the table with minimal spacing
-        const tableHtml = `
-        <div class="prescription-table">
-          <table>
-            <thead>
-              <tr>
-                ${headers.map(header => `<th>${header}</th>`).join('')}
-              </tr>
-            </thead>
-            <tbody>
-              ${dataRows.map(row => `
-                <tr>
-                  ${row.map(cell => `<td>${cell === 'N/A' ? '-' : cell}</td>`).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-        `;
+        const tableHtml = `<div class="prescription-table"><table><thead><tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr></thead><tbody>${dataRows.map(row => `<tr>${row.map(cell => `<td>${cell === 'N/A' ? '-' : cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
         
-        // Replace table in original content with no spacing
+        // Replace table in original content with absolutely no spacing
         return `${contentBeforeTable.trim()}${tableHtml}${contentAfterTable.trim()}`;
       }
     }
@@ -71,7 +54,7 @@ export const formatMedicalTable = (content: string) => {
 // Format medical prescription patterns
 export const formatMedicalPrescription = (content: string) => {
   // Detect patterns like "Condutas Iniciais:" or prescription lists
-  const conductPattern = /Condutas?\s+Iniciais?:|Condutas?\s*:|Prescrição:|Conduta:\s*([^\n]+)\nDose\/Comp\/Amp:/i;
+  const conductPattern = /Condutas?\s+Iniciais?:|Condutas?\s*:|Prescrição:|Conduta:\s*([^\n]+)\nDose\/Comp\/Amp:|(\*\*Condutas\s+ou\s+Prescrição:\*\*)/i;
   
   if (conductPattern.test(content)) {
     // Extract key-value pairs in "Key: Value" format
@@ -128,38 +111,15 @@ export const formatMedicalPrescription = (content: string) => {
       }
     }
     
-    // If we have prescription items, render as a custom table with minimal spacing
+    // If we have prescription items, render as a compact table with no spacing
     if (prescriptionItems.length > 0) {
-      const tableContent = `<div class="prescription-table">
-          <table class="w-full border-collapse">
-            <thead>
-              <tr>
-                <th>Conduta</th>
-                <th>Dose/Comp/Amp</th>
-                <th>Diluição</th>
-                <th>Via de Administração</th>
-                <th>Intervalo/horário</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${prescriptionItems.map(item => `
-                <tr>
-                  <td>${item.Conduta || item.conduta || 'N/A'}</td>
-                  <td>${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td>
-                  <td>${item.Diluição || item.diluição || 'N/A'}</td>
-                  <td>${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td>
-                  <td>${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>`;
+      const tableContent = `<div class="prescription-table"><table class="w-full border-collapse"><thead><tr><th>Conduta</th><th>Dose/Comp/Amp</th><th>Diluição</th><th>Via de Administração</th><th>Intervalo/horário</th></tr></thead><tbody>${prescriptionItems.map(item => `<tr><td>${item.Conduta || item.conduta || 'N/A'}</td><td>${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td><td>${item.Diluição || item.diluição || 'N/A'}</td><td>${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td><td>${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td></tr>`).join('')}</tbody></table></div>`;
       
       // Replace prescription section with formatted table - eliminate all whitespace
       return content.replace(
         new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:|\\*\\*Condutas\\s+ou\\s+Prescrição:\\*\\*)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `${prefix.trim()}${tableContent}${suffix.trim()}`;
+          return `${prefix}${tableContent}${suffix}`;
         }
       );
     }

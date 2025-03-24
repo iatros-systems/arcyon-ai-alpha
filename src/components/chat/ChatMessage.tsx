@@ -46,7 +46,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <div className="prose prose-xs dark:prose-invert max-w-none text-left text-sm">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left text-xs space-y-0" // Reduced font size and removed vertical spacing
+                className="prescription-content text-left text-xs space-y-0" // Removed vertical spacing completely
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
