@@ -12,6 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import NewInviteDialog from "../NewInviteDialog";
+import { useToast } from "@/components/ui/use-toast";
 
 // Dados de exemplo para os convites
 const inviteData = [
@@ -37,6 +39,8 @@ const InvitesSettings = () => {
   const [invites, setInvites] = useState(inviteData);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isNewInviteOpen, setIsNewInviteOpen] = useState(false);
+  const { toast } = useToast();
 
   // Filtrar convites com base na busca e na opção de favoritos
   const filteredInvites = invites.filter(invite => {
@@ -56,11 +60,33 @@ const InvitesSettings = () => {
     ));
   };
 
+  // Função para lidar com o envio de um novo convite
+  const handleInviteSubmit = (name: string, email: string) => {
+    const now = new Date();
+    const formattedDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} às ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    const newInvite = {
+      id: invites.length + 1,
+      name,
+      email,
+      date: formattedDate,
+      status: "Pendente",
+      favorite: false
+    };
+    
+    setInvites([...invites, newInvite]);
+    
+    toast({
+      title: "Convite enviado com sucesso",
+      description: `Um convite foi enviado para ${email}.`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-600">Convites para registro</h2>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setIsNewInviteOpen(true)}>
           <Mail className="h-4 w-4" />
           Novo Convite
         </Button>
@@ -156,6 +182,13 @@ const InvitesSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Novo Convite */}
+      <NewInviteDialog 
+        open={isNewInviteOpen} 
+        onOpenChange={setIsNewInviteOpen}
+        onInviteSubmit={handleInviteSubmit}
+      />
     </div>
   );
 };
