@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +15,12 @@ interface SidebarFooterProps {
 }
 
 const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
+  const navigate = useNavigate();
+
+  const handleMenuItemClick = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className={cn("border-t p-4", collapsed && "p-2")}>
       <DropdownMenu>
@@ -32,7 +39,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" alignOffset={-20}>
           <DropdownMenuGroup>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleMenuItemClick('/workspace/members')}>
               <Users className="mr-2 h-4 w-4" />
               <span>Administrar espaços de trabalho</span>
             </DropdownMenuItem>
@@ -49,7 +56,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
               <Palette className="mr-2 h-4 w-4" />
               <span>Personalizar Arcyon</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleMenuItemClick('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
             </DropdownMenuItem>
