@@ -24,9 +24,24 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
     navigate(path);
   };
 
+  const handleSettingsClick = () => {
+    setSettingsOpen(true);
+  };
+
+  const handleSettingsClose = (open: boolean) => {
+    setSettingsOpen(open);
+    // Add a small delay to ensure proper cleanup
+    if (!open) {
+      setTimeout(() => {
+        document.body.style.pointerEvents = "auto";
+        document.body.style.overflow = "auto";
+      }, 100);
+    }
+  };
+
   return (
     <div className={cn("border-t p-4", collapsed && "p-2")}>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <SettingsDialog open={settingsOpen} onOpenChange={handleSettingsClose} />
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -56,7 +71,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
               <Palette className="mr-2 h-4 w-4" />
               <span>Personalizar Arcyon</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+            <DropdownMenuItem onClick={handleSettingsClick}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
             </DropdownMenuItem>
