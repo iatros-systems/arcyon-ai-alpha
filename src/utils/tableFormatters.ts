@@ -58,8 +58,8 @@ export const formatMedicalTable = (content: string) => {
         </div>
         `;
         
-        // Replace table in original content
-        return `${contentBeforeTable}\n${tableHtml}\n${contentAfterTable}`;
+        // Replace table in original content with minimal spacing around it
+        return `${contentBeforeTable.trim()}\n${tableHtml}\n${contentAfterTable.trim()}`;
       }
     }
   }
@@ -156,11 +156,11 @@ export const formatMedicalPrescription = (content: string) => {
         </div>
       `;
       
-      // Replace prescription section with formatted table - reduce whitespace
+      // Replace prescription section with formatted table - reduce whitespace and improve spacing
       return content.replace(
         new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `**Condutas Iniciais:**\n${tableContent}\n${suffix}`;
+          return `${prefix}\n${tableContent}\n${suffix.trim()}`;
         }
       );
     }

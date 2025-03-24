@@ -40,13 +40,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           )}
         </Avatar>
         <div className="message-content flex-1 min-w-0">
-          <div className="font-medium mb-1">
+          <div className="font-medium mb-0.5"> {/* Reduced margin bottom from mb-1 to mb-0.5 */}
             {message.role === "user" ? "Médico" : "Arcyon"}
           </div>
           <div className="prose prose-sm dark:prose-invert max-w-none text-left">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left"
+                className="prescription-content text-left space-y-1" {/* Added space-y-1 to reduce vertical spacing between elements */}
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {

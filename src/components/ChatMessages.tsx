@@ -27,7 +27,7 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
         {messages.length === 0 ? (
           <EmptyChat />
         ) : (
-          <div className="space-y-4 py-4">
+          <div className="space-y-3 py-2"> {/* Reduced space-y-4 to space-y-3 and py-4 to py-2 */}
             {messages.map((message, index) => (
               <ChatMessage key={index} message={message} />
             ))}
