@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { ChevronRight } from "lucide-react";
+import MemoryManagementDialog from "../MemoryManagementDialog";
 
 const PersonalizationSettings = () => {
   const [memoryEnabled, setMemoryEnabled] = useState(false);
+  const [memoryDialogOpen, setMemoryDialogOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -64,11 +66,18 @@ const PersonalizationSettings = () => {
             variant="outline" 
             size="sm"
             className="mt-4"
+            onClick={() => setMemoryDialogOpen(true)}
           >
             Administrar memórias
           </Button>
         </CardContent>
       </Card>
+
+      {/* Memory Management Dialog */}
+      <MemoryManagementDialog 
+        open={memoryDialogOpen} 
+        onOpenChange={setMemoryDialogOpen} 
+      />
     </div>
   );
 };
