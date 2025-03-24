@@ -38,6 +38,9 @@ export const useProjectStore = create<ProjectState>()(
           currentProject: newProject,
         }));
         
+        console.log("Projeto criado:", newProject);
+        console.log("Lista de projetos após criação:", [...get().projects, newProject]);
+        
         return newProject;
       },
       
@@ -52,6 +55,7 @@ export const useProjectStore = create<ProjectState>()(
     }),
     {
       name: "project-store",
+      version: 1, // Adicionar versão para evitar problemas de persistência
     }
   )
 );

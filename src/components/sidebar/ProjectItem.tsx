@@ -13,16 +13,16 @@ interface ProjectItemProps {
 
 const ProjectItem = ({ project, collapsed, onSelect, onNewChat }: ProjectItemProps) => {
   return (
-    <div className="sidebar-item group">
+    <div className="sidebar-item group relative">
       <Button
         variant="ghost"
         className={cn(
           "w-full justify-start",
-          collapsed && "justify-center p-2"
+          collapsed ? "justify-center p-2" : "text-left pr-8"
         )}
         onClick={() => onSelect(project.id)}
       >
-        <Folder className="mr-2 h-4 w-4" />
+        <Folder className="mr-2 h-4 w-4 shrink-0" />
         {!collapsed && (
           <span className="truncate">{project.name}</span>
         )}
@@ -32,7 +32,7 @@ const ProjectItem = ({ project, collapsed, onSelect, onNewChat }: ProjectItemPro
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 absolute right-1 opacity-0 group-hover:opacity-100"
+          className="h-6 w-6 absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onNewChat(project.id);

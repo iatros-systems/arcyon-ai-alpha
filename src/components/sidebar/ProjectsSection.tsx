@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Folder } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ interface ProjectsSectionProps {
 
 const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const { projects, setCurrentProject } = useProjectStore();
+  const { projects, setCurrentProject, currentProject } = useProjectStore();
   const { startNewChat } = useChatStore();
 
   const handleProjectSelect = (projectId: string) => {
@@ -24,6 +24,11 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
   const handleNewChat = (projectId: string) => {
     startNewChat(projectId);
   };
+
+  // Para debugar
+  useEffect(() => {
+    console.log("Projetos disponíveis:", projects);
+  }, [projects]);
 
   return (
     <>

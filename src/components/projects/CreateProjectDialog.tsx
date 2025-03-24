@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useProjectStore } from "@/store/project-store";
 import { useChatStore } from "@/store/chat-store";
+import { toast } from "sonner";
 
 interface CreateProjectDialogProps {
   open: boolean;
@@ -19,15 +20,24 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
   const handleCreateProject = () => {
     if (!projectName.trim()) return;
     
-    // Criar o projeto
-    const newProject = createProject(projectName.trim());
-    
-    // Criar um chat inicial para o projeto
-    startNewChat(newProject.id);
-    
-    // Limpar o campo e fechar o diálogo
-    setProjectName("");
-    onOpenChange(false);
+    try {
+      // Criar o projeto
+      const newProject = createProject(projectName.trim());
+      console.log("Projeto criado via dialog:", newProject);
+      
+      // Criar um chat inicial para o projeto
+      startNewChat(newProject.id);
+      
+      // Notificar o usuário
+      toast.success("Projeto criado com sucesso");
+      
+      // Limpar o campo e fechar o diálogo
+      setProjectName("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Erro ao criar projeto:", error);
+      toast.error("Erro ao criar projeto");
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -44,6 +54,10 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
           {/* Removed the custom close button since Dialog already provides one */}
         </div>
         
+        <DialogDescription>
+          Crie um novo projeto para organizar suas conversas e arquivos.
+        </DialogDescription>
+        
         <div className="space-y-4 py-4">
           <Input 
             placeholder="Por exemplo, planificação de uma festa de aniversário" 
@@ -51,6 +65,7 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
             onChange={(e) => setProjectName(e.target.value)}
             onKeyDown={handleKeyDown}
             className="w-full"
+            autoFocus
           />
           
           <div className="flex items-start space-x-2 bg-muted/50 p-3 rounded-md">
