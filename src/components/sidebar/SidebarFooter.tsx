@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, Users, List, Palette } from "lucide-react";
+import { LogOut, Settings, Users, Palette } from "lucide-react";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -42,11 +42,6 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
             <DropdownMenuItem onClick={() => handleMenuItemClick('/workspace')}>
               <Users className="mr-2 h-4 w-4" />
               <span>Administrar espaços de trabalho</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <List className="mr-2 h-4 w-4" />
-              <span>Tareas</span>
-              <span className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded-sm">BETA</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Users className="mr-2 h-4 w-4" />
