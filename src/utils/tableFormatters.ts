@@ -38,14 +38,19 @@ export const formatMedicalTable = (content: string) => {
           line.split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim())
         );
         
-        // Create HTML for the table with minimal spacing
-        const tableHtml = `<div class="prescription-table"><table><thead><tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr></thead><tbody>${dataRows.map(row => `<tr>${row.map(cell => `<td>${cell === 'N/A' ? '-' : cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+        // Create HTML for the table with enhanced styling
+        const tableHtml = `<div class="prescription-table"><table class="w-full border-collapse rounded-md overflow-hidden"><thead class="bg-sky-50 dark:bg-sky-900/20"><tr>${headers.map(header => `<th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">${header}</th>`).join('')}</tr></thead><tbody>${dataRows.map(row => `<tr class="border-b border-sky-100 dark:border-sky-900/30">${row.map(cell => `<td class="p-2 border border-sky-100 dark:border-sky-900/30">${cell === 'N/A' ? '-' : cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
         
-        // Replace table in original content with absolutely no spacing
+        // Replace table in original content
         return `${contentBeforeTable.trim()}${tableHtml}${contentAfterTable.trim()}`;
       }
     }
   }
+  
+  // Format special medical sections and headings
+  content = content.replace(/\*\*([^*\n]+):\*\*/g, '<h3 class="text-iatros-blue dark:text-sky-300 font-bold my-2">$1:</h3>');
+  content = content.replace(/\*\*PLANO DE AÇÃO IMEDIATO[^*]*\*\*/g, '<h2 class="text-iatros-blue dark:text-sky-300 font-bold my-3">PLANO DE AÇÃO IMEDIATO</h2>');
+  content = content.replace(/\*\*Confirmação[^*]*\*\*/g, '<h2 class="text-iatros-blue dark:text-sky-300 font-bold my-3">Confirmação de IAMCSST</h2>');
   
   // If not a medical table, continue with prescription detection
   return formatMedicalPrescription(content);
@@ -111,15 +116,36 @@ export const formatMedicalPrescription = (content: string) => {
       }
     }
     
-    // If we have prescription items, render as a compact table with no spacing
+    // If we have prescription items, render as a better formatted table
     if (prescriptionItems.length > 0) {
-      const tableContent = `<div class="prescription-table"><table class="w-full border-collapse"><thead><tr><th>Conduta</th><th>Dose/Comp/Amp</th><th>Diluição</th><th>Via de Administração</th><th>Intervalo/horário</th></tr></thead><tbody>${prescriptionItems.map(item => `<tr><td>${item.Conduta || item.conduta || 'N/A'}</td><td>${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td><td>${item.Diluição || item.diluição || 'N/A'}</td><td>${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td><td>${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td></tr>`).join('')}</tbody></table></div>`;
+      const tableContent = `<div class="prescription-table mt-2"><table class="w-full border-collapse rounded-md overflow-hidden">
+        <thead class="bg-sky-50 dark:bg-sky-900/20">
+          <tr>
+            <th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">Conduta</th>
+            <th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">Dose/Comp/Amp</th>
+            <th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">Diluição</th>
+            <th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">Via de Administração</th>
+            <th class="p-2 text-left border border-sky-100 dark:border-sky-900/30 font-semibold text-iatros-blue dark:text-sky-300">Intervalo/horário</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${prescriptionItems.map(item => `
+            <tr class="border-b border-sky-100 dark:border-sky-900/30">
+              <td class="p-2 border border-sky-100 dark:border-sky-900/30">${item.Conduta || item.conduta || 'N/A'}</td>
+              <td class="p-2 border border-sky-100 dark:border-sky-900/30">${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td>
+              <td class="p-2 border border-sky-100 dark:border-sky-900/30">${item.Diluição || item.diluição || 'N/A'}</td>
+              <td class="p-2 border border-sky-100 dark:border-sky-900/30">${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td>
+              <td class="p-2 border border-sky-100 dark:border-sky-900/30">${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table></div>`;
       
-      // Replace prescription section with formatted table - eliminate all whitespace
+      // Replace prescription section with formatted table
       return content.replace(
         new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:|\\*\\*Condutas\\s+ou\\s+Prescrição:\\*\\*)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `${prefix}${tableContent}${suffix}`;
+          return `<h3 class="text-iatros-blue dark:text-sky-300 font-bold my-2">Prescrição:</h3>${tableContent}${suffix}`;
         }
       );
     }

@@ -22,8 +22,8 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
   }, [messages, loading]);
 
   return (
-    <ScrollArea className="flex-1 p-4 h-full">
-      <div className="max-w-3xl mx-auto pb-6">
+    <ScrollArea className="flex-1 p-4 pb-8 h-full">
+      <div className="max-w-3xl mx-auto pb-10">
         {messages.length === 0 ? (
           <EmptyChat />
         ) : (
