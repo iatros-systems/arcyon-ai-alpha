@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,6 +14,107 @@ interface ChatMessagesProps {
   messages: Message[];
   loading: boolean;
 }
+
+// Função para detectar e formatar conteúdo de prescrição médica
+const formatMedicalPrescription = (content: string) => {
+  // Detectar padrões como "Condutas Iniciais:" ou listas de prescrições no formato chave: valor
+  const conductPattern = /Condutas?\s+Iniciais?:|Condutas?\s*:|Prescrição:|Conduta:\s*([^\n]+)\nDose\/Comp\/Amp:/i;
+  
+  if (conductPattern.test(content)) {
+    // Extrai pares de chave-valor no formato "Chave: Valor"
+    const lines = content.split('\n');
+    const prescriptionItems = [];
+    
+    let currentItem: {[key: string]: string} = {};
+    let isCollectingPrescription = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Verifica se estamos iniciando uma seção de prescrição
+      if (
+        line.match(/Condutas?\s+Iniciais?:|Prescrição:|Medicamentos?:/i) || 
+        line === '**Condutas Iniciais:**' || 
+        line === '**Prescrição:**'
+      ) {
+        isCollectingPrescription = true;
+        continue;
+      }
+      
+      // Se não estamos coletando prescrição, continua
+      if (!isCollectingPrescription) continue;
+      
+      // Verifica se a linha termina a seção de prescrição
+      if (line === '' && Object.keys(currentItem).length > 0) {
+        prescriptionItems.push({...currentItem});
+        currentItem = {};
+        continue;
+      }
+      
+      // Se chegamos a outra seção, terminamos de coletar
+      if (line.match(/^##|^#\s|^Observações:|^\*\*Observações/i) && i > 0) {
+        isCollectingPrescription = false;
+        continue;
+      }
+      
+      // Extrai pares chave-valor
+      const match = line.match(/^(Conduta|Dose\/Comp\/Amp|Diluição|Via de Administração|Intervalo\/horário):\s*(.+)$/i);
+      if (match) {
+        const [, key, value] = match;
+        currentItem[key] = value;
+        
+        // Se tivermos todos os campos ou este é o último, adiciona o item
+        const hasAllFields = ['Conduta', 'Dose/Comp/Amp', 'Diluição', 'Via de Administração', 'Intervalo/horário']
+          .every(field => field in currentItem || field.toLowerCase() in currentItem);
+        
+        if (hasAllFields || (i === lines.length - 1)) {
+          prescriptionItems.push({...currentItem});
+          currentItem = {};
+        }
+      }
+    }
+    
+    // Se tivermos itens de prescrição, renderiza como uma tabela personalizada
+    if (prescriptionItems.length > 0) {
+      const tableContent = `
+        <div class="prescription-table">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr>
+                <th class="p-2 bg-muted/50 text-left font-medium">Conduta</th>
+                <th class="p-2 bg-muted/50 text-left font-medium">Dose/Comp/Amp</th>
+                <th class="p-2 bg-muted/50 text-left font-medium">Diluição</th>
+                <th class="p-2 bg-muted/50 text-left font-medium">Via de Administração</th>
+                <th class="p-2 bg-muted/50 text-left font-medium">Intervalo/horário</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${prescriptionItems.map(item => `
+                <tr class="border-b">
+                  <td class="p-2">${item.Conduta || item.conduta || 'N/A'}</td>
+                  <td class="p-2">${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td>
+                  <td class="p-2">${item.Diluição || item.diluição || 'N/A'}</td>
+                  <td class="p-2">${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td>
+                  <td class="p-2">${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      
+      // Substitui a seção de prescrição pela tabela formatada
+      return content.replace(
+        new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
+        (match, prefix, suffix) => {
+          return `**Condutas Iniciais:**\n\n${tableContent}\n\n${suffix}`;
+        }
+      );
+    }
+  }
+  
+  return content;
+};
 
 const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -81,53 +183,65 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
                       {message.role === "user" ? "Médico" : "Arcyon"}
                     </div>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <Markdown
-                        components={{
-                          code(props) {
-                            const { children, className, ...rest } = props;
-                            const match = /language-(\w+)/.exec(className || '');
-                            return match ? (
-                              <SyntaxHighlighter
-                                language={match[1]}
-                                style={nord}
-                                PreTag="div"
-                                className="rounded-md"
-                              >
-                                {String(children).replace(/\n$/, '')}
-                              </SyntaxHighlighter>
-                            ) : (
-                              <code {...rest} className="px-1 py-0.5 rounded bg-muted">
-                                {children}
-                              </code>
-                            );
-                          },
-                          // Custom table renderer using shadcn/ui components
-                          table(props) {
-                            return (
-                              <div className="my-4 overflow-x-auto rounded-md border">
-                                <Table className="w-full">{props.children}</Table>
-                              </div>
-                            );
-                          },
-                          thead(props) {
-                            return <TableHeader>{props.children}</TableHeader>;
-                          },
-                          tbody(props) {
-                            return <TableBody>{props.children}</TableBody>;
-                          },
-                          tr(props) {
-                            return <TableRow>{props.children}</TableRow>;
-                          },
-                          th(props) {
-                            return <TableHead className="font-semibold bg-muted/50">{props.children}</TableHead>;
-                          },
-                          td(props) {
-                            return <TableCell className="p-2">{props.children}</TableCell>;
-                          },
-                        }}
-                      >
-                        {message.content}
-                      </Markdown>
+                      {message.role === "assistant" ? (
+                        <div 
+                          className="prescription-content"
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatMedicalPrescription(message.content)
+                              .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
+                                return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
+                              })
+                              .replace(/\n/g, '<br>')
+                          }}
+                        />
+                      ) : (
+                        <Markdown
+                          components={{
+                            code(props) {
+                              const { children, className, ...rest } = props;
+                              const match = /language-(\w+)/.exec(className || '');
+                              return match ? (
+                                <SyntaxHighlighter
+                                  language={match[1]}
+                                  style={nord}
+                                  PreTag="div"
+                                  className="rounded-md"
+                                >
+                                  {String(children).replace(/\n$/, '')}
+                                </SyntaxHighlighter>
+                              ) : (
+                                <code {...rest} className="px-1 py-0.5 rounded bg-muted">
+                                  {children}
+                                </code>
+                              );
+                            },
+                            table(props) {
+                              return (
+                                <div className="my-4 overflow-x-auto rounded-md border">
+                                  <Table className="w-full">{props.children}</Table>
+                                </div>
+                              );
+                            },
+                            thead(props) {
+                              return <TableHeader>{props.children}</TableHeader>;
+                            },
+                            tbody(props) {
+                              return <TableBody>{props.children}</TableBody>;
+                            },
+                            tr(props) {
+                              return <TableRow>{props.children}</TableRow>;
+                            },
+                            th(props) {
+                              return <TableHead className="font-semibold bg-muted/50">{props.children}</TableHead>;
+                            },
+                            td(props) {
+                              return <TableCell className="p-2">{props.children}</TableCell>;
+                            },
+                          }}
+                        >
+                          {message.content}
+                        </Markdown>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +22,7 @@ const App = () => {
     document.title = "Arcyon - Assistente para Dor Torácica";
   }, []);
 
-  // Add CSS for sidebar edit functionality
+  // Add CSS for sidebar edit functionality and prescription table styling
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -42,6 +43,38 @@ const App = () => {
       
       .sidebar-item:hover button, .sidebar-item:focus-within button {
         opacity: 1;
+      }
+      
+      /* Estilos para tabelas de prescrição médica */
+      .prescription-table table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+        font-size: 0.875rem;
+      }
+      
+      .prescription-table th {
+        background-color: hsl(var(--muted) / 0.5);
+        font-weight: 500;
+        text-align: left;
+        padding: 0.5rem;
+      }
+      
+      .prescription-table td {
+        padding: 0.5rem;
+        border-bottom: 1px solid hsl(var(--border));
+      }
+      
+      .prescription-table tr:last-child td {
+        border-bottom: none;
+      }
+      
+      .prescription-content {
+        width: 100%;
+      }
+      
+      .prescription-content table {
+        margin: 1rem 0;
       }
     `;
     document.head.appendChild(style);
