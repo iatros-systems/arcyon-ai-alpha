@@ -2,8 +2,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, MicOff, X } from "lucide-react";
+import { Send, Paperclip, Mic, MicOff, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ChatInputProps {
   onSubmit: (message: string, files?: File[]) => void;
@@ -14,6 +20,7 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("Arcyon Alpha");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -131,16 +138,49 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
               </div>
-              <Button 
-                type="submit" 
-                size="icon" 
-                className={cn(
-                  disabled || (!input.trim() && selectedFiles.length === 0) ? "opacity-50 cursor-not-allowed" : ""
-                )}
-                disabled={disabled || (!input.trim() && selectedFiles.length === 0)}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-9 px-3 flex items-center gap-1 border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                      disabled={disabled}
+                    >
+                      {selectedModel}
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-[180px] bg-popover p-1"
+                  >
+                    <DropdownMenuItem 
+                      onClick={() => setSelectedModel("Arcyon Alpha")}
+                      className="cursor-pointer"
+                    >
+                      <span>Arcyon Alpha</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setSelectedModel("Arcyon Beta")}
+                      className="cursor-pointer"
+                    >
+                      <span>Arcyon Beta</span>
+                      <span className="ml-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 px-1.5 py-0.5 rounded">beta</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button 
+                  type="submit" 
+                  size="icon" 
+                  className={cn(
+                    disabled || (!input.trim() && selectedFiles.length === 0) ? "opacity-50 cursor-not-allowed" : ""
+                  )}
+                  disabled={disabled || (!input.trim() && selectedFiles.length === 0)}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </form>
