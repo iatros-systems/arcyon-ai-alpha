@@ -9,14 +9,8 @@
   background-color: hsl(var(--muted) / 0.5);
 }
 
-/* Make buttons visible by default, not hidden */
+/* Make buttons always visible */
 .sidebar-item button {
-  opacity: 1;
-  transition: opacity 0.2s;
-}
-
-/* Keep hover effect for better user experience */
-.sidebar-item:hover button, .sidebar-item:focus-within button {
   opacity: 1;
 }
 

@@ -36,7 +36,7 @@ const ChatItem = ({
     <div
       key={chat.id}
       className={cn(
-        "sidebar-item flex items-center p-2 rounded-md cursor-pointer group",
+        "sidebar-item flex items-center p-2 rounded-md cursor-pointer",
         chat.isCurrent && "bg-accent/50 active",
         chat.pinned && "border-l-2 border-primary pl-1"
       )}
