@@ -54,7 +54,7 @@ const ChatItem = ({
       ) : (
         <>
           {!collapsed && (
-            <span className="text-sm truncate flex-1">{chat.title}</span>
+            <span className="text-sm truncate flex-1 pr-0">{chat.title}</span>
           )}
           
           {!collapsed && (
