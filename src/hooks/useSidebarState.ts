@@ -1,27 +1,35 @@
 
 import { useState, useEffect } from "react";
 
-/**
- * Custom hook to manage sidebar collapsed state
- */
 export const useSidebarState = () => {
-  const [collapsed, setCollapsed] = useState(() => {
-    // Initialize from localStorage if available
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
     return savedState ? savedState === "true" : false;
   });
 
-  // Save collapsed state to localStorage when it changes
+  // Listen for sidebar state changes
   useEffect(() => {
-    localStorage.setItem("sidebar-collapsed", String(collapsed));
-    // Add an event to notify other components about the sidebar state change
-    window.dispatchEvent(new Event("sidebar-state-changed"));
-  }, [collapsed]);
+    const handleSidebarStateChange = () => {
+      const collapsed = localStorage.getItem("sidebar-collapsed") === "true";
+      setSidebarCollapsed(collapsed);
+    };
 
-  // Toggle sidebar collapsed state
-  const toggleCollapsed = () => {
-    setCollapsed(!collapsed);
+    // Listen for the custom event fired when sidebar state changes
+    window.addEventListener("sidebar-state-changed", handleSidebarStateChange);
+    
+    // Also listen for storage events for cross-tab synchronization
+    window.addEventListener("storage", handleSidebarStateChange);
+    
+    return () => {
+      window.removeEventListener("sidebar-state-changed", handleSidebarStateChange);
+      window.removeEventListener("storage", handleSidebarStateChange);
+    };
+  }, []);
+
+  return {
+    sidebarOpen,
+    setSidebarOpen,
+    sidebarCollapsed
   };
-
-  return { collapsed, toggleCollapsed };
 };
