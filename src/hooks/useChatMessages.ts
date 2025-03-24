@@ -7,14 +7,17 @@ import { useChatTextMessaging } from "@/hooks/useChatTextMessaging";
 import { createFileMessage } from "@/utils/chatMessageUtils";
 
 export const useChatMessages = () => {
-  const [loading, setLoading] = useState(false);
   const { currentChat } = useChatStore();
+  const [loading, setLoading] = useState(false);
   const fileProcessing = useChatFileProcessing();
   const textMessaging = useChatTextMessaging();
 
-  // Sync loading states
-  if (fileProcessing.loading !== loading) setLoading(fileProcessing.loading);
-  if (textMessaging.loading !== loading) setLoading(textMessaging.loading);
+  // Mantenha um único estado de loading
+  const updateLoading = (isLoading: boolean) => {
+    setLoading(isLoading);
+    if (fileProcessing.loading !== isLoading) fileProcessing.setLoading(isLoading);
+    if (textMessaging.loading !== isLoading) textMessaging.setLoading(isLoading);
+  };
 
   const handleSendMessage = async (messageContent: string, files?: File[]) => {
     if (!hasApiKey()) {

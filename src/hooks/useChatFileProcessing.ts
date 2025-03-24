@@ -5,8 +5,8 @@ import { sendMessageToGemini } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 
 export const useChatFileProcessing = () => {
-  const [loading, setLoading] = useState(false);
   const { currentChat, addMessage } = useChatStore();
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const processImageFile = async (file: File, messageContent: string): Promise<boolean> => {
@@ -20,46 +20,60 @@ export const useChatFileProcessing = () => {
       addMessage(finalMessage, "user");
         
       const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Data = e.target?.result as string;
-        
-        // Create a message with the image data for the AI to process
-        const imageMessage = `[Imagem: ${file.name}]\n${base64Data}`;
-        
-        setLoading(true);
-        
-        try {
-          // Send the image data to Gemini
-          const systemMessage = currentChat?.messages.find(m => m.role === "system");
-          const messagesToSend = [];
+      
+      return new Promise((resolve) => {
+        reader.onload = async (e) => {
+          const base64Data = e.target?.result as string;
           
-          if (systemMessage) {
+          // Create a message with the image data for the AI to process
+          const imageMessage = `[Imagem: ${file.name}]\n${base64Data}`;
+          
+          setLoading(true);
+          
+          try {
+            // Send the image data to Gemini
+            const systemMessage = currentChat?.messages.find(m => m.role === "system");
+            const messagesToSend = [];
+            
+            if (systemMessage) {
+              messagesToSend.push({
+                role: systemMessage.role,
+                content: systemMessage.content,
+              });
+            }
+            
             messagesToSend.push({
-              role: systemMessage.role,
-              content: systemMessage.content,
+              role: "user",
+              content: imageMessage,
             });
+            
+            const response = await sendMessageToGemini(messagesToSend);
+            addMessage(response, "assistant");
+            resolve(true);
+          } catch (error) {
+            console.error("Error processing image:", error);
+            toast({
+              title: "Erro ao processar imagem",
+              description: "Não foi possível analisar a imagem.",
+              variant: "destructive",
+            });
+            resolve(false);
+          } finally {
+            setLoading(false);
           }
-          
-          messagesToSend.push({
-            role: "user",
-            content: imageMessage,
-          });
-          
-          const response = await sendMessageToGemini(messagesToSend);
-          addMessage(response, "assistant");
-        } catch (error) {
-          console.error("Error processing image:", error);
+        };
+        
+        reader.onerror = () => {
           toast({
-            title: "Erro ao processar imagem",
-            description: "Não foi possível analisar a imagem.",
+            title: "Erro ao ler arquivo",
+            description: "Não foi possível ler o arquivo de imagem.",
             variant: "destructive",
           });
-        } finally {
-          setLoading(false);
-        }
-      };
-      reader.readAsDataURL(file);
-      return true;
+          resolve(false);
+        };
+        
+        reader.readAsDataURL(file);
+      });
     } catch (error) {
       console.error("Error processing file:", error);
       toast({

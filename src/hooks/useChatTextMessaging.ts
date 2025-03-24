@@ -6,8 +6,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { prepareMessagesForApi } from "@/utils/chatMessageUtils";
 
 export const useChatTextMessaging = () => {
-  const [loading, setLoading] = useState(false);
   const { currentChat, addMessage } = useChatStore();
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const sendTextMessage = async (messageContent: string): Promise<boolean> => {
@@ -15,13 +15,17 @@ export const useChatTextMessaging = () => {
       return false;
     }
 
-    // Add user message to chat
-    addMessage(messageContent, "user");
-    
-    setLoading(true);
-    
     try {
+      // Add user message to chat
+      addMessage(messageContent, "user");
+      
+      setLoading(true);
+      
       // Prepare messages for API
+      if (!currentChat) {
+        throw new Error("No active chat");
+      }
+      
       const messagesToSend = prepareMessagesForApi(currentChat);
       
       // Add the new message
