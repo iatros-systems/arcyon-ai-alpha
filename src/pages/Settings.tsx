@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -336,7 +337,7 @@ const Settings = () => {
               </Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Salvar Configurações"}
+                {isSaving ? "Salvando..." : "Salvar Configurações"}
               </Button>
             </CardFooter>
           </Card>
@@ -376,7 +377,7 @@ const Settings = () => {
             <CardFooter className="flex justify-end">
               <Button onClick={handleSave} disabled={isSaving}>
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Salvar Configuração"}
+                {isSaving ? "Salvando..." : "Salvar Configuração"}
               </Button>
             </CardFooter>
           </Card>
