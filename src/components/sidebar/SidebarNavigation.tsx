@@ -11,7 +11,7 @@ interface SidebarNavigationProps {
 
 const SidebarNavigation = ({ activeSection, collapsed, setActiveSection }: SidebarNavigationProps) => {
   return (
-    <div className="flex border-b">
+    <div className="flex border-b sticky top-0 z-10 bg-background">
       <Button
         variant="ghost"
         className={cn(

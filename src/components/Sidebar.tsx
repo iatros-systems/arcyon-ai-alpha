@@ -67,13 +67,13 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
           onNewChat={startNewChat} 
         />
 
-        <div className="flex-1 overflow-auto">
-          <SidebarNavigation 
-            activeSection={activeSection} 
-            collapsed={collapsed} 
-            setActiveSection={setActiveSection} 
-          />
+        <SidebarNavigation 
+          activeSection={activeSection} 
+          collapsed={collapsed} 
+          setActiveSection={setActiveSection} 
+        />
 
+        <div className="flex-1 overflow-auto">
           {activeSection === "chats" && (
             <ChatsSection
               groupedChats={groupedChats}
