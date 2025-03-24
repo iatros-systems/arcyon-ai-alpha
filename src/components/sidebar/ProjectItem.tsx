@@ -73,7 +73,7 @@ const ProjectItem = ({
         )}
         <Folder className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} />
         {!collapsed && (
-          <span className="truncate ml-2 flex-1 text-sm font-medium">{project.name}</span>
+          <span className="truncate ml-1 flex-1 text-sm font-medium">{project.name}</span>
         )}
         
         {!collapsed && (
