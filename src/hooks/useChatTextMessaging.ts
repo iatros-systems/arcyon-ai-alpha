@@ -31,17 +31,15 @@ export const useChatTextMessaging = () => {
         throw new Error("No active chat");
       }
       
-      // This guarantees the system message is included
+      // This function now properly includes the system message as the first message
       const messagesToSend = prepareMessagesForApi(currentChat);
       
-      // Log the system message in development
-      if (process.env.NODE_ENV === 'development') {
-        const systemMsg = messagesToSend.find(msg => msg.role === "system");
-        if (systemMsg) {
-          console.log("Using system prompt:", systemMsg.content.substring(0, 100) + "...");
-        } else {
-          console.warn("No system prompt found in prepared messages!");
-        }
+      // Add the new message (should already be included from prepareMessagesForApi)
+      if (!messagesToSend.some(msg => msg.role === "user" && msg.content === messageContent)) {
+        messagesToSend.push({
+          role: "user",
+          content: messageContent,
+        });
       }
       
       // Send messages to API

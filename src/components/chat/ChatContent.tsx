@@ -24,7 +24,7 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     <div className="flex flex-col flex-1 h-full relative overflow-hidden">
       <div className="flex-1 overflow-hidden relative">
         <ChatMessages 
-          messages={currentChat?.messages || []}
+          messages={currentChat?.messages.filter(m => m.role !== "system") || []}
           loading={loading} 
         />
       </div>
