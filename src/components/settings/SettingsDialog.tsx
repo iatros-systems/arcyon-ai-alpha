@@ -16,6 +16,7 @@ import AudioSettings from "./sections/AudioSettings";
 import PersonalizationSettings from "./sections/PersonalizationSettings";
 import NotificationsSettings from "./sections/NotificationsSettings";
 import AppsSettings from "./sections/AppsSettings";
+import DataSettings from "./sections/DataSettings";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -65,6 +66,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         return <NotificationsSettings />;
       case "apps":
         return <AppsSettings />;
+      case "data":
+        return <DataSettings />;
       default:
         return <SectionPlaceholder />;
     }
