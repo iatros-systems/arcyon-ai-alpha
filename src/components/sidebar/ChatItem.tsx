@@ -62,11 +62,11 @@ const ChatItem = ({
       ) : (
         <>
           {!collapsed && (
-            <span className="text-sm truncate flex-1 ml-1.5">{chat.title}</span>
+            <span className="text-sm truncate flex-1 ml-1.5 text-left">{chat.title}</span>
           )}
           
           {!collapsed && (
-            <div className="ml-1">
+            <div className="ml-auto">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
