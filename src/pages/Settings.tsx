@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Key, Thermometer, Zap, Settings as SettingsIcon, MessageSquare, Save, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Key, Thermometer, Zap, Settings as SettingsIcon, MessageSquare, Save, RefreshCw, ShieldCheck, FileText } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -29,6 +29,9 @@ const Settings = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
+  // Novo estado para o prompt do sistema
+  const [pathology, setPathology] = useState("");
+  
   useEffect(() => {
     // Load existing API key if available
     if (hasApiKey()) {
@@ -41,12 +44,14 @@ const Settings = () => {
     const savedTopK = localStorage.getItem("gemini-topK");
     const savedMaxTokens = localStorage.getItem("gemini-maxTokens");
     const savedAdvancedMode = localStorage.getItem("gemini-advancedMode");
+    const savedPathology = localStorage.getItem("system-prompt-pathology");
     
     if (savedTemperature) setTemperature(parseFloat(savedTemperature));
     if (savedTopP) setTopP(parseFloat(savedTopP));
     if (savedTopK) setTopK(parseInt(savedTopK));
     if (savedMaxTokens) setMaxTokens(parseInt(savedMaxTokens));
     if (savedAdvancedMode) setAdvancedMode(savedAdvancedMode === "true");
+    if (savedPathology) setPathology(savedPathology);
   }, []);
   
   const handleSave = () => {
@@ -61,6 +66,7 @@ const Settings = () => {
       localStorage.setItem("gemini-topK", topK.toString());
       localStorage.setItem("gemini-maxTokens", maxTokens.toString());
       localStorage.setItem("gemini-advancedMode", advancedMode.toString());
+      localStorage.setItem("system-prompt-pathology", pathology);
       
       toast({
         title: "Configurações salvas",
@@ -139,7 +145,7 @@ const Settings = () => {
       </div>
       
       <Tabs defaultValue="api" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="api">
             <Key className="mr-2 h-4 w-4" />
             API e Conexão
@@ -147,6 +153,10 @@ const Settings = () => {
           <TabsTrigger value="model">
             <MessageSquare className="mr-2 h-4 w-4" />
             Configurações do Modelo
+          </TabsTrigger>
+          <TabsTrigger value="prompt">
+            <FileText className="mr-2 h-4 w-4" />
+            Prompt do Sistema
           </TabsTrigger>
           <TabsTrigger value="security">
             <ShieldCheck className="mr-2 h-4 w-4" />
@@ -326,7 +336,47 @@ const Settings = () => {
               </Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Salvando..." : "Salvar Configurações"}
+                {isSaving ? "Salvar Configurações"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="prompt">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prompt do Sistema</CardTitle>
+              <CardDescription>
+                Configure o prompt do sistema para cada tipo de patologia.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="grid gap-2">
+                  <Label htmlFor="pathology">Patologia</Label>
+                  <Select
+                    value={pathology}
+                    onValueChange={setPathology}
+                  >
+                    <SelectTrigger id="pathology">
+                      <SelectValue placeholder="Selecione uma patologia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="iamWithST">Angina/Síndrome coronariana(IAM) com supra</SelectItem>
+                      <SelectItem value="iamWithoutST">Angina/Síndrome coronariana(IAM) sem supra</SelectItem>
+                      <SelectItem value="aorticSyndrome">Síndrome aórtica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    A patologia selecionada define o contexto do assistente para fornecer respostas mais precisas.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-end">
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className="mr-2 h-4 w-4" />
+                {isSaving ? "Salvar Configuração"}
               </Button>
             </CardFooter>
           </Card>
