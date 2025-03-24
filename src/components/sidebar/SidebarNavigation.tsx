@@ -34,7 +34,7 @@ const SidebarNavigation = ({ activeSection, collapsed, setActiveSection }: Sideb
         onClick={() => setActiveSection("projects")}
       >
         <FolderOpen className="mr-2 h-4 w-4" />
-        {!collapsed && "Proyectos"}
+        {!collapsed && "Projetos"}
       </Button>
     </div>
   );
