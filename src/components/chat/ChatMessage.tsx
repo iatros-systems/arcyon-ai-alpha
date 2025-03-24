@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Stethoscope } from "lucide-react";
@@ -18,11 +17,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "message-container p-3 rounded-lg", // Reduced padding from p-4 to p-3
+        "message-container p-3 rounded-lg", 
         message.role === "user" ? "user" : "ai"
       )}
     >
-      <div className="flex gap-2"> {/* Reduced gap from gap-3 to gap-2 */}
+      <div className="flex gap-2">
         <div className="flex items-start">
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
@@ -34,8 +33,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                 </>
               ) : (
                 <>
-                  <AvatarImage src="/lovable-uploads/3c10210e-57f5-4e1c-a850-86f3a335d86c.png" />
-                  <AvatarFallback className="bg-sky-100 text-sky-500">
+                  <AvatarFallback className="bg-sky-100">
                     <Stethoscope className="h-4 w-4" color="#33C3F0" />
                   </AvatarFallback>
                 </>
