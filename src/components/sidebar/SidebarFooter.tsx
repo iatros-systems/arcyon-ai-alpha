@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -9,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, Users, Palette } from "lucide-react";
+import SettingsDialog from "../settings/SettingsDialog";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -16,6 +18,7 @@ interface SidebarFooterProps {
 
 const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
   const navigate = useNavigate();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const handleMenuItemClick = (path: string) => {
     navigate(path);
@@ -23,6 +26,8 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
 
   return (
     <div className={cn("border-t p-4", collapsed && "p-2")}>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
@@ -51,7 +56,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
               <Palette className="mr-2 h-4 w-4" />
               <span>Personalizar Arcyon</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleMenuItemClick('/settings')}>
+            <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Configurações</span>
             </DropdownMenuItem>
