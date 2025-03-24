@@ -1,12 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import SharedLinksDialog from "../SharedLinksDialog";
 
 const DataSettings = () => {
+  const [sharedLinksOpen, setSharedLinksOpen] = useState(false);
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Controles de dados</h2>
@@ -41,12 +44,19 @@ const DataSettings = () => {
               </CardDescription>
             </div>
             
-            <Button variant="outline" size="sm">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSharedLinksOpen(true)}
+            >
               Administrar
             </Button>
           </div>
         </CardHeader>
       </Card>
+
+      {/* Shared Links Dialog */}
+      <SharedLinksDialog open={sharedLinksOpen} onOpenChange={setSharedLinksOpen} />
     </div>
   );
 };
