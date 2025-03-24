@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, User } from "lucide-react";
+import { User, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/types";
 import Markdown from "react-markdown";
@@ -35,8 +35,8 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               ) : (
                 <>
                   <AvatarImage src="/lovable-uploads/3c10210e-57f5-4e1c-a850-86f3a335d86c.png" />
-                  <AvatarFallback className="bg-muted">
-                    <Bot className="h-4 w-4" />
+                  <AvatarFallback className="bg-purple-100 text-purple-700">
+                    <Stethoscope className="h-4 w-4" />
                   </AvatarFallback>
                 </>
               )}
