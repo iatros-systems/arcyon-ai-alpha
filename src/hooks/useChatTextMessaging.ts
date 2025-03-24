@@ -12,6 +12,11 @@ export const useChatTextMessaging = () => {
 
   const sendTextMessage = async (messageContent: string): Promise<boolean> => {
     if (!hasApiKey()) {
+      toast({
+        title: "Chave de API não configurada",
+        description: "Configure sua chave de API nas configurações.",
+        variant: "destructive",
+      });
       return false;
     }
 
@@ -26,13 +31,16 @@ export const useChatTextMessaging = () => {
         throw new Error("No active chat");
       }
       
+      // This function now properly includes the system message as the first message
       const messagesToSend = prepareMessagesForApi(currentChat);
       
-      // Add the new message
-      messagesToSend.push({
-        role: "user",
-        content: messageContent,
-      });
+      // Add the new message (should already be included from prepareMessagesForApi)
+      if (!messagesToSend.some(msg => msg.role === "user" && msg.content === messageContent)) {
+        messagesToSend.push({
+          role: "user",
+          content: messageContent,
+        });
+      }
       
       // Send messages to API
       const response = await sendMessageToGemini(messagesToSend);

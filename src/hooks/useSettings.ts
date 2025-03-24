@@ -11,6 +11,9 @@ import {
   setStoredPassword,
   validatePassword
 } from "@/utils/settingsStorage";
+import { useChatStore } from "@/store/chat-store"; 
+import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
+import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
 
 export function useSettings() {
   const { toast } = useToast();
@@ -23,6 +26,7 @@ export function useSettings() {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [pathology, setPathology] = useState("");
   const [systemInstructions, setSystemInstructions] = useState("");
+  const { chats, setChats } = useChatStore();
   
   // Password management states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -69,6 +73,19 @@ export function useSettings() {
         pathology,
         systemInstructions
       });
+      
+      // Update system prompt in all chats
+      let systemPrompt = '';
+      if (systemInstructions) {
+        systemPrompt = systemInstructions;
+      } else if (pathology === 'iamWithST' || pathology === 'iamWithoutST' || pathology === 'aorticSyndrome') {
+        systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
+      }
+      
+      if (systemPrompt && chats.length > 0) {
+        const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
+        setChats(updatedChats);
+      }
       
       toast({
         title: "Configurações salvas",

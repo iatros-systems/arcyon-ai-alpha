@@ -2,9 +2,24 @@
 import { v4 as uuidv4 } from "uuid";
 import { Chat } from "./types";
 import { Message } from "@/types";
-import { INITIAL_SYSTEM_MESSAGE } from "./constants";
+import { INITIAL_SYSTEM_MESSAGE, CHEST_PAIN_SYSTEM_PROMPT } from "./constants";
+import { getStoredSystemPromptSettings } from "@/utils/settingsStorage";
 
 export const createNewChat = (projectId?: string): Chat => {
+  // Get the stored system prompt settings
+  const { pathology, systemInstructions } = getStoredSystemPromptSettings();
+  
+  // Determine which system prompt to use
+  let systemPrompt = INITIAL_SYSTEM_MESSAGE;
+  
+  if (systemInstructions) {
+    // If custom instructions are provided, use those
+    systemPrompt = systemInstructions;
+  } else if (pathology === 'iamWithST' || pathology === 'iamWithoutST' || pathology === 'aorticSyndrome') {
+    // If a pathology is selected but no custom instructions, use the default chest pain prompt
+    systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
+  }
+
   return {
     id: uuidv4(),
     title: "Nova conversa",
@@ -13,7 +28,7 @@ export const createNewChat = (projectId?: string): Chat => {
       {
         id: uuidv4(),
         role: "system",
-        content: INITIAL_SYSTEM_MESSAGE,
+        content: systemPrompt,
         createdAt: new Date().toISOString(),
       },
     ],

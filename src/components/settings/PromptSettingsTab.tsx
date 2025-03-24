@@ -8,6 +8,9 @@ import { UploadCloud, Save, FileText, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useRef } from "react";
 import { useSettingsContext } from "@/contexts/SettingsContext";
+import { useChatStore } from "@/store/chat-store";
+import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
+import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
 
 const PromptSettingsTab = () => {
   const {
@@ -21,6 +24,7 @@ const PromptSettingsTab = () => {
   
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { chats, setChats, currentChat } = useChatStore();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,6 +51,29 @@ const PromptSettingsTab = () => {
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  // Custom save handler to also update all existing chats
+  const handleSaveAndUpdateChats = () => {
+    // First save settings as normal
+    handleSave();
+    
+    // Determine which system prompt to use
+    let systemPrompt = '';
+    
+    if (systemInstructions) {
+      // If custom instructions are provided, use those
+      systemPrompt = systemInstructions;
+    } else if (pathology === 'iamWithST' || pathology === 'iamWithoutST' || pathology === 'aorticSyndrome') {
+      // If a pathology is selected but no custom instructions, use the default chest pain prompt
+      systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
+    }
+    
+    if (systemPrompt) {
+      // Update all chats with the new system prompt
+      const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
+      setChats(updatedChats);
+    }
   };
 
   return (
@@ -123,7 +150,7 @@ const PromptSettingsTab = () => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSaveAndUpdateChats} disabled={isSaving}>
           <Save className="mr-2 h-4 w-4" />
           {isSaving ? "Salvando..." : "Salvar Configuração"}
         </Button>

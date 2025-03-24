@@ -7,7 +7,7 @@ export const prepareMessagesForApi = (currentChat: Chat | null): { role: string;
   // Get system message
   const systemMessage = currentChat.messages.find(m => m.role === "system");
   
-  // Prepare messages array
+  // Prepare messages array - excluding system message for now
   const messagesToSend = currentChat.messages
     .filter((m) => m.role !== "system")
     .map((m) => ({
@@ -15,7 +15,7 @@ export const prepareMessagesForApi = (currentChat: Chat | null): { role: string;
       content: m.content,
     }));
   
-  // Add system message as the first message if it exists
+  // Always add system message as the first message if it exists
   if (systemMessage) {
     messagesToSend.unshift({
       role: systemMessage.role,
@@ -38,4 +38,38 @@ export const createFileMessage = (messageContent: string, files: File[]): string
   } else {
     return `Arquivos anexados: ${fileNames}`;
   }
+};
+
+// Add function to update system prompt in an existing chat
+export const updateChatSystemPrompt = (chat: Chat, newSystemPrompt: string): Chat => {
+  if (!chat) return chat;
+  
+  // Find the system message
+  const systemMessageIndex = chat.messages.findIndex(m => m.role === "system");
+  
+  // Clone the messages array
+  const updatedMessages = [...chat.messages];
+  
+  if (systemMessageIndex >= 0) {
+    // Update existing system message
+    updatedMessages[systemMessageIndex] = {
+      ...updatedMessages[systemMessageIndex],
+      content: newSystemPrompt
+    };
+  } else {
+    // Add new system message if it doesn't exist
+    updatedMessages.unshift({
+      id: crypto.randomUUID(),
+      role: "system",
+      content: newSystemPrompt,
+      createdAt: new Date().toISOString()
+    });
+  }
+  
+  // Return updated chat
+  return {
+    ...chat,
+    messages: updatedMessages,
+    updatedAt: new Date().toISOString()
+  };
 };
