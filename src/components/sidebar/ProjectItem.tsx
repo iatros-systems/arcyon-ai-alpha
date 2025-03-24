@@ -71,9 +71,9 @@ const ProjectItem = ({
             {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
           </button>
         )}
-        <Folder className={cn("mr-2 h-4 w-4 shrink-0", isActive && "text-primary")} />
+        <Folder className={cn("h-4 w-4 shrink-0", isActive && "text-primary")} />
         {!collapsed && (
-          <span className="truncate flex-1 text-sm font-medium">{project.name}</span>
+          <span className="truncate ml-2 flex-1 text-sm font-medium">{project.name}</span>
         )}
         
         {!collapsed && (
@@ -95,21 +95,22 @@ const ProjectItem = ({
 
       {/* Project Chats List */}
       {!collapsed && expanded && projectChats.length > 0 && (
-        <div className="mt-1 pl-6 ml-2 space-y-1 border-l-2 border-muted">
+        <div className="project-chat-list">
           {projectChats.map((chat) => (
-            <ChatItem
-              key={chat.id}
-              chat={chat}
-              collapsed={collapsed}
-              editingChatId={editingChatId}
-              editTitle={editTitle}
-              setEditTitle={setEditTitle}
-              startEditing={startEditing}
-              saveTitle={saveTitle}
-              handleKeyDown={handleKeyDown}
-              onChatSelect={onChatSelect}
-              onTogglePin={onTogglePin}
-            />
+            <div key={chat.id} className="project-chat-item">
+              <ChatItem
+                chat={chat}
+                collapsed={collapsed}
+                editingChatId={editingChatId}
+                editTitle={editTitle}
+                setEditTitle={setEditTitle}
+                startEditing={startEditing}
+                saveTitle={saveTitle}
+                handleKeyDown={handleKeyDown}
+                onChatSelect={onChatSelect}
+                onTogglePin={onTogglePin}
+              />
+            </div>
           ))}
         </div>
       )}
