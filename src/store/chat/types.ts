@@ -22,5 +22,6 @@ export interface ChatState {
   setChats: (chats: Chat[]) => void;
   updateChatTitle: (chatId: string, title: string) => void;
   toggleChatPin: (chatId: string) => void;
+  deleteChat: (chatId: string) => void;
   getChatsByProjectId: (projectId: string) => Chat[];
 }

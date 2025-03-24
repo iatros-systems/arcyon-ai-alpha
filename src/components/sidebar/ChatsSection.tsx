@@ -14,6 +14,7 @@ interface ChatsSectionProps {
   saveTitle: () => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onChatSelect: (chatId: string) => void;
+  onDeleteChat: (chatId: string) => void;
 }
 
 // Ordem de prioridade para os grupos de tempo
@@ -34,7 +35,8 @@ const ChatsSection = ({
   startEditing,
   saveTitle,
   handleKeyDown,
-  onChatSelect
+  onChatSelect,
+  onDeleteChat
 }: ChatsSectionProps) => {
   const { toggleChatPin } = useChatStore();
   
@@ -90,6 +92,7 @@ const ChatsSection = ({
                 handleKeyDown={handleKeyDown}
                 onChatSelect={onChatSelect}
                 onTogglePin={toggleChatPin}
+                onDeleteChat={onDeleteChat}
               />
             ))}
           </div>
@@ -119,6 +122,7 @@ const ChatsSection = ({
                   handleKeyDown={handleKeyDown}
                   onChatSelect={onChatSelect}
                   onTogglePin={toggleChatPin}
+                  onDeleteChat={onDeleteChat}
                 />
               ))}
             </div>

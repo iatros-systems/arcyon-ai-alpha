@@ -1,5 +1,5 @@
 
-import { MessageSquare, PenLine, Pin } from "lucide-react";
+import { MessageSquare, PenLine, Pin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ interface ChatItemProps {
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onChatSelect: (chatId: string) => void;
   onTogglePin: (chatId: string) => void;
+  onDeleteChat: (chatId: string) => void;
 }
 
 const ChatItem = ({
@@ -28,7 +29,8 @@ const ChatItem = ({
   saveTitle,
   handleKeyDown,
   onChatSelect,
-  onTogglePin
+  onTogglePin,
+  onDeleteChat
 }: ChatItemProps) => {
   return (
     <div
@@ -83,6 +85,17 @@ const ChatItem = ({
                 }}
               >
                 <PenLine className="h-3 w-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5 text-destructive hover:text-destructive" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteChat(chat.id);
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           )}

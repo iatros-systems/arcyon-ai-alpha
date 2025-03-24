@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MessageSquarePlus, Folder, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +21,7 @@ interface ProjectItemProps {
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onChatSelect: (chatId: string) => void;
   onTogglePin: (chatId: string) => void;
+  onDeleteChat: (chatId: string) => void;
 }
 
 const ProjectItem = ({ 
@@ -38,7 +38,8 @@ const ProjectItem = ({
   saveTitle,
   handleKeyDown,
   onChatSelect,
-  onTogglePin
+  onTogglePin,
+  onDeleteChat
 }: ProjectItemProps) => {
   const [expanded, setExpanded] = useState(isActive);
   
@@ -109,6 +110,7 @@ const ProjectItem = ({
                 handleKeyDown={handleKeyDown}
                 onChatSelect={onChatSelect}
                 onTogglePin={onTogglePin}
+                onDeleteChat={onDeleteChat}
               />
             </div>
           ))}

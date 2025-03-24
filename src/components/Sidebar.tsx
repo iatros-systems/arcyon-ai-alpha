@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chat-store";
 import { useSidebarState } from "@/hooks/useSidebarState";
@@ -42,7 +43,7 @@ const getChatTimeGroup = (chatDate: Date): string => {
 };
 
 const Sidebar = ({ open, setOpen }: SidebarProps) => {
-  const { chats, startNewChat, setCurrentChat, updateChatTitle, toggleChatPin } = useChatStore();
+  const { chats, startNewChat, setCurrentChat, updateChatTitle, toggleChatPin, deleteChat } = useChatStore();
   const [activeSection, setActiveSection] = useState("chats");
   const { collapsed, toggleCollapsed } = useSidebarState();
   const {
@@ -60,6 +61,12 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
     if (window.innerWidth < 768) {
       setOpen(false);
     }
+  };
+
+  // Handle chat deletion
+  const handleDeleteChat = (chatId: string) => {
+    deleteChat(chatId);
+    toast.success("Chat excluído com sucesso");
   };
 
   // Group chats by time periods
@@ -115,6 +122,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
               saveTitle={saveTitle}
               handleKeyDown={handleKeyDown}
               onChatSelect={handleChatSelect}
+              onDeleteChat={handleDeleteChat}
             />
           )}
 

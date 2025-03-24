@@ -97,6 +97,39 @@ export const useChatStore = create<ChatState>()(
         });
       },
 
+      deleteChat: (chatId) => {
+        set((state) => {
+          const updatedChats = state.chats.filter(chat => chat.id !== chatId);
+          
+          // If we're deleting the current chat, set currentChat to null
+          // The app will create a new chat automatically if needed
+          const newCurrentChat = state.currentChat?.id === chatId 
+            ? null 
+            : state.currentChat;
+            
+          // If there are other chats, mark the most recent one as current
+          if (newCurrentChat === null && updatedChats.length > 0) {
+            // Sort chats by updatedAt (most recent first)
+            const sortedChats = [...updatedChats].sort(
+              (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            );
+            
+            // Mark the most recent chat as current
+            sortedChats[0].isCurrent = true;
+            
+            return {
+              chats: sortedChats,
+              currentChat: sortedChats[0],
+            };
+          }
+          
+          return {
+            chats: updatedChats,
+            currentChat: newCurrentChat,
+          };
+        });
+      },
+
       getChatsByProjectId: (projectId) => {
         return get().chats.filter(chat => chat.projectId === projectId);
       },
