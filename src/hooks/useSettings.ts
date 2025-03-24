@@ -1,7 +1,16 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
+import { setApiKey, getApiKey, hasApiKey } from "@/services/api";
+import { 
+  getStoredModelSettings, 
+  saveModelSettings, 
+  getStoredSystemPromptSettings, 
+  saveSystemPromptSettings,
+  getStoredPassword,
+  setStoredPassword,
+  validatePassword
+} from "@/utils/settingsStorage";
 
 export function useSettings() {
   const { toast } = useToast();
@@ -26,22 +35,18 @@ export function useSettings() {
       setApiKeyState(getApiKey());
     }
     
-    // Load other settings from localStorage
-    const savedTemperature = localStorage.getItem("gemini-temperature");
-    const savedTopP = localStorage.getItem("gemini-topP");
-    const savedTopK = localStorage.getItem("gemini-topK");
-    const savedMaxTokens = localStorage.getItem("gemini-maxTokens");
-    const savedAdvancedMode = localStorage.getItem("gemini-advancedMode");
-    const savedPathology = localStorage.getItem("system-prompt-pathology");
-    const savedSystemInstructions = localStorage.getItem("system-instructions");
+    // Load model settings
+    const modelSettings = getStoredModelSettings();
+    setTemperature(modelSettings.temperature);
+    setTopP(modelSettings.topP);
+    setTopK(modelSettings.topK);
+    setMaxTokens(modelSettings.maxTokens);
+    setAdvancedMode(modelSettings.advancedMode);
     
-    if (savedTemperature) setTemperature(parseFloat(savedTemperature));
-    if (savedTopP) setTopP(parseFloat(savedTopP));
-    if (savedTopK) setTopK(parseInt(savedTopK));
-    if (savedMaxTokens) setMaxTokens(parseInt(savedMaxTokens));
-    if (savedAdvancedMode) setAdvancedMode(savedAdvancedMode === "true");
-    if (savedPathology) setPathology(savedPathology);
-    if (savedSystemInstructions) setSystemInstructions(savedSystemInstructions);
+    // Load system prompt settings
+    const promptSettings = getStoredSystemPromptSettings();
+    setPathology(promptSettings.pathology);
+    setSystemInstructions(promptSettings.systemInstructions);
   }, []);
   
   const handleSave = () => {
@@ -50,14 +55,20 @@ export function useSettings() {
       // Save API key
       setApiKey(apiKey);
       
-      // Save other settings to localStorage
-      localStorage.setItem("gemini-temperature", temperature.toString());
-      localStorage.setItem("gemini-topP", topP.toString());
-      localStorage.setItem("gemini-topK", topK.toString());
-      localStorage.setItem("gemini-maxTokens", maxTokens.toString());
-      localStorage.setItem("gemini-advancedMode", advancedMode.toString());
-      localStorage.setItem("system-prompt-pathology", pathology);
-      localStorage.setItem("system-instructions", systemInstructions);
+      // Save model settings
+      saveModelSettings({
+        temperature,
+        topP,
+        topK,
+        maxTokens,
+        advancedMode
+      });
+      
+      // Save system prompt settings
+      saveSystemPromptSettings({
+        pathology,
+        systemInstructions
+      });
       
       toast({
         title: "Configurações salvas",
@@ -84,9 +95,7 @@ export function useSettings() {
   };
   
   const handleChangePassword = () => {
-    const storedPassword = localStorage.getItem("settings-password") || "admin123";
-    
-    if (currentPassword !== storedPassword) {
+    if (!validatePassword(currentPassword)) {
       toast({
         title: "Senha atual incorreta",
         description: "A senha atual informada não corresponde à senha armazenada.",
@@ -113,7 +122,7 @@ export function useSettings() {
       return;
     }
     
-    localStorage.setItem("settings-password", newPassword);
+    setStoredPassword(newPassword);
     
     toast({
       title: "Senha alterada",

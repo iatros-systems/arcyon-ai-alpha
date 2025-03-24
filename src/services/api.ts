@@ -1,5 +1,5 @@
-
 import { GeminiResponse } from "@/types";
+import { getStoredApiKey, setStoredApiKey, hasStoredApiKey, getStoredModelSettings } from "@/utils/settingsStorage";
 
 // Since the user would need to provide their own API key in a production app
 // Here we'll allow them to input it in the app
@@ -7,18 +7,18 @@ let GEMINI_API_KEY = "";
 
 export const setApiKey = (key: string) => {
   GEMINI_API_KEY = key;
-  localStorage.setItem("gemini-api-key", key);
+  setStoredApiKey(key);
 };
 
 export const getApiKey = () => {
   if (!GEMINI_API_KEY) {
-    GEMINI_API_KEY = localStorage.getItem("gemini-api-key") || "";
+    GEMINI_API_KEY = getStoredApiKey();
   }
   return GEMINI_API_KEY;
 };
 
 export const hasApiKey = () => {
-  return !!getApiKey();
+  return hasStoredApiKey();
 };
 
 export const sendMessageToGemini = async (
@@ -31,10 +31,7 @@ export const sendMessageToGemini = async (
   }
 
   // Get model parameters from localStorage or use defaults
-  const temperature = parseFloat(localStorage.getItem("gemini-temperature") || "0.3");
-  const topP = parseFloat(localStorage.getItem("gemini-topP") || "0.85");
-  const topK = parseInt(localStorage.getItem("gemini-topK") || "40");
-  const maxOutputTokens = parseInt(localStorage.getItem("gemini-maxTokens") || "4096");
+  const { temperature, topP, topK, maxTokens: maxOutputTokens } = getStoredModelSettings();
 
   try {
     // Format messages for Gemini API
