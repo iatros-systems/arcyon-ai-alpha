@@ -7,15 +7,17 @@ import { useSidebarState } from "@/hooks/useSidebarState";
 import ChatLayout from "@/components/chat/ChatLayout";
 
 const Chat = () => {
-  const { currentChat, fetchChats } = useChatStore();
+  const { currentChat, startNewChat } = useChatStore();
   const { apiKeyDialogOpen, setApiKeyDialogOpen } = useApiKeyDialog();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const { sidebarOpen, setSidebarOpen, collapsed: sidebarCollapsed } = useSidebarState();
 
-  // Initialize: fetch all chats from Firestore
+  // Create first chat if none exists
   useEffect(() => {
-    fetchChats();
-  }, [fetchChats]);
+    if (!currentChat) {
+      startNewChat();
+    }
+  }, [currentChat, startNewChat]);
 
   return (
     <ChatLayout

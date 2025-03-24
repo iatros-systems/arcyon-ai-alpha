@@ -6,12 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 export const useChatMessages = () => {
   const [loading, setLoading] = useState(false);
-  const { 
-    currentChat, 
-    addMessage, 
-    startNewChat,
-    fetchCurrentChat
-  } = useChatStore();
+  const { currentChat, addMessage, startNewChat } = useChatStore();
   const { toast } = useToast();
 
   const handleSendMessage = async (messageContent: string, files?: File[]) => {
@@ -37,7 +32,7 @@ export const useChatMessages = () => {
       for (const file of files) {
         try {
           // Add the file info message to the chat
-          await addMessage(finalMessage, "user");
+          addMessage(finalMessage, "user");
           
           // For images
           if (file.type.startsWith('image/')) {
@@ -68,7 +63,7 @@ export const useChatMessages = () => {
                 });
                 
                 const response = await sendMessageToGemini(messagesToSend);
-                await addMessage(response, "assistant");
+                addMessage(response, "assistant");
               } catch (error) {
                 console.error("Error processing image:", error);
                 toast({
@@ -108,7 +103,7 @@ export const useChatMessages = () => {
 
     // Regular text message handling
     // Add user message to chat
-    await addMessage(finalMessage, "user");
+    addMessage(finalMessage, "user");
     
     setLoading(true);
     
@@ -142,7 +137,7 @@ export const useChatMessages = () => {
       const response = await sendMessageToGemini(messagesToSend);
       
       // Add AI response to chat
-      await addMessage(response, "assistant");
+      addMessage(response, "assistant");
     } catch (error) {
       console.error("Error sending message:", error);
       toast({

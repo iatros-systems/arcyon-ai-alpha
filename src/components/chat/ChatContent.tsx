@@ -10,28 +10,15 @@ interface ChatContentProps {
 }
 
 const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
-  const { 
-    currentChat, 
-    startNewChat, 
-    fetchCurrentChat,
-    isLoading 
-  } = useChatStore();
-  const { loading: sendingMessage, handleSendMessage } = useChatMessages();
+  const { currentChat, startNewChat } = useChatStore();
+  const { loading, handleSendMessage } = useChatMessages();
 
-  // Load current chat or create first chat if none exists
+  // Create first chat if none exists
   useEffect(() => {
-    const loadInitialChat = async () => {
-      await fetchCurrentChat();
-      
-      if (!currentChat) {
-        await startNewChat();
-      }
-    };
-    
-    loadInitialChat();
-  }, []);
-
-  const loading = isLoading || sendingMessage;
+    if (!currentChat) {
+      startNewChat();
+    }
+  }, [currentChat, startNewChat]);
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
