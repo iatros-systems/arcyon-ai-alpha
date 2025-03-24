@@ -17,7 +17,7 @@ interface ProjectsSectionProps {
 const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { projects, setCurrentProject, currentProject } = useProjectStore();
-  const { startNewChat, chats, setCurrentChat, toggleChatPin, updateChatTitle } = useChatStore();
+  const { startNewChat, chats, setCurrentChat, toggleChatPin, updateChatTitle, deleteChat } = useChatStore();
   const {
     editingChatId,
     editTitle,
@@ -42,6 +42,12 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
       // This assumes there's a setOpen function in the parent component
       // If not, you may need to add this functionality
     }
+  };
+
+  // Handle chat deletion
+  const handleDeleteChat = (chatId: string) => {
+    deleteChat(chatId);
+    toast.success("Chat excluído com sucesso");
   };
 
   // Get chats for each project
@@ -87,6 +93,7 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
                   handleKeyDown={handleKeyDown}
                   onChatSelect={handleChatSelect}
                   onTogglePin={toggleChatPin}
+                  onDeleteChat={handleDeleteChat}
                 />
               ))}
             </div>
