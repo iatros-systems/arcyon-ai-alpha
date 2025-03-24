@@ -68,7 +68,7 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
   };
 
   return (
-    <div className="border-t bg-background p-4">
+    <div className="border-t bg-background p-4 shadow-sm">
       <div className="mx-auto max-w-3xl">
         <form onSubmit={handleSubmit} className="relative">
           <div className="glass rounded-lg shadow-sm">

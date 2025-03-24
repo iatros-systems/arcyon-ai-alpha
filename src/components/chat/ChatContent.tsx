@@ -21,15 +21,19 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
   }, [currentChat, startNewChat]);
 
   return (
-    <div className="flex flex-col flex-1 overflow-hidden">
-      <ChatMessages 
-        messages={currentChat?.messages.filter(m => m.role !== "system") || []}
-        loading={loading} 
-      />
-      <ChatInput 
-        onSubmit={handleSendMessage} 
-        disabled={loading} 
-      />
+    <div className="flex flex-col flex-1 h-full relative">
+      <div className="flex-1 overflow-hidden">
+        <ChatMessages 
+          messages={currentChat?.messages.filter(m => m.role !== "system") || []}
+          loading={loading} 
+        />
+      </div>
+      <div className="sticky bottom-0 left-0 right-0 z-10">
+        <ChatInput 
+          onSubmit={handleSendMessage} 
+          disabled={loading} 
+        />
+      </div>
     </div>
   );
 };
