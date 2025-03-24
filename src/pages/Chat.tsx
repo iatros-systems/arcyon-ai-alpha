@@ -16,6 +16,23 @@ const Chat = () => {
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const { currentChat, addMessage, startNewChat } = useChatStore();
   const { toast } = useToast();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const savedState = localStorage.getItem("sidebar-collapsed");
+    return savedState ? savedState === "true" : false;
+  });
+
+  // Listen for sidebar collapse changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const collapsed = localStorage.getItem("sidebar-collapsed") === "true";
+      setSidebarCollapsed(collapsed);
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // Check if API key is configured on initial load
   useEffect(() => {
@@ -203,7 +220,9 @@ const Chat = () => {
         onOpenChange={setApiKeyDialogOpen} 
       />
       
-      <div className="flex flex-col flex-1 h-full ml-0 md:ml-72">
+      <div 
+        className={`flex flex-col flex-1 h-full ml-0 md:${sidebarCollapsed ? 'ml-16' : 'ml-72'} transition-all duration-300`}
+      >
         <ChatHeader 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
