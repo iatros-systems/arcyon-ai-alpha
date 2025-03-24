@@ -7,7 +7,7 @@ import { useSidebarState } from "@/hooks/useSidebarState";
 import ChatLayout from "@/components/chat/ChatLayout";
 
 const Chat = () => {
-  const { currentChat, startNewChat, fetchChats } = useChatStore();
+  const { currentChat, fetchChats } = useChatStore();
   const { apiKeyDialogOpen, setApiKeyDialogOpen } = useApiKeyDialog();
   const { darkMode, toggleDarkMode } = useDarkMode();
   const { sidebarOpen, setSidebarOpen, collapsed: sidebarCollapsed } = useSidebarState();
