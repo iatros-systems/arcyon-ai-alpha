@@ -51,8 +51,9 @@ const ProjectItem = ({
   };
 
   return (
-    <div className="sidebar-item group relative space-y-1">
-      <div className="flex items-center">
+    <div className="sidebar-item group relative">
+      {/* Project Header */}
+      <div className="flex items-center mb-1">
         <Button
           variant={isActive ? "secondary" : "ghost"}
           className={cn(
@@ -95,8 +96,9 @@ const ProjectItem = ({
         )}
       </div>
 
+      {/* Project Chats List */}
       {!collapsed && expanded && projectChats.length > 0 && (
-        <div className="pl-6 space-y-1">
+        <div className="pl-7 space-y-1 border-l border-muted ml-3">
           {projectChats.map((chat) => (
             <ChatItem
               key={chat.id}
