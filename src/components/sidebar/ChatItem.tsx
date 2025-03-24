@@ -60,13 +60,13 @@ const ChatItem = ({
           )}
           
           {!collapsed && (
-            <div className="flex ml-1 opacity-0 group-hover:opacity-100">
+            <div className="flex ml-1">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 className={cn(
                   "h-5 w-5",
-                  chat.pinned && "text-primary opacity-100"
+                  chat.pinned && "text-primary"
                 )}
                 onClick={(e) => {
                   e.stopPropagation();

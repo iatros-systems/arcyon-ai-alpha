@@ -10,8 +10,9 @@
   background-color: hsl(var(--muted) / 0.5);
 }
 
-/* Remove the opacity:0 default state that was hiding buttons */
+/* Make buttons visible by default, not hidden */
 .sidebar-item button {
+  opacity: 1;
   transition: opacity 0.2s;
 }
 
