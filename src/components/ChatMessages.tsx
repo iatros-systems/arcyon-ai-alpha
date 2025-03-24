@@ -78,7 +78,7 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
                   </Avatar>
                   <div className="message-content flex-1 min-w-0">
                     <div className="font-medium mb-1">
-                      {message.role === "user" ? "Você" : "Arcyon"}
+                      {message.role === "user" ? "Médico" : "Arcyon"}
                     </div>
                     <div className="prose prose-sm dark:prose-invert max-w-none">
                       <Markdown
