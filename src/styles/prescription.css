@@ -3,7 +3,7 @@
 .prescription-table {
   width: 100%;
   overflow-x: auto;
-  margin: 0.25rem 0; /* Reduced margin from 0.5rem to 0.25rem */
+  margin: 0.1rem 0; /* Reduced margin from 0.25rem to 0.1rem */
   border-radius: 0.375rem;
 }
 
@@ -11,21 +11,23 @@
   width: 100%;
   border-collapse: collapse;
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.75rem; /* Reduced from 0.875rem */
 }
 
 .prescription-table th {
   background-color: hsl(var(--muted) / 0.5);
   font-weight: 500;
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem; /* Reduced padding */
   border: 1px solid hsl(var(--border));
+  font-size: 0.75rem;
 }
 
 .prescription-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem; /* Reduced padding */
   border: 1px solid hsl(var(--border));
   vertical-align: top;
+  font-size: 0.75rem;
 }
 
 .prescription-table tr:nth-child(even) {
@@ -34,16 +36,29 @@
 
 .prescription-content {
   width: 100%;
+  font-size: 0.75rem;
 }
 
 .prescription-content table {
-  margin: 0.25rem 0; /* Reduced margin from 0.5rem to 0.25rem */
+  margin: 0.1rem 0; /* Reduced margin from 0.25rem to 0.1rem */
 }
 
 /* Reduce spacing between paragraphs and tables */
 .prescription-content p {
-  margin-top: 0.25rem; /* Reduced from 0.5rem */
-  margin-bottom: 0.25rem; /* Reduced from 0.5rem */
+  margin-top: 0.1rem; /* Reduced from 0.25rem */
+  margin-bottom: 0.1rem; /* Reduced from 0.25rem */
+}
+
+/* Reduce spacing between headers and content */
+.prescription-content h1, 
+.prescription-content h2, 
+.prescription-content h3, 
+.prescription-content h4, 
+.prescription-content h5, 
+.prescription-content h6,
+.prescription-content strong {
+  margin-top: 0.2rem;
+  margin-bottom: 0.1rem;
 }
 
 /* Reduce spacing after tables */
@@ -56,7 +71,7 @@
 .prescription-table + h4,
 .prescription-table + h5,
 .prescription-table + h6 {
-  margin-top: 0.25rem; /* Reduced from 0.5rem */
+  margin-top: 0.1rem; /* Reduced from 0.25rem */
 }
 
 /* Reduce spacing before tables */
@@ -69,7 +84,7 @@ h3 + .prescription-table,
 h4 + .prescription-table,
 h5 + .prescription-table,
 h6 + .prescription-table {
-  margin-top: 0.25rem; /* Reduced from 0.5rem */
+  margin-top: 0.1rem; /* Reduced from 0.25rem */
 }
 
 /* Estilos responsivos para tabelas em telas pequenas */
@@ -80,7 +95,7 @@ h6 + .prescription-table {
   
   .prescription-table th, 
   .prescription-table td {
-    padding: 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.4rem;
+    font-size: 0.7rem;
   }
 }

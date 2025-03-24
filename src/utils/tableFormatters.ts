@@ -86,9 +86,10 @@ export const formatMedicalPrescription = (content: string) => {
       
       // Check if we're starting a prescription section
       if (
-        line.match(/Condutas?\s+Iniciais?:|Prescrição:|Medicamentos?:/i) || 
+        line.match(/Condutas?\s+Iniciais?:|Prescrição:|Medicamentos?:|Condutas?\s+ou\s+Prescrição:/i) || 
         line === '**Condutas Iniciais:**' || 
-        line === '**Prescrição:**'
+        line === '**Prescrição:**' ||
+        line === '**Condutas ou Prescrição:**'
       ) {
         isCollectingPrescription = true;
         continue;
@@ -134,21 +135,21 @@ export const formatMedicalPrescription = (content: string) => {
           <table class="w-full border-collapse">
             <thead>
               <tr>
-                <th class="p-2 bg-muted/50 text-left font-medium">Conduta</th>
-                <th class="p-2 bg-muted/50 text-left font-medium">Dose/Comp/Amp</th>
-                <th class="p-2 bg-muted/50 text-left font-medium">Diluição</th>
-                <th class="p-2 bg-muted/50 text-left font-medium">Via de Administração</th>
-                <th class="p-2 bg-muted/50 text-left font-medium">Intervalo/horário</th>
+                <th>Conduta</th>
+                <th>Dose/Comp/Amp</th>
+                <th>Diluição</th>
+                <th>Via de Administração</th>
+                <th>Intervalo/horário</th>
               </tr>
             </thead>
             <tbody>
               ${prescriptionItems.map(item => `
-                <tr class="border-b">
-                  <td class="p-2">${item.Conduta || item.conduta || 'N/A'}</td>
-                  <td class="p-2">${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td>
-                  <td class="p-2">${item.Diluição || item.diluição || 'N/A'}</td>
-                  <td class="p-2">${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td>
-                  <td class="p-2">${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td>
+                <tr>
+                  <td>${item.Conduta || item.conduta || 'N/A'}</td>
+                  <td>${item['Dose/Comp/Amp'] || item['dose/comp/amp'] || 'N/A'}</td>
+                  <td>${item.Diluição || item.diluição || 'N/A'}</td>
+                  <td>${item['Via de Administração'] || item['via de administração'] || 'N/A'}</td>
+                  <td>${item['Intervalo/horário'] || item['intervalo/horário'] || 'N/A'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -158,9 +159,9 @@ export const formatMedicalPrescription = (content: string) => {
       
       // Replace prescription section with formatted table - reduce whitespace and improve spacing
       return content.replace(
-        new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
+        new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:|\\*\\*Condutas\\s+ou\\s+Prescrição:\\*\\*)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `${prefix}\n${tableContent}\n${suffix.trim()}`;
+          return `${prefix.trim()}\n${tableContent}\n${suffix.trim()}`;
         }
       );
     }

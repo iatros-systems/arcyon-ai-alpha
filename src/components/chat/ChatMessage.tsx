@@ -43,10 +43,10 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <div className="font-medium mb-0.5">
             {message.role === "user" ? "Médico" : "Arcyon"}
           </div>
-          <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+          <div className="prose prose-xs dark:prose-invert max-w-none text-left text-sm">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left space-y-1"
+                className="prescription-content text-left text-sm"
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
@@ -66,19 +66,19 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                         language={match[1]}
                         style={nord}
                         PreTag="div"
-                        className="rounded-md"
+                        className="rounded-md text-sm"
                       >
                         {String(children).replace(/\n$/, '')}
                       </SyntaxHighlighter>
                     ) : (
-                      <code {...rest} className="px-1 py-0.5 rounded bg-muted">
+                      <code {...rest} className="px-1 py-0.5 rounded bg-muted text-sm">
                         {children}
                       </code>
                     );
                   },
                   table(props) {
                     return (
-                      <div className="my-4 overflow-x-auto rounded-md border">
+                      <div className="my-2 overflow-x-auto rounded-md border">
                         <Table className="w-full">{props.children}</Table>
                       </div>
                     );
@@ -93,10 +93,10 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                     return <TableRow>{props.children}</TableRow>;
                   },
                   th(props) {
-                    return <TableHead className="font-semibold bg-muted/50">{props.children}</TableHead>;
+                    return <TableHead className="font-semibold bg-muted/50 text-xs">{props.children}</TableHead>;
                   },
                   td(props) {
-                    return <TableCell className="p-2">{props.children}</TableCell>;
+                    return <TableCell className="p-2 text-xs">{props.children}</TableCell>;
                   },
                 }}
               >
