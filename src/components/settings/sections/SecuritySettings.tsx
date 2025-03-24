@@ -13,7 +13,7 @@ const SecuritySettings = () => {
 
   const handleCloseAllSessions = () => {
     // Implementação futura: lógica para encerrar todas as sessões
-    console.log("Encerrando todas as sessões");
+    console.log("Fechando todas as sessões");
   };
 
   return (
@@ -44,7 +44,7 @@ const SecuritySettings = () => {
         <CardHeader className="p-4">
           <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
             <div className="space-y-1 max-w-[80%]">
-              <CardTitle className="text-base font-medium">Encerrar sessão em todos os dispositivos</CardTitle>
+              <CardTitle className="text-base font-medium">Fechar sessão em todos os dispositivos</CardTitle>
               <CardDescription className="text-xs">
                 Encerra todas as sessões ativas em todos os dispositivos, 
                 incluída a sessão atual. Em outros dispositivos, o encerramento 
@@ -57,7 +57,7 @@ const SecuritySettings = () => {
               size="sm"
               className="whitespace-nowrap"
             >
-              Encerrar todas as sessões
+              Fechar todas as sessões
             </Button>
           </div>
         </CardHeader>
