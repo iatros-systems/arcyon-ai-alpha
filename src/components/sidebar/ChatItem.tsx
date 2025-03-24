@@ -40,7 +40,7 @@ const ChatItem = ({
       )}
       onClick={() => onChatSelect(chat.id)}
     >
-      <MessageSquare className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+      <MessageSquare className="h-3.5 w-3.5 mr-0 flex-shrink-0" />
       
       {editingChatId === chat.id && !collapsed ? (
         <Input
@@ -54,7 +54,7 @@ const ChatItem = ({
       ) : (
         <>
           {!collapsed && (
-            <span className="text-sm truncate flex-1 pr-0">{chat.title}</span>
+            <span className="text-sm truncate flex-1 pl-2">{chat.title}</span>
           )}
           
           {!collapsed && (
