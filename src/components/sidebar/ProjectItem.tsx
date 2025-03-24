@@ -39,7 +39,7 @@ const ProjectItem = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-6 w-6 absolute right-1 top-1/2 transform -translate-y-1/2 transition-opacity"
           onClick={(e) => {
             e.stopPropagation();
             onNewChat(project.id);

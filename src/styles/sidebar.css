@@ -9,11 +9,12 @@
   background-color: hsl(var(--muted) / 0.5);
 }
 
+/* Remove the opacity:0 default state that was hiding buttons */
 .sidebar-item button {
-  opacity: 0;
   transition: opacity 0.2s;
 }
 
+/* Keep hover effect for better user experience */
 .sidebar-item:hover button, .sidebar-item:focus-within button {
   opacity: 1;
 }
