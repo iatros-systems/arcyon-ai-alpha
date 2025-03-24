@@ -66,7 +66,7 @@ const ChatHeader = ({
         >
           <Link to="/settings">
             <Settings className="h-4 w-4 mr-2" />
-            Configurações
+            Configurações do chat
           </Link>
         </Button>
       </div>
