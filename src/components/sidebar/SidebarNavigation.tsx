@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { MessageSquare, User2, FolderOpen } from "lucide-react";
+import { MessageSquare, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SidebarNavigationProps {
@@ -35,18 +35,6 @@ const SidebarNavigation = ({ activeSection, collapsed, setActiveSection }: Sideb
       >
         <FolderOpen className="mr-2 h-4 w-4" />
         {!collapsed && "Proyectos"}
-      </Button>
-      <Button
-        variant="ghost"
-        className={cn(
-          "flex-1 justify-center rounded-none border-b-2 border-transparent",
-          activeSection === "patients" && "border-primary",
-          collapsed && "p-0"
-        )}
-        onClick={() => setActiveSection("patients")}
-      >
-        <User2 className="mr-2 h-4 w-4" />
-        {!collapsed && "Pacientes"}
       </Button>
     </div>
   );
