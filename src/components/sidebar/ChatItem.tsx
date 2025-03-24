@@ -1,9 +1,15 @@
 
-import { MessageSquare, PenLine, Pin, Trash2 } from "lucide-react";
+import { EllipsisVertical, MessageSquare, PenLine, Pin, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Chat } from "@/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ChatItemProps {
   chat: Chat;
@@ -60,43 +66,54 @@ const ChatItem = ({
           )}
           
           {!collapsed && (
-            <div className="flex ml-1">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={cn(
-                  "h-5 w-5",
-                  chat.pinned && "text-primary"
-                )}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePin(chat.id);
-                }}
-              >
-                <Pin className="h-3 w-3" fill={chat.pinned ? "currentColor" : "none"} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-5 w-5" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startEditing(chat.id, chat.title);
-                }}
-              >
-                <PenLine className="h-3 w-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-5 w-5 text-destructive hover:text-destructive" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteChat(chat.id);
-                }}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
+            <div className="ml-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-5 w-5" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <EllipsisVertical className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                
+                <DropdownMenuContent align="end" className="w-40 bg-popover">
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTogglePin(chat.id);
+                    }}
+                  >
+                    <Pin className="mr-2 h-4 w-4" fill={chat.pinned ? "currentColor" : "none"} />
+                    {chat.pinned ? "Desafixar" : "Fixar"}
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startEditing(chat.id, chat.title);
+                    }}
+                  >
+                    <PenLine className="mr-2 h-4 w-4" />
+                    Renomear
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem 
+                    className="text-destructive focus:text-destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteChat(chat.id);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </>
