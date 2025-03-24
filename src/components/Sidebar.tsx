@@ -6,7 +6,9 @@ import {
   User2, 
   Stethoscope, 
   PenLine, 
-  FolderPlus
+  FolderPlus,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -58,6 +60,11 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
     }
   };
 
+  // Toggle sidebar
+  const toggleSidebar = () => {
+    setOpen(!open);
+  };
+
   // Group chats by date
   const groupedChats = chats.reduce((acc: Record<string, typeof chats>, chat) => {
     const date = new Date(chat.createdAt).toLocaleDateString();
@@ -70,15 +77,28 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
 
   return (
     <div className="relative flex h-full">
+      {/* Collapse button - fixed positioned outside the sidebar */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn(
+          "fixed z-50 top-2 bg-background rounded-md shadow-sm",
+          open ? "left-64 md:left-[17rem]" : "left-2"
+        )}
+        onClick={toggleSidebar}
+      >
+        {open ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+      </Button>
+
       {/* Full sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-full w-72 flex-col border-r bg-background transition-transform duration-300 ease-in-out md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex h-full w-72 flex-col border-r bg-background transition-transform duration-300 ease-in-out md:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex h-14 items-center border-b px-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-1">
             <div className="h-8 w-8 bg-iatros-blue rounded-md flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                 <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />

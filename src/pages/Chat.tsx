@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import ChatHeader from "@/components/ChatHeader";
 import Sidebar from "@/components/Sidebar";
@@ -8,9 +7,10 @@ import ApiKeyDialog from "@/components/ApiKeyDialog";
 import { useChatStore } from "@/store/chat-store";
 import { hasApiKey, sendMessageToGemini } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 const Chat = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
@@ -34,6 +34,19 @@ const Chat = () => {
       document.documentElement.classList.remove("dark");
     }
   }, []);
+
+  // Remember sidebar state in localStorage
+  useEffect(() => {
+    const savedSidebarState = localStorage.getItem("sidebarOpen");
+    if (savedSidebarState !== null) {
+      setSidebarOpen(savedSidebarState === "true");
+    }
+  }, []);
+
+  // Save sidebar state when changed
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", sidebarOpen.toString());
+  }, [sidebarOpen]);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
@@ -203,7 +216,12 @@ const Chat = () => {
         onOpenChange={setApiKeyDialogOpen} 
       />
       
-      <div className="flex flex-col flex-1 h-full ml-0 md:ml-72">
+      <div 
+        className={cn(
+          "flex flex-col flex-1 h-full transition-all duration-300",
+          sidebarOpen ? "ml-0 md:ml-72" : "ml-0"
+        )}
+      >
         <ChatHeader 
           sidebarOpen={sidebarOpen} 
           setSidebarOpen={setSidebarOpen} 
