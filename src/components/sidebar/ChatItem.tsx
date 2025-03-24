@@ -1,5 +1,5 @@
 
-import { MessageSquare, Stethoscope, PenLine, Pin } from "lucide-react";
+import { MessageSquare, PenLine, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -52,11 +52,7 @@ const ChatItem = ({
         </div>
       ) : (
         <div className="flex items-center gap-2" onClick={() => onChatSelect(chat.id)}>
-          {chat.type === "chest-pain" ? (
-            <Stethoscope className="h-4 w-4 text-iatros-blue" />
-          ) : (
-            <MessageSquare className="h-4 w-4" />
-          )}
+          <MessageSquare className="h-4 w-4" />
           {!collapsed && (
             <>
               <span className="text-sm truncate flex-1">{chat.title}</span>
