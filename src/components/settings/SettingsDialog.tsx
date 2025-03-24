@@ -18,6 +18,7 @@ import NotificationsSettings from "./sections/NotificationsSettings";
 import AppsSettings from "./sections/AppsSettings";
 import DataSettings from "./sections/DataSettings";
 import ProfileSettings from "./sections/ProfileSettings";
+import InvitesSettings from "./sections/InvitesSettings";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -71,6 +72,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         return <DataSettings />;
       case "profile":
         return <ProfileSettings />;
+      case "invites":
+        return <InvitesSettings />;
       default:
         return <SectionPlaceholder />;
     }

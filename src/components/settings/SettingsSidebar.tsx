@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Settings, Bell, Paintbrush, Headphones, Database, User, Share2, ShieldCheck } from "lucide-react";
+import { Settings, Bell, Paintbrush, Headphones, Database, User, Share2, ShieldCheck, Mail } from "lucide-react";
 
 interface SettingsSidebarProps {
   activeSection: string;
@@ -74,6 +74,15 @@ const SettingsSidebar = ({ activeSection, setActiveSection }: SettingsSidebarPro
             <Share2 className="mr-2 h-4 w-4" />
             <span className="text-left leading-tight">Aplicações<br />conectadas</span>
           </div>
+        </Button>
+        
+        <Button 
+          variant={activeSection === "invites" ? "secondary" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => setActiveSection("invites")}
+        >
+          <Mail className="mr-2 h-4 w-4" />
+          Convites para registros
         </Button>
         
         <Button 
