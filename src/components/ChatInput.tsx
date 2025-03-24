@@ -2,18 +2,20 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Paperclip, Mic, MicOff } from "lucide-react";
+import { Send, Paperclip, Mic, MicOff, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
-  onSubmit: (message: string) => void;
+  onSubmit: (message: string, files?: File[]) => void;
   disabled: boolean;
 }
 
 const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -25,9 +27,10 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !disabled) {
-      onSubmit(input);
+    if ((input.trim() || selectedFiles.length > 0) && !disabled) {
+      onSubmit(input, selectedFiles.length > 0 ? selectedFiles : undefined);
       setInput("");
+      setSelectedFiles([]);
       // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
@@ -47,12 +50,47 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
     // In a real app, this would handle speech recognition
   };
 
+  const handleFileClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="border-t bg-background p-4">
       <div className="mx-auto max-w-3xl">
         <form onSubmit={handleSubmit} className="relative">
           <div className="glass rounded-lg shadow-sm">
-            <div className="flex">
+            <div className="flex flex-col">
+              {selectedFiles.length > 0 && (
+                <div className="px-4 pt-2 flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-1 bg-muted rounded-md px-2 py-1 text-xs">
+                      <span className="truncate max-w-[150px]">{file.name}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 p-0"
+                        onClick={() => removeFile(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <Textarea
                 ref={textareaRef}
                 value={input}
@@ -65,7 +103,22 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
             </div>
             <div className="flex items-center justify-between p-2">
               <div className="flex gap-1">
-                <Button type="button" size="icon" variant="ghost" disabled={disabled}>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept=".png,.jpg,.jpeg,.pdf"
+                  multiple
+                  onChange={handleFileChange}
+                  disabled={disabled}
+                />
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={handleFileClick}
+                  disabled={disabled}
+                >
                   <Paperclip className="h-4 w-4" />
                 </Button>
                 <Button 
@@ -82,9 +135,9 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
                 type="submit" 
                 size="icon" 
                 className={cn(
-                  disabled || !input.trim() ? "opacity-50 cursor-not-allowed" : ""
+                  disabled || (!input.trim() && selectedFiles.length === 0) ? "opacity-50 cursor-not-allowed" : ""
                 )}
-                disabled={disabled || !input.trim()}
+                disabled={disabled || (!input.trim() && selectedFiles.length === 0)}
               >
                 <Send className="h-4 w-4" />
               </Button>

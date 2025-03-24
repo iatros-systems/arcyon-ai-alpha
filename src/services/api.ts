@@ -1,3 +1,4 @@
+
 import { GeminiResponse } from "@/types";
 import { getStoredApiKey, setStoredApiKey, hasStoredApiKey, getStoredModelSettings } from "@/utils/settingsStorage";
 
@@ -36,12 +37,43 @@ export const sendMessageToGemini = async (
   try {
     // Format messages for Gemini API
     const formattedMessages = messages.map(msg => {
+      // Check if the message contains an image (base64 data)
+      const isImageMessage = msg.content.includes('[Imagem:') && msg.content.includes('data:image/');
+      
       // Convert 'user' and 'assistant' roles to match Gemini's expected format
       let role = msg.role;
       if (role === "user") role = "user";
       if (role === "assistant") role = "model";
       if (role === "system") role = "user"; // Gemini doesn't have a system role, prepend to first user message
       
+      // If this is an image message, format it specially for the Gemini 1.5 API
+      if (isImageMessage && role === "user") {
+        const contentParts = [];
+        
+        // Extract the base64 data from the message
+        const base64Match = msg.content.match(/data:image\/[^;]+;base64,([^"]+)/);
+        const textContent = msg.content.split('\n')[0]; // Get the text part
+        
+        // Add the text part
+        contentParts.push({ text: textContent });
+        
+        // Add the image part if we found base64 data
+        if (base64Match && base64Match[1]) {
+          contentParts.push({
+            inlineData: {
+              mimeType: msg.content.includes('data:image/png') ? 'image/png' : 'image/jpeg',
+              data: base64Match[1]
+            }
+          });
+        }
+        
+        return {
+          role,
+          parts: contentParts
+        };
+      }
+      
+      // Regular text message
       return {
         role,
         parts: [{ text: msg.content }]
