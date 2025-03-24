@@ -183,10 +183,10 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
       <div className="border-t p-4">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-iatros-blue flex items-center justify-center text-white">
-            GM
+            RF
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Dr. Geoffrey Moraes</p>
+            <p className="text-sm font-medium truncate">Dr. Romulo Farias</p>
             <p className="text-xs text-muted-foreground truncate">Emergência</p>
           </div>
         </div>
