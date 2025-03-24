@@ -59,7 +59,7 @@ export const formatMedicalTable = (content: string) => {
         `;
         
         // Replace table in original content
-        return `${contentBeforeTable}\n\n${tableHtml}\n\n${contentAfterTable}`;
+        return `${contentBeforeTable}\n${tableHtml}\n${contentAfterTable}`;
       }
     }
   }
@@ -156,11 +156,11 @@ export const formatMedicalPrescription = (content: string) => {
         </div>
       `;
       
-      // Replace prescription section with formatted table
+      // Replace prescription section with formatted table - reduce whitespace
       return content.replace(
         new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `**Condutas Iniciais:**\n\n${tableContent}\n\n${suffix}`;
+          return `**Condutas Iniciais:**\n${tableContent}\n${suffix}`;
         }
       );
     }
