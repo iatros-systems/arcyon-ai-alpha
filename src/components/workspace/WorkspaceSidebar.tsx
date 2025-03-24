@@ -72,13 +72,13 @@ const WorkspaceSidebar = ({ activeSection = "members" }: WorkspaceSidebarProps) 
         <div className="px-3 space-y-1 mb-2">
           <WorkspaceSidebarItem 
             icon={<Users className="h-4 w-4" />} 
-            label="Miembros" 
+            label="Membros" 
             href="/workspace/members"
             isActive={activeSection === "members"}
           />
           <WorkspaceSidebarItem 
             icon={<FileText className="h-4 w-4" />} 
-            label="Facturación" 
+            label="Cobrança" 
             href="/workspace/billing"
             isActive={activeSection === "billing"}
           />
@@ -90,7 +90,7 @@ const WorkspaceSidebar = ({ activeSection = "members" }: WorkspaceSidebarProps) 
           />
           <WorkspaceSidebarItem 
             icon={<Settings className="h-4 w-4" />} 
-            label="Configuración" 
+            label="Configuração" 
             href="/workspace/settings"
             isActive={activeSection === "settings"}
           />
@@ -106,13 +106,13 @@ const WorkspaceSidebar = ({ activeSection = "members" }: WorkspaceSidebarProps) 
             />
             <WorkspaceSidebarItem 
               icon={<BarChart2 className="h-4 w-4" />} 
-              label="Análisis" 
+              label="Análises" 
               href="/workspace/analytics"
               isActive={activeSection === "analytics"}
             />
             <WorkspaceSidebarItem 
               icon={<ShieldCheck className="h-4 w-4" />} 
-              label="Identidad y aprovisionamiento" 
+              label="Identidade e provisionamento" 
               href="/workspace/identity"
               isActive={activeSection === "identity"}
             />
