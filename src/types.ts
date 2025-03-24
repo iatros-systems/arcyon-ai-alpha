@@ -16,3 +16,14 @@ export interface Chat {
   createdAt: string;
   updatedAt: string;
 }
+
+// Add GeminiResponse interface for the API
+export interface GeminiResponse {
+  candidates: {
+    content: {
+      parts: {
+        text: string;
+      }[];
+    };
+  }[];
+}
