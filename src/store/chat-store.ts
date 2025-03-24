@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChatState } from "./chat/types";
@@ -7,7 +6,8 @@ import {
   createMessage, 
   updateChatWithMessage, 
   markChatAsCurrent,
-  updateChatTitleById
+  updateChatTitleById,
+  toggleChatPinById
 } from "./chat/chat-actions";
 
 export const useChatStore = create<ChatState>()(
@@ -69,6 +69,22 @@ export const useChatStore = create<ChatState>()(
             state.chats, 
             chatId, 
             title
+          );
+          
+          return {
+            chats: updatedChats,
+            currentChat: state.currentChat?.id === chatId
+              ? updatedCurrentChat
+              : state.currentChat,
+          };
+        });
+      },
+
+      toggleChatPin: (chatId) => {
+        set((state) => {
+          const { updatedChats, updatedCurrentChat } = toggleChatPinById(
+            state.chats, 
+            chatId
           );
           
           return {

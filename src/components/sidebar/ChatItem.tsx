@@ -1,5 +1,5 @@
 
-import { MessageSquare, Stethoscope, PenLine } from "lucide-react";
+import { MessageSquare, Stethoscope, PenLine, Pin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ interface ChatItemProps {
   saveTitle: () => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   onChatSelect: (chatId: string) => void;
+  onTogglePin: (chatId: string) => void;
 }
 
 const ChatItem = ({
@@ -26,14 +27,16 @@ const ChatItem = ({
   startEditing,
   saveTitle,
   handleKeyDown,
-  onChatSelect
+  onChatSelect,
+  onTogglePin
 }: ChatItemProps) => {
   return (
     <div
       key={chat.id}
       className={cn(
         "sidebar-item p-2 cursor-pointer",
-        chat.isCurrent && "active"
+        chat.isCurrent && "active",
+        chat.pinned && "border-l-2 border-iatros-blue"
       )}
     >
       {editingChatId === chat.id && !collapsed ? (
@@ -57,17 +60,33 @@ const ChatItem = ({
           {!collapsed && (
             <>
               <span className="text-sm truncate flex-1">{chat.title}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startEditing(chat.id, chat.title);
-                }}
-              >
-                <PenLine className="h-3 w-3" />
-              </Button>
+              <div className="flex gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={cn(
+                    "h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100",
+                    chat.pinned && "text-iatros-blue opacity-100"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onTogglePin(chat.id);
+                  }}
+                >
+                  <Pin className="h-3 w-3" fill={chat.pinned ? "currentColor" : "none"} />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEditing(chat.id, chat.title);
+                  }}
+                >
+                  <PenLine className="h-3 w-3" />
+                </Button>
+              </div>
             </>
           )}
         </div>

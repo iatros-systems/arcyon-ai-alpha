@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from "uuid";
 import { Chat, Message } from "@/types";
 import { CHEST_PAIN_SYSTEM_PROMPT } from "./constants";
@@ -21,6 +20,7 @@ export const createNewChat = (): Chat => {
     updatedAt: new Date(),
     isCurrent: true,
     type: "chest-pain",
+    pinned: false,
   };
 };
 
@@ -76,6 +76,22 @@ export const updateChatTitleById = (
   const now = new Date();
   const updatedChats = chats.map((chat) =>
     chat.id === chatId ? { ...chat, title, updatedAt: now } : chat
+  );
+  
+  const updatedCurrentChat = updatedChats.find(chat => chat.id === chatId) || null;
+  
+  return { updatedChats, updatedCurrentChat };
+};
+
+export const toggleChatPinById = (
+  chats: Chat[],
+  chatId: string
+): { updatedChats: Chat[], updatedCurrentChat: Chat | null } => {
+  const now = new Date();
+  const updatedChats = chats.map((chat) =>
+    chat.id === chatId 
+      ? { ...chat, pinned: !chat.pinned, updatedAt: now }
+      : chat
   );
   
   const updatedCurrentChat = updatedChats.find(chat => chat.id === chatId) || null;

@@ -14,6 +14,7 @@ export interface Chat {
   updatedAt: Date;
   isCurrent: boolean;
   type: "general" | "chest-pain";
+  pinned?: boolean;
 }
 
 export interface ChestPainDetails {

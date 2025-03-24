@@ -9,4 +9,5 @@ export interface ChatState {
   setCurrentChat: (chatId: string) => void;
   setChats: (chats: Chat[]) => void;
   updateChatTitle: (chatId: string, title: string) => void;
+  toggleChatPin: (chatId: string) => void;
 }
