@@ -18,11 +18,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "message-container p-3 rounded-lg", 
+        "message-container p-4 rounded-lg mb-4", 
         message.role === "user" ? "user" : "ai"
       )}
     >
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
             {message.role === "user" ? (
@@ -44,11 +44,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           </div>
         </div>
         
-        <div className="message-content pl-10"> {/* Added left padding to align with avatar */}
-          <div className="prose prose-xs dark:prose-invert max-w-none text-left text-sm">
+        <div className="message-content pl-10 overflow-x-auto w-full"> 
+          <div className="prose prose-sm dark:prose-invert max-w-none text-left">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left text-xs space-y-0"
+                className="prescription-content text-left text-sm space-y-0"
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {

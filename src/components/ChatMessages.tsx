@@ -22,12 +22,12 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
   }, [messages, loading]);
 
   return (
-    <ScrollArea className="flex-1 p-4">
-      <div className="max-w-3xl mx-auto">
+    <ScrollArea className="flex-1 p-4 h-full">
+      <div className="max-w-3xl mx-auto pb-6">
         {messages.length === 0 ? (
           <EmptyChat />
         ) : (
-          <div className="space-y-4 py-2"> {/* Changed back to space-y-4 for better spacing between messages */}
+          <div className="space-y-6 py-2">
             {messages.map((message, index) => (
               <ChatMessage key={index} message={message} />
             ))}
