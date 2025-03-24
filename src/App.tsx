@@ -16,6 +16,7 @@ import "./styles/prescription.css";
 import WorkspaceLayout from "./pages/workspace/WorkspaceLayout";
 import WorkspaceHome from "./pages/workspace/WorkspaceHome";
 import WorkspaceMembers from "./pages/workspace/WorkspaceMembers";
+import WorkspaceBilling from "./pages/workspace/WorkspaceBilling";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => {
               <Route path="/workspace" element={<WorkspaceLayout />}>
                 <Route index element={<WorkspaceHome />} />
                 <Route path="members" element={<WorkspaceMembers />} />
+                <Route path="billing" element={<WorkspaceBilling />} />
               </Route>
               <Route 
                 path="/settings" 
