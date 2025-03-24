@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import SettingsSidebar from "./SettingsSidebar";
 import GeneralSettings from "./sections/GeneralSettings";
@@ -21,26 +20,14 @@ interface SettingsDialogProps {
 const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [activeSection, setActiveSection] = useState("general");
   
-  // Gerencia os estilos do corpo da página quando o componente é montado/desmontado
+  // Garantimos que o body esteja navegável quando o componente é desmontado
   useEffect(() => {
-    // Quando o componente é desmontado, garantimos que o body esteja com os estilos de navegação normalizados
     return () => {
-      document.body.style.pointerEvents = "";
-      document.body.style.overflow = "";
+      document.body.style.removeProperty("pointerEvents");
+      document.body.style.removeProperty("overflow");
     };
   }, []);
 
-  // Quando o estado do diálogo muda, atualizamos os estilos do body
-  useEffect(() => {
-    if (open) {
-      // Não precisamos fazer nada especial quando o modal abre
-    } else {
-      // Quando fechamos, restauramos imediatamente os estilos do body
-      document.body.style.pointerEvents = "";
-      document.body.style.overflow = "";
-    }
-  }, [open]);
-  
   const renderActiveSection = () => {
     switch (activeSection) {
       case "general":
@@ -53,12 +40,11 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   };
   
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
-        <SheetHeader className="mb-4">
-          <SheetTitle>Configurações</SheetTitle>
-          
-        </SheetHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+        <DialogHeader className="mb-4">
+          <DialogTitle>Configurações</DialogTitle>
+        </DialogHeader>
         
         <div className="flex h-[calc(100vh-6rem)]">
           {/* Sidebar menu */}
@@ -72,8 +58,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
             {renderActiveSection()}
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -32,8 +32,8 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
     setSettingsOpen(open);
     // Garantimos que o body esteja navegável quando o modal é fechado
     if (!open) {
-      document.body.style.pointerEvents = "";
-      document.body.style.overflow = "";
+      document.body.style.removeProperty("pointerEvents");
+      document.body.style.removeProperty("overflow");
     }
   };
 
