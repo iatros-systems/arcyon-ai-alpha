@@ -1,100 +1,111 @@
-import { v4 as uuidv4 } from "uuid";
-import { Chat, Message } from "@/types";
-import { CHEST_PAIN_SYSTEM_PROMPT } from "./constants";
 
-export const createNewChat = (): Chat => {
-  const newChatId = uuidv4();
-  
+import { v4 as uuidv4 } from "uuid";
+import { Chat } from "./types";
+import { Message } from "@/types";
+import { INITIAL_SYSTEM_MESSAGE } from "./constants";
+
+export const createNewChat = (projectId?: string): Chat => {
   return {
-    id: newChatId,
+    id: uuidv4(),
     title: "Nova conversa",
+    projectId,
     messages: [
       {
         id: uuidv4(),
-        content: CHEST_PAIN_SYSTEM_PROMPT,
         role: "system",
-        createdAt: new Date(),
-      }
+        content: INITIAL_SYSTEM_MESSAGE,
+        createdAt: new Date().toISOString(),
+      },
     ],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    isCurrent: true,
-    type: "chest-pain",
     pinned: false,
+    isCurrent: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 };
 
-export const createMessage = (content: string, role: "user" | "assistant" | "system"): Message => {
+export const createMessage = (content: string, role: string): Message => {
   return {
     id: uuidv4(),
-    content,
     role,
-    createdAt: new Date(),
+    content,
+    createdAt: new Date().toISOString(),
   };
 };
 
 export const updateChatWithMessage = (
-  currentChat: Chat | null, 
+  chat: Chat,
   message: Message
 ): Chat | null => {
-  if (!currentChat) return null;
+  if (!chat) return null;
 
-  // Update current chat with new message
-  const updatedChat = {
-    ...currentChat,
-    messages: [...currentChat.messages, message],
-    updatedAt: new Date(),
-  };
+  // Update title if this is the first user message
+  let newTitle = chat.title;
+  if (
+    chat.title === "Nova conversa" &&
+    message.role === "user" &&
+    chat.messages.filter((m) => m.role === "user").length === 0
+  ) {
+    // Extract title from the first few words of the message
+    newTitle = message.content.slice(0, 30);
+    if (message.content.length > 30) {
+      newTitle += "...";
+    }
+  }
 
-  // If this is the first user message, update the title
-  const isFirstUserMessage = 
-    currentChat.messages.filter(m => m.role === "user").length === 0 && 
-    message.role === "user";
-  
-  const newTitle = isFirstUserMessage 
-    ? message.content.slice(0, 30) + (message.content.length > 30 ? "..." : "") 
-    : updatedChat.title;
-
+  // Create a new chat object with the updated message and possibly new title
   return {
-    ...updatedChat,
+    ...chat,
     title: newTitle,
+    messages: [...chat.messages, message],
+    updatedAt: new Date().toISOString(),
   };
 };
 
-export const markChatAsCurrent = (chats: Chat[], selectedChatId: string): Chat[] => {
+export const markChatAsCurrent = (chats: Chat[], chatId: string): Chat[] => {
   return chats.map((chat) => ({
     ...chat,
-    isCurrent: chat.id === selectedChatId,
+    isCurrent: chat.id === chatId,
   }));
 };
 
 export const updateChatTitleById = (
-  chats: Chat[], 
-  chatId: string, 
+  chats: Chat[],
+  chatId: string,
   title: string
-): { updatedChats: Chat[], updatedCurrentChat: Chat | null } => {
-  const now = new Date();
+) => {
   const updatedChats = chats.map((chat) =>
-    chat.id === chatId ? { ...chat, title, updatedAt: now } : chat
+    chat.id === chatId
+      ? {
+          ...chat,
+          title,
+          updatedAt: new Date().toISOString(),
+        }
+      : chat
   );
-  
-  const updatedCurrentChat = updatedChats.find(chat => chat.id === chatId) || null;
-  
+
+  const updatedCurrentChat =
+    updatedChats.find((chat) => chat.id === chatId) || null;
+
   return { updatedChats, updatedCurrentChat };
 };
 
 export const toggleChatPinById = (
   chats: Chat[],
   chatId: string
-): { updatedChats: Chat[], updatedCurrentChat: Chat | null } => {
-  const now = new Date();
+) => {
   const updatedChats = chats.map((chat) =>
-    chat.id === chatId 
-      ? { ...chat, pinned: !chat.pinned, updatedAt: now }
+    chat.id === chatId
+      ? {
+          ...chat,
+          pinned: !chat.pinned,
+          updatedAt: new Date().toISOString(),
+        }
       : chat
   );
-  
-  const updatedCurrentChat = updatedChats.find(chat => chat.id === chatId) || null;
-  
+
+  const updatedCurrentChat =
+    updatedChats.find((chat) => chat.id === chatId) || null;
+
   return { updatedChats, updatedCurrentChat };
 };

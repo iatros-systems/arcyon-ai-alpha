@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChatState } from "./chat/types";
@@ -16,8 +17,8 @@ export const useChatStore = create<ChatState>()(
       chats: [],
       currentChat: null,
       
-      startNewChat: () => {
-        const newChat = createNewChat();
+      startNewChat: (projectId?: string) => {
+        const newChat = createNewChat(projectId);
 
         set((state) => ({
           chats: [
@@ -94,6 +95,10 @@ export const useChatStore = create<ChatState>()(
               : state.currentChat,
           };
         });
+      },
+
+      getChatsByProjectId: (projectId) => {
+        return get().chats.filter(chat => chat.projectId === projectId);
       },
     }),
     {

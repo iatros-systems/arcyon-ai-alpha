@@ -8,6 +8,7 @@ import SidebarHeader from "./sidebar/SidebarHeader";
 import SidebarNewChat from "./sidebar/SidebarNewChat";
 import SidebarNavigation from "./sidebar/SidebarNavigation";
 import ChatsSection from "./sidebar/ChatsSection";
+import ProjectsSection from "./sidebar/ProjectsSection";
 import PatientsSection from "./sidebar/PatientsSection";
 import SidebarFooter from "./sidebar/SidebarFooter";
 import { Chat } from "@/types";
@@ -91,7 +92,7 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
         
         <SidebarNewChat 
           collapsed={collapsed} 
-          onNewChat={startNewChat} 
+          onNewChat={() => startNewChat()} 
         />
 
         <SidebarNavigation 
@@ -113,6 +114,10 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
               handleKeyDown={handleKeyDown}
               onChatSelect={handleChatSelect}
             />
+          )}
+
+          {activeSection === "projects" && (
+            <ProjectsSection collapsed={collapsed} />
           )}
 
           {activeSection === "patients" && (

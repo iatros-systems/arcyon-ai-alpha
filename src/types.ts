@@ -1,50 +1,18 @@
 
 export interface Message {
   id: string;
+  role: string;
   content: string;
-  role: "user" | "assistant" | "system";
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface Chat {
   id: string;
   title: string;
+  projectId?: string;
   messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
+  pinned: boolean;
   isCurrent: boolean;
-  type: "general" | "chest-pain";
-  pinned?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
-
-export interface ChestPainDetails {
-  age?: number;
-  gender?: string;
-  painType?: string;
-  duration?: string;
-  riskFactors?: string[];
-  ecgFindings?: string;
-  troponinLevel?: string;
-  painLocation?: string;
-  painIntensity?: number;
-  painCharacteristics?: string;
-  painModifyingFactors?: string;
-  vitals?: {
-    bloodPressure?: string;
-    heartRate?: number;
-    respiratoryRate?: number;
-    oxygenSaturation?: number;
-    temperature?: number;
-  };
-}
-
-export type GeminiResponse = {
-  id: string;
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
-    };
-  }[];
-};
