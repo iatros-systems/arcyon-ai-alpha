@@ -36,13 +36,13 @@ const ChatItem = ({
     <div
       key={chat.id}
       className={cn(
-        "flex items-center p-2 rounded-md cursor-pointer group",
-        chat.isCurrent && "bg-accent/50",
+        "sidebar-item flex items-center p-2 rounded-md cursor-pointer group",
+        chat.isCurrent && "bg-accent/50 active",
         chat.pinned && "border-l-2 border-primary pl-1"
       )}
       onClick={() => onChatSelect(chat.id)}
     >
-      <MessageSquare className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+      <MessageSquare className="h-3.5 w-3.5 flex-shrink-0" />
       
       {editingChatId === chat.id && !collapsed ? (
         <Input
@@ -51,12 +51,12 @@ const ChatItem = ({
           onChange={(e) => setEditTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={saveTitle}
-          className="h-7 text-sm"
+          className="h-7 text-sm ml-1.5"
         />
       ) : (
         <>
           {!collapsed && (
-            <span className="text-sm truncate flex-1">{chat.title}</span>
+            <span className="text-sm truncate flex-1 ml-1.5">{chat.title}</span>
           )}
           
           {!collapsed && (
