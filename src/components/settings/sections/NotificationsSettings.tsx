@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
 
 const NotificationsSettings = () => {
   const [notificationType, setNotificationType] = useState<string>("push");
@@ -43,22 +42,8 @@ const NotificationsSettings = () => {
                 <SelectValue placeholder="Selecione um tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="push">
-                  <div className="flex items-center justify-between w-full">
-                    <span>Push</span>
-                    {notificationType === "push" && (
-                      <Check className="h-4 w-4 ml-2" />
-                    )}
-                  </div>
-                </SelectItem>
-                <SelectItem value="email">
-                  <div className="flex items-center justify-between w-full">
-                    <span>Correo electrónico</span>
-                    {notificationType === "email" && (
-                      <Check className="h-4 w-4 ml-2" />
-                    )}
-                  </div>
-                </SelectItem>
+                <SelectItem value="push">Push</SelectItem>
+                <SelectItem value="email">Correo electrónico</SelectItem>
               </SelectContent>
             </Select>
           </div>
