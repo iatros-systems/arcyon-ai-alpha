@@ -23,22 +23,24 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       )}
     >
       <div className="flex gap-2"> {/* Reduced gap from gap-3 to gap-2 */}
-        <Avatar className="h-8 w-8">
-          {message.role === "user" ? (
-            <>
-              <AvatarFallback className="bg-iatros-blue text-white">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </>
-          ) : (
-            <>
-              <AvatarImage src="/lovable-uploads/3c10210e-57f5-4e1c-a850-86f3a335d86c.png" />
-              <AvatarFallback className="bg-muted">
-                <Bot className="h-4 w-4" />
-              </AvatarFallback>
-            </>
-          )}
-        </Avatar>
+        <div className="flex items-start">
+          <Avatar className="h-8 w-8">
+            {message.role === "user" ? (
+              <>
+                <AvatarFallback className="bg-iatros-blue text-white">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </>
+            ) : (
+              <>
+                <AvatarImage src="/lovable-uploads/3c10210e-57f5-4e1c-a850-86f3a335d86c.png" />
+                <AvatarFallback className="bg-muted">
+                  <Bot className="h-4 w-4" />
+                </AvatarFallback>
+              </>
+            )}
+          </Avatar>
+        </div>
         <div className="message-content flex-1 min-w-0">
           <div className="font-medium mb-0.5 text-xs"> {/* Reduced font size to text-xs */}
             {message.role === "user" ? "Médico" : "Arcyon"}
