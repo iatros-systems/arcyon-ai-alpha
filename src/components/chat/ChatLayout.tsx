@@ -34,18 +34,21 @@ const ChatLayout = ({
       />
       
       <div 
-        className={cn("flex flex-col flex-1 h-full transition-all duration-300", 
+        className={cn(
+          "flex flex-col flex-1 h-full transition-all duration-300", 
           sidebarCollapsed 
             ? 'md:ml-16' 
             : 'md:ml-72'
         )}
       >
-        <ChatHeader 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen} 
-          darkMode={darkMode}
-          toggleDarkMode={toggleDarkMode}
-        />
+        <div className="sticky top-0 z-10 w-full">
+          <ChatHeader 
+            sidebarOpen={sidebarOpen} 
+            setSidebarOpen={setSidebarOpen} 
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+          />
+        </div>
         
         <ChatContent sidebarCollapsed={sidebarCollapsed} />
       </div>
