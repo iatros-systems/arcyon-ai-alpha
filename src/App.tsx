@@ -13,6 +13,9 @@ import SettingsAuth from "./components/SettingsAuth";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import "./styles/sidebar.css";
 import "./styles/prescription.css";
+import WorkspaceLayout from "./pages/workspace/WorkspaceLayout";
+import WorkspaceHome from "./pages/workspace/WorkspaceHome";
+import WorkspaceMembers from "./pages/workspace/WorkspaceMembers";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +53,10 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/chat" element={<Chat />} />
+              <Route path="/workspace" element={<WorkspaceLayout />}>
+                <Route index element={<WorkspaceHome />} />
+                <Route path="members" element={<WorkspaceMembers />} />
+              </Route>
               <Route 
                 path="/settings" 
                 element={
