@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Stethoscope } from "lucide-react";
@@ -21,34 +22,33 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
         message.role === "user" ? "user" : "ai"
       )}
     >
-      <div className="flex gap-2">
-        <div className="flex items-start">
-          <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              {message.role === "user" ? (
-                <>
-                  <AvatarFallback className="bg-iatros-blue text-white">
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </>
-              ) : (
-                <>
-                  <AvatarFallback className="bg-sky-100">
-                    <Stethoscope className="h-4 w-4" color="#33C3F0" />
-                  </AvatarFallback>
-                </>
-              )}
-            </Avatar>
-            <div className="font-medium text-xs">
-              {message.role === "user" ? "Médico" : "Arcyon"}
-            </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            {message.role === "user" ? (
+              <>
+                <AvatarFallback className="bg-iatros-blue text-white">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </>
+            ) : (
+              <>
+                <AvatarFallback className="bg-sky-100">
+                  <Stethoscope className="h-4 w-4" color="#33C3F0" />
+                </AvatarFallback>
+              </>
+            )}
+          </Avatar>
+          <div className="font-medium text-xs">
+            {message.role === "user" ? "Médico" : "Arcyon"}
           </div>
         </div>
-        <div className="message-content flex-1 min-w-0">
+        
+        <div className="message-content pl-10"> {/* Added left padding to align with avatar */}
           <div className="prose prose-xs dark:prose-invert max-w-none text-left text-sm">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left text-xs space-y-0" // Removed vertical spacing completely
+                className="prescription-content text-left text-xs space-y-0"
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
