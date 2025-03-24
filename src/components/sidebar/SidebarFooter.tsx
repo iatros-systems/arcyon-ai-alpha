@@ -34,7 +34,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
           <DropdownMenuGroup>
             <DropdownMenuItem>
               <Users className="mr-2 h-4 w-4" />
-              <span>Administrar espacio de trabajo</span>
+              <span>Administrar espaços de trabalho</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <List className="mr-2 h-4 w-4" />
@@ -43,19 +43,19 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Users className="mr-2 h-4 w-4" />
-              <span>Mis GPT</span>
+              <span>Meus Projetos</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Palette className="mr-2 h-4 w-4" />
-              <span>Personalizar ChatGPT</span>
+              <span>Personalizar Arcyon</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
-              <span>Configuración</span>
+              <span>Configurações</span>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Cerrar sesión</span>
+              <span>Logout</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
