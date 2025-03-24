@@ -35,7 +35,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               ) : (
                 <>
                   <AvatarImage src="/lovable-uploads/3c10210e-57f5-4e1c-a850-86f3a335d86c.png" />
-                  <AvatarFallback className="bg-purple-100 text-purple-700">
+                  <AvatarFallback className="bg-blue-100 text-blue-500">
                     <Stethoscope className="h-4 w-4" />
                   </AvatarFallback>
                 </>
