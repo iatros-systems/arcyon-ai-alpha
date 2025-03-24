@@ -21,33 +21,25 @@ interface SettingsDialogProps {
 const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [activeSection, setActiveSection] = useState("general");
   
-  // Ensure the document body is reset when component unmounts
+  // Gerencia os estilos do corpo da página quando o componente é montado/desmontado
   useEffect(() => {
+    // Quando o componente é desmontado, garantimos que o body esteja com os estilos de navegação normalizados
     return () => {
-      document.body.style.pointerEvents = "auto";
-      document.body.style.overflow = "auto";
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
     };
   }, []);
 
-  // When dialog state changes, update body styles
+  // Quando o estado do diálogo muda, atualizamos os estilos do body
   useEffect(() => {
-    if (!open) {
-      // Small delay to ensure animations complete
-      const timeout = setTimeout(() => {
-        document.body.style.pointerEvents = "auto";
-        document.body.style.overflow = "auto";
-      }, 300);
-      return () => clearTimeout(timeout);
+    if (open) {
+      // Não precisamos fazer nada especial quando o modal abre
+    } else {
+      // Quando fechamos, restauramos imediatamente os estilos do body
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
     }
   }, [open]);
-
-  const handleClose = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      document.body.style.pointerEvents = "auto";
-      document.body.style.overflow = "auto";
-    }, 100);
-  };
   
   const renderActiveSection = () => {
     switch (activeSection) {

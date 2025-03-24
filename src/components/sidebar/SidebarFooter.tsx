@@ -30,12 +30,10 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
 
   const handleSettingsClose = (open: boolean) => {
     setSettingsOpen(open);
-    // Add a small delay to ensure proper cleanup
+    // Garantimos que o body esteja navegável quando o modal é fechado
     if (!open) {
-      setTimeout(() => {
-        document.body.style.pointerEvents = "auto";
-        document.body.style.overflow = "auto";
-      }, 100);
+      document.body.style.pointerEvents = "";
+      document.body.style.overflow = "";
     }
   };
 
