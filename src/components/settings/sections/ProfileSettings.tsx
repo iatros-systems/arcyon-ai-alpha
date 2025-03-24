@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Cube, Globe, Github, Linkedin, Twitter, ExternalLink, Info } from "lucide-react";
+import { Box, Globe, Github, Linkedin, Twitter, ExternalLink, Info } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const ProfileSettings = () => {
@@ -25,7 +25,7 @@ const ProfileSettings = () => {
 
       <div className="flex justify-center py-4">
         <div className="text-center">
-          <Cube className="mx-auto h-12 w-12 text-muted-foreground" />
+          <Box className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-2 text-xl font-medium">SuperArcyon</h3>
           <p className="text-sm text-muted-foreground">Por Geoffrey Moraes Porto</p>
           <div className="mt-2 text-xs text-muted-foreground">Vista previa</div>
