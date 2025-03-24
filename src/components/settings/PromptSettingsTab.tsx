@@ -3,11 +3,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Save } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { UploadCloud, Save, FileText, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useRef } from "react";
 
 interface PromptSettingsTabProps {
   pathology: string;
   setPathology: (value: string) => void;
+  systemInstructions: string;
+  setSystemInstructions: (value: string) => void;
   handleSave: () => void;
   isSaving: boolean;
 }
@@ -15,9 +20,41 @@ interface PromptSettingsTabProps {
 const PromptSettingsTab = ({
   pathology,
   setPathology,
+  systemInstructions,
+  setSystemInstructions,
   handleSave,
   isSaving
 }: PromptSettingsTabProps) => {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Only accept markdown files
+    if (file.type !== "text/markdown" && !file.name.endsWith(".md")) {
+      alert("Por favor, selecione apenas arquivos Markdown (.md)");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setSystemInstructions(content);
+    };
+    reader.readAsText(file);
+
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -47,6 +84,48 @@ const PromptSettingsTab = ({
               A patologia selecionada define o contexto do assistente para fornecer respostas mais precisas.
             </p>
           </div>
+          
+          <div className="grid gap-2">
+            <div className="flex justify-between items-center">
+              <Label htmlFor="system-instructions">Instruções do Sistema</Label>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleUploadClick} 
+                  title="Fazer upload de arquivo Markdown"
+                >
+                  <UploadCloud className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => setIsPreviewOpen(true)} 
+                  title="Visualizar Markdown"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileUpload} 
+                  accept=".md,text/markdown" 
+                  className="hidden" 
+                />
+              </div>
+            </div>
+            <Textarea 
+              id="system-instructions" 
+              value={systemInstructions} 
+              onChange={(e) => setSystemInstructions(e.target.value)} 
+              placeholder="Digite ou faça upload das instruções do sistema em formato Markdown..." 
+              className="h-[300px] font-mono text-sm" 
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Estas instruções serão enviadas ao modelo como contexto para guiar suas respostas. 
+              Você pode usar a formatação Markdown para organizar o conteúdo.
+            </p>
+          </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
@@ -55,6 +134,28 @@ const PromptSettingsTab = ({
           {isSaving ? "Salvando..." : "Salvar Configuração"}
         </Button>
       </CardFooter>
+      
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Visualização das Instruções do Sistema
+            </DialogTitle>
+            <DialogDescription>
+              Visualização da formatação Markdown das instruções do sistema
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border rounded-md p-4 bg-muted/50 prose prose-sm max-w-none dark:prose-invert">
+            {/* 
+              For simplicity, we're just displaying the raw markdown.
+              In a real app, you would use a markdown renderer like react-markdown:
+              <ReactMarkdown>{systemInstructions}</ReactMarkdown>
+            */}
+            <pre className="whitespace-pre-wrap">{systemInstructions}</pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

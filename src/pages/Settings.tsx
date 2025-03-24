@@ -22,6 +22,7 @@ const Settings = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [pathology, setPathology] = useState("");
+  const [systemInstructions, setSystemInstructions] = useState("");
   
   // Password management states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -41,6 +42,7 @@ const Settings = () => {
     const savedMaxTokens = localStorage.getItem("gemini-maxTokens");
     const savedAdvancedMode = localStorage.getItem("gemini-advancedMode");
     const savedPathology = localStorage.getItem("system-prompt-pathology");
+    const savedSystemInstructions = localStorage.getItem("system-instructions");
     
     if (savedTemperature) setTemperature(parseFloat(savedTemperature));
     if (savedTopP) setTopP(parseFloat(savedTopP));
@@ -48,6 +50,7 @@ const Settings = () => {
     if (savedMaxTokens) setMaxTokens(parseInt(savedMaxTokens));
     if (savedAdvancedMode) setAdvancedMode(savedAdvancedMode === "true");
     if (savedPathology) setPathology(savedPathology);
+    if (savedSystemInstructions) setSystemInstructions(savedSystemInstructions);
   }, []);
   
   const handleSave = () => {
@@ -63,6 +66,7 @@ const Settings = () => {
       localStorage.setItem("gemini-maxTokens", maxTokens.toString());
       localStorage.setItem("gemini-advancedMode", advancedMode.toString());
       localStorage.setItem("system-prompt-pathology", pathology);
+      localStorage.setItem("system-instructions", systemInstructions);
       
       toast({
         title: "Configurações salvas",
@@ -192,6 +196,8 @@ const Settings = () => {
           <PromptSettingsTab
             pathology={pathology}
             setPathology={setPathology}
+            systemInstructions={systemInstructions}
+            setSystemInstructions={setSystemInstructions}
             handleSave={handleSave}
             isSaving={isSaving}
           />
