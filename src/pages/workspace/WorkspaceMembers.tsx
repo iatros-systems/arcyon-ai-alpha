@@ -13,8 +13,8 @@ const WorkspaceMembers = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-1">Miembros del espacio de trabajo</h1>
-        <p className="text-muted-foreground">Gestiona quién tiene acceso a tu espacio de trabajo.</p>
+        <h1 className="text-2xl font-bold mb-1">Membros do espaço de trabalho</h1>
+        <p className="text-muted-foreground">Gerencie quem tem acesso ao seu espaço de trabalho.</p>
       </div>
 
       <div className="flex items-center justify-between mb-6">

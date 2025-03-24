@@ -49,17 +49,17 @@ const WorkspaceSidebar = ({ activeSection = "members" }: WorkspaceSidebarProps) 
         >
           <Link to="/chat">
             <ArrowLeft className="h-4 w-4" />
-            Volver al chat
+            Voltar ao chat
           </Link>
         </Button>
 
         <div className="flex items-center gap-3 mb-6 mt-8">
           <div className="h-10 w-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground">
-            <span className="text-xl">N</span>
+            <span className="text-xl">A</span>
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Neuraliza</h3>
+              <h3 className="font-semibold">Arcyon</h3>
               <Button variant="ghost" size="icon" className="h-6 w-6">
                 <Edit className="h-3.5 w-3.5" />
               </Button>
