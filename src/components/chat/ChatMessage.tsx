@@ -43,10 +43,10 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <div className="font-medium mb-1">
             {message.role === "user" ? "Médico" : "Arcyon"}
           </div>
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="prose prose-sm dark:prose-invert max-w-none text-left">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content"
+                className="prescription-content text-left"
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
