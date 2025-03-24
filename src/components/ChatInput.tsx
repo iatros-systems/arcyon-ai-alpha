@@ -80,15 +80,13 @@ const ChatInput = ({ onSubmit, disabled }: ChatInputProps) => {
               </div>
               <Button 
                 type="submit" 
-                size="sm" 
+                size="icon" 
                 className={cn(
-                  "px-3",
                   disabled || !input.trim() ? "opacity-50 cursor-not-allowed" : ""
                 )}
                 disabled={disabled || !input.trim()}
               >
-                <Send className="h-4 w-4 mr-1" /> 
-                Enviar
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </div>
