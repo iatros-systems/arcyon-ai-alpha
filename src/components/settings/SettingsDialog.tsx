@@ -1,5 +1,5 @@
+
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +11,7 @@ import {
 import SettingsSidebar from "./SettingsSidebar";
 import GeneralSettings from "./sections/GeneralSettings";
 import SectionPlaceholder from "./sections/SectionPlaceholder";
+import SecuritySettings from "./sections/SecuritySettings";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -49,10 +50,14 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   };
   
   const renderActiveSection = () => {
-    if (activeSection === "general") {
-      return <GeneralSettings />;
+    switch (activeSection) {
+      case "general":
+        return <GeneralSettings />;
+      case "security":
+        return <SecuritySettings />;
+      default:
+        return <SectionPlaceholder />;
     }
-    return <SectionPlaceholder />;
   };
   
   return (
