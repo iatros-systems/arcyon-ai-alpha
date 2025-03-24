@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +17,7 @@ const App = () => {
   
   // Set document title
   useEffect(() => {
-    document.title = "IatrosGPT - Assistente para Dor Torácica";
+    document.title = "Arcyon - Assistente para Dor Torácica";
   }, []);
 
   // Add CSS for sidebar edit functionality
