@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { useChatStore } from "@/store/chat-store";
-import { useChatMessages } from "@/hooks/useChatMessages";
 import { useApiKeyDialog } from "@/hooks/useApiKeyDialog";
 import { useDarkMode } from "@/hooks/useDarkMode";
 import { useSidebarState } from "@/hooks/useSidebarState";
@@ -11,7 +10,7 @@ const Chat = () => {
   const { currentChat, startNewChat } = useChatStore();
   const { apiKeyDialogOpen, setApiKeyDialogOpen } = useApiKeyDialog();
   const { darkMode, toggleDarkMode } = useDarkMode();
-  const { sidebarOpen, setSidebarOpen, sidebarCollapsed } = useSidebarState();
+  const { sidebarOpen, setSidebarOpen, collapsed: sidebarCollapsed } = useSidebarState();
 
   // Create first chat if none exists
   useEffect(() => {

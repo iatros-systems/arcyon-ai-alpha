@@ -3,16 +3,26 @@ import { useState, useEffect } from "react";
 
 export const useSidebarState = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  const [collapsed, setCollapsed] = useState(() => {
     const savedState = localStorage.getItem("sidebar-collapsed");
     return savedState ? savedState === "true" : false;
   });
 
+  // Toggle collapsed state
+  const toggleCollapsed = () => {
+    const newState = !collapsed;
+    setCollapsed(newState);
+    localStorage.setItem("sidebar-collapsed", String(newState));
+    
+    // Dispatch a custom event for cross-tab synchronization
+    window.dispatchEvent(new CustomEvent("sidebar-state-changed"));
+  };
+
   // Listen for sidebar state changes
   useEffect(() => {
     const handleSidebarStateChange = () => {
-      const collapsed = localStorage.getItem("sidebar-collapsed") === "true";
-      setSidebarCollapsed(collapsed);
+      const isCollapsed = localStorage.getItem("sidebar-collapsed") === "true";
+      setCollapsed(isCollapsed);
     };
 
     // Listen for the custom event fired when sidebar state changes
@@ -30,6 +40,7 @@ export const useSidebarState = () => {
   return {
     sidebarOpen,
     setSidebarOpen,
-    sidebarCollapsed
+    collapsed,
+    toggleCollapsed
   };
 };
