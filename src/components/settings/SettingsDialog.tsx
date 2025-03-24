@@ -76,7 +76,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex h-[calc(100vh-6rem)]">
+        <div className="flex h-[calc(100vh-6rem)] max-h-[600px]">
           {/* Sidebar menu */}
           <SettingsSidebar 
             activeSection={activeSection} 
@@ -84,7 +84,7 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
           />
           
           {/* Content area */}
-          <div className="flex-1 border-l pl-6 overflow-y-auto">
+          <div className="flex-1 border-l pl-4 pr-2 overflow-y-auto">
             {renderActiveSection()}
           </div>
         </div>

@@ -17,15 +17,15 @@ const SecuritySettings = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Configurações de Segurança</h2>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Configurações de Segurança</h2>
       
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden">
+        <CardHeader className="p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Autenticação multifator</CardTitle>
-              <CardDescription className="mt-1">
+            <div className="space-y-1 max-w-[80%]">
+              <CardTitle className="text-base font-medium">Autenticação multifator</CardTitle>
+              <CardDescription className="text-xs">
                 Requer um desafio de segurança adicional ao iniciar sessão. 
                 Se não puder passar este desafio, terá a opção de recuperar 
                 sua conta por correio eletrônico.
@@ -40,12 +40,12 @@ const SecuritySettings = () => {
         </CardHeader>
       </Card>
       
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Encerrar sessão em todos os dispositivos</CardTitle>
-              <CardDescription className="mt-1">
+      <Card className="overflow-hidden">
+        <CardHeader className="p-4">
+          <div className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:items-start sm:space-y-0">
+            <div className="space-y-1 max-w-[80%]">
+              <CardTitle className="text-base font-medium">Encerrar sessão em todos os dispositivos</CardTitle>
+              <CardDescription className="text-xs">
                 Encerra todas as sessões ativas em todos os dispositivos, 
                 incluída a sessão atual. Em outros dispositivos, o encerramento 
                 de sessão pode demorar até 30 minutos.
@@ -54,6 +54,8 @@ const SecuritySettings = () => {
             <Button 
               variant="outline" 
               onClick={handleCloseAllSessions}
+              size="sm"
+              className="whitespace-nowrap"
             >
               Encerrar todas as sessões
             </Button>
