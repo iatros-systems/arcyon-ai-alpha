@@ -3,13 +3,13 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chat-store";
 
-// Import the new components
-import SidebarHeader from "./sidebar/SidebarHeader";
-import NewChatButton from "./sidebar/NewChatButton";
-import SidebarTabs from "./sidebar/SidebarTabs";
-import ChatList from "./sidebar/ChatList";
-import PatientList from "./sidebar/PatientList";
-import UserProfile from "./sidebar/UserProfile";
+// Import the new components with updated paths
+import SidebarHeader from "./sidebar/header/SidebarHeader";
+import NewChatButton from "./sidebar/actions/NewChatButton";
+import SidebarTabs from "./sidebar/navigation/SidebarTabs";
+import ChatList from "./sidebar/content/ChatList";
+import PatientList from "./sidebar/content/PatientList";
+import UserProfile from "./sidebar/footer/UserProfile";
 
 interface SidebarProps {
   open: boolean;
