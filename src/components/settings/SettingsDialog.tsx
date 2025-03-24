@@ -12,6 +12,7 @@ import SettingsSidebar from "./SettingsSidebar";
 import GeneralSettings from "./sections/GeneralSettings";
 import SectionPlaceholder from "./sections/SectionPlaceholder";
 import SecuritySettings from "./sections/SecuritySettings";
+import AudioSettings from "./sections/AudioSettings";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -53,6 +54,8 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
         return <GeneralSettings />;
       case "security":
         return <SecuritySettings />;
+      case "audio":
+        return <AudioSettings />;
       default:
         return <SectionPlaceholder />;
     }
