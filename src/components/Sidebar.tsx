@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Plus, MessageSquare, User2, Stethoscope, History, FolderPlus, PenLine } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +7,7 @@ import { useState } from "react";
 import { useChatStore } from "@/store/chat-store";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback } from "./ui/avatar";
 
 interface SidebarProps {
   open: boolean;
@@ -182,9 +182,9 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
 
       <div className="border-t p-4">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-iatros-blue flex items-center justify-center text-white">
-            RF
-          </div>
+          <Avatar className="h-9 w-9 bg-iatros-blue">
+            <AvatarFallback className="text-white">RF</AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">Dr. Romulo Farias</p>
             <p className="text-xs text-muted-foreground truncate">Emergência</p>
