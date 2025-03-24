@@ -34,58 +34,59 @@ const ChatItem = ({
     <div
       key={chat.id}
       className={cn(
-        "sidebar-item p-2 cursor-pointer",
-        chat.isCurrent && "active",
-        chat.pinned && "border-l-2 border-iatros-blue"
+        "flex items-center p-2 rounded-md cursor-pointer group",
+        chat.isCurrent && "bg-accent/50",
+        chat.pinned && "border-l-2 border-primary pl-1"
       )}
+      onClick={() => onChatSelect(chat.id)}
     >
+      <MessageSquare className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+      
       {editingChatId === chat.id && !collapsed ? (
-        <div className="flex items-center gap-2">
-          <Input
-            autoFocus
-            value={editTitle}
-            onChange={(e) => setEditTitle(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={saveTitle}
-            className="h-7 text-sm"
-          />
-        </div>
+        <Input
+          autoFocus
+          value={editTitle}
+          onChange={(e) => setEditTitle(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={saveTitle}
+          className="h-7 text-sm"
+        />
       ) : (
-        <div className="flex items-center gap-2" onClick={() => onChatSelect(chat.id)}>
-          <MessageSquare className="h-4 w-4" />
+        <>
           {!collapsed && (
-            <>
-              <span className="text-sm truncate flex-1">{chat.title}</span>
-              <div className="flex gap-1">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className={cn(
-                    "h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100",
-                    chat.pinned && "text-iatros-blue opacity-100"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTogglePin(chat.id);
-                  }}
-                >
-                  <Pin className="h-3 w-3" fill={chat.pinned ? "currentColor" : "none"} />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 focus:opacity-100" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startEditing(chat.id, chat.title);
-                  }}
-                >
-                  <PenLine className="h-3 w-3" />
-                </Button>
-              </div>
-            </>
+            <span className="text-sm truncate flex-1">{chat.title}</span>
           )}
-        </div>
+          
+          {!collapsed && (
+            <div className="flex ml-1 opacity-0 group-hover:opacity-100">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn(
+                  "h-5 w-5",
+                  chat.pinned && "text-primary opacity-100"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTogglePin(chat.id);
+                }}
+              >
+                <Pin className="h-3 w-3" fill={chat.pinned ? "currentColor" : "none"} />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startEditing(chat.id, chat.title);
+                }}
+              >
+                <PenLine className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

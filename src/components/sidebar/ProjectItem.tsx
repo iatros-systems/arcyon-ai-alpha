@@ -51,39 +51,36 @@ const ProjectItem = ({
   };
 
   return (
-    <div className="sidebar-item group relative">
+    <div className="relative mb-2">
       {/* Project Header */}
-      <div className="flex items-center mb-1">
-        <Button
-          variant={isActive ? "secondary" : "ghost"}
-          className={cn(
-            "w-full justify-start",
-            collapsed ? "justify-center p-2" : "text-left pr-8"
-          )}
-          onClick={() => {
-            onSelect(project.id);
-            if (!collapsed) setExpanded(true);
-          }}
-        >
-          {!collapsed && projectChats.length > 0 && (
-            <button 
-              className="mr-1 p-1 hover:bg-accent rounded-sm" 
-              onClick={toggleExpand}
-            >
-              {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-            </button>
-          )}
-          <Folder className={cn("mr-2 h-4 w-4 shrink-0", isActive && "text-primary")} />
-          {!collapsed && (
-            <span className="truncate">{project.name}</span>
-          )}
-        </Button>
+      <div 
+        className={cn(
+          "flex items-center p-2 rounded-md hover:bg-accent cursor-pointer",
+          isActive && "bg-accent/50"
+        )}
+        onClick={() => {
+          onSelect(project.id);
+          if (!collapsed) setExpanded(!expanded);
+        }}
+      >
+        {!collapsed && projectChats.length > 0 && (
+          <button 
+            className="mr-1 p-1 hover:bg-accent rounded-sm" 
+            onClick={toggleExpand}
+          >
+            {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          </button>
+        )}
+        <Folder className={cn("mr-2 h-4 w-4 shrink-0", isActive && "text-primary")} />
+        {!collapsed && (
+          <span className="truncate flex-1 text-sm font-medium">{project.name}</span>
+        )}
         
         {!collapsed && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 absolute right-1 top-1/2 transform -translate-y-1/2 transition-opacity"
+            className="h-6 w-6 opacity-0 group-hover:opacity-100 hover:opacity-100 ml-auto"
             onClick={(e) => {
               e.stopPropagation();
               onNewChat(project.id);
@@ -98,7 +95,7 @@ const ProjectItem = ({
 
       {/* Project Chats List */}
       {!collapsed && expanded && projectChats.length > 0 && (
-        <div className="pl-7 space-y-1 border-l border-muted ml-3">
+        <div className="mt-1 pl-6 ml-2 space-y-1 border-l-2 border-muted">
           {projectChats.map((chat) => (
             <ChatItem
               key={chat.id}

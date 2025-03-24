@@ -18,3 +18,37 @@
 .sidebar-item:hover button, .sidebar-item:focus-within button {
   opacity: 1;
 }
+
+/* Project hierarchy styling */
+.project-chat-list {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-left: 0.5rem;
+}
+
+.project-chat-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background-color: hsl(var(--muted));
+  opacity: 0.8;
+}
+
+.project-chat-item {
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.project-chat-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 50%;
+  width: 0.5rem;
+  height: 2px;
+  background-color: hsl(var(--muted));
+  opacity: 0.8;
+}
