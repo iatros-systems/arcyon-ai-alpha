@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useProjectStore } from "@/store/project-store";
 import { useChatStore } from "@/store/chat-store";
+import { useChatEdit } from "@/hooks/useChatEdit";
 import CreateProjectDialog from "@/components/projects/CreateProjectDialog";
 import ProjectItem from "./ProjectItem";
 import { toast } from "sonner";
@@ -16,7 +17,15 @@ interface ProjectsSectionProps {
 const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { projects, setCurrentProject, currentProject } = useProjectStore();
-  const { startNewChat } = useChatStore();
+  const { startNewChat, chats, setCurrentChat, toggleChatPin, updateChatTitle } = useChatStore();
+  const {
+    editingChatId,
+    editTitle,
+    setEditTitle,
+    startEditing,
+    saveTitle,
+    handleKeyDown
+  } = useChatEdit({ updateChatTitle });
 
   const handleProjectSelect = (projectId: string) => {
     setCurrentProject(projectId);
@@ -26,11 +35,19 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
     startNewChat(projectId);
   };
 
-  // Para debugar
-  useEffect(() => {
-    console.log("Projetos disponíveis:", projects);
-    console.log("Projeto atual:", currentProject);
-  }, [projects, currentProject]);
+  const handleChatSelect = (chatId: string) => {
+    setCurrentChat(chatId);
+    // Close sidebar on mobile when chat is selected
+    if (window.innerWidth < 768) {
+      // This assumes there's a setOpen function in the parent component
+      // If not, you may need to add this functionality
+    }
+  };
+
+  // Get chats for each project
+  const getProjectChats = (projectId: string) => {
+    return chats.filter(chat => chat.projectId === projectId);
+  };
 
   return (
     <>
@@ -61,6 +78,15 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
                   onSelect={handleProjectSelect}
                   onNewChat={handleNewChat}
                   isActive={currentProject?.id === project.id}
+                  projectChats={getProjectChats(project.id)}
+                  editingChatId={editingChatId}
+                  editTitle={editTitle}
+                  setEditTitle={setEditTitle}
+                  startEditing={startEditing}
+                  saveTitle={saveTitle}
+                  handleKeyDown={handleKeyDown}
+                  onChatSelect={handleChatSelect}
+                  onTogglePin={toggleChatPin}
                 />
               ))}
             </div>

@@ -42,7 +42,7 @@ const getChatTimeGroup = (chatDate: Date): string => {
 };
 
 const Sidebar = ({ open, setOpen }: SidebarProps) => {
-  const { chats, startNewChat, setCurrentChat, updateChatTitle } = useChatStore();
+  const { chats, startNewChat, setCurrentChat, updateChatTitle, toggleChatPin } = useChatStore();
   const [activeSection, setActiveSection] = useState("chats");
   const { collapsed, toggleCollapsed } = useSidebarState();
   const {
@@ -64,13 +64,16 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
 
   // Group chats by time periods
   const groupedChats = chats.reduce((acc: Record<string, Chat[]>, chat) => {
-    const date = new Date(chat.createdAt);
-    const group = getChatTimeGroup(date);
-    
-    if (!acc[group]) {
-      acc[group] = [];
+    // Only include chats without a projectId here
+    if (!chat.projectId) {
+      const date = new Date(chat.createdAt);
+      const group = getChatTimeGroup(date);
+      
+      if (!acc[group]) {
+        acc[group] = [];
+      }
+      acc[group].push(chat);
     }
-    acc[group].push(chat);
     return acc;
   }, {});
 
@@ -116,7 +119,9 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
           )}
 
           {activeSection === "projects" && (
-            <ProjectsSection collapsed={collapsed} />
+            <ProjectsSection 
+              collapsed={collapsed} 
+            />
           )}
         </div>
 
