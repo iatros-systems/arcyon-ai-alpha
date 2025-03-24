@@ -1,6 +1,5 @@
 
 import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings, Users, List, Palette } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarFooterProps {
   collapsed: boolean;
@@ -39,7 +39,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" alignOffset={-20}>
           <DropdownMenuGroup>
-            <DropdownMenuItem onClick={() => handleMenuItemClick('/workspace/members')}>
+            <DropdownMenuItem>
               <Users className="mr-2 h-4 w-4" />
               <span>Administrar espaços de trabalho</span>
             </DropdownMenuItem>

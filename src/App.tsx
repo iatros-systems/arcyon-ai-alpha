@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import WorkspaceMembers from "./pages/WorkspaceMembers";
 import { useEffect, useState } from "react";
 import SettingsAuth from "./components/SettingsAuth";
 import { SettingsProvider } from "./contexts/SettingsContext";
@@ -51,7 +50,6 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/chat" element={<Chat />} />
-              <Route path="/workspace/members" element={<WorkspaceMembers />} />
               <Route 
                 path="/settings" 
                 element={
