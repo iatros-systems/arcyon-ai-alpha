@@ -67,11 +67,13 @@ const SettingsSidebar = ({ activeSection, setActiveSection }: SettingsSidebarPro
         
         <Button 
           variant={activeSection === "apps" ? "secondary" : "ghost"} 
-          className="w-full justify-start"
+          className="w-full justify-start flex-col items-start pt-2 pb-2 h-auto"
           onClick={() => setActiveSection("apps")}
         >
-          <Share2 className="mr-2 h-4 w-4" />
-          Aplicações conectadas
+          <div className="flex items-center w-full">
+            <Share2 className="mr-2 h-4 w-4" />
+            <span className="text-left leading-tight">Aplicações<br />conectadas</span>
+          </div>
         </Button>
         
         <Button 
