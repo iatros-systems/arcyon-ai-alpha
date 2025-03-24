@@ -33,20 +33,28 @@ export const useProjectStore = create<ProjectState>()(
           updatedAt: new Date().toISOString(),
         };
         
-        set((state) => ({
-          projects: [...state.projects, newProject],
-          currentProject: newProject,
-        }));
-        
-        console.log("Projeto criado:", newProject);
-        console.log("Lista de projetos após criação:", [...get().projects, newProject]);
+        set((state) => {
+          const updatedProjects = [...state.projects, newProject];
+          console.log("Criando projeto:", newProject);
+          console.log("Lista atualizada de projetos:", updatedProjects);
+          
+          return {
+            projects: updatedProjects,
+            currentProject: newProject,
+          };
+        });
         
         return newProject;
       },
       
       setCurrentProject: (projectId: string) => {
         const project = get().projects.find((p) => p.id === projectId);
-        set({ currentProject: project || null });
+        if (project) {
+          console.log("Definindo projeto atual:", project);
+          set({ currentProject: project });
+        } else {
+          console.warn("Projeto não encontrado:", projectId);
+        }
       },
       
       getProjectById: (projectId: string) => {
@@ -55,7 +63,10 @@ export const useProjectStore = create<ProjectState>()(
     }),
     {
       name: "project-store",
-      version: 1, // Adicionar versão para evitar problemas de persistência
+      version: 1,
+      partialize: (state) => ({
+        projects: state.projects,
+      }),
     }
   )
 );

@@ -50,8 +50,7 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <div className="flex items-center justify-between">
-          <DialogTitle>Nome do projeto</DialogTitle>
-          {/* Removed the custom close button since Dialog already provides one */}
+          <DialogTitle>Novo projeto</DialogTitle>
         </div>
         
         <DialogDescription>
@@ -60,7 +59,7 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
         
         <div className="space-y-4 py-4">
           <Input 
-            placeholder="Por exemplo, planificação de uma festa de aniversário" 
+            placeholder="Nome do projeto" 
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             onKeyDown={handleKeyDown}

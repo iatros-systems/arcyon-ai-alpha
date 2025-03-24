@@ -7,6 +7,7 @@ import { useProjectStore } from "@/store/project-store";
 import { useChatStore } from "@/store/chat-store";
 import CreateProjectDialog from "@/components/projects/CreateProjectDialog";
 import ProjectItem from "./ProjectItem";
+import { toast } from "sonner";
 
 interface ProjectsSectionProps {
   collapsed: boolean;
@@ -28,7 +29,8 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
   // Para debugar
   useEffect(() => {
     console.log("Projetos disponíveis:", projects);
-  }, [projects]);
+    console.log("Projeto atual:", currentProject);
+  }, [projects, currentProject]);
 
   return (
     <>
@@ -58,6 +60,7 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
                   collapsed={collapsed}
                   onSelect={handleProjectSelect}
                   onNewChat={handleNewChat}
+                  isActive={currentProject?.id === project.id}
                 />
               ))}
             </div>
