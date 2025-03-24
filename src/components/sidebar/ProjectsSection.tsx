@@ -36,7 +36,7 @@ const ProjectsSection = ({ collapsed }: ProjectsSectionProps) => {
             onClick={() => setCreateDialogOpen(true)}
           >
             <Plus className="mr-2 h-4 w-4" />
-            {!collapsed && "Novo Proyecto"}
+            {!collapsed && "Novo Projeto"}
           </Button>
           
           {/* Lista de Projetos */}

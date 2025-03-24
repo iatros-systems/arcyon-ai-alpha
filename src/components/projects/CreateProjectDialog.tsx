@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,20 +40,13 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <div className="flex items-center justify-between">
-          <DialogTitle>Nombre del proyecto</DialogTitle>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => onOpenChange(false)}
-            className="h-6 w-6"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <DialogTitle>Nome do projeto</DialogTitle>
+          {/* Removed the custom close button since Dialog already provides one */}
         </div>
         
         <div className="space-y-4 py-4">
           <Input 
-            placeholder="Por ejemplo, planificación de una fiesta de cumpleaños" 
+            placeholder="Por exemplo, planificação de uma festa de aniversário" 
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -70,10 +62,10 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium">¿Qué es un proyecto?</p>
+              <p className="text-sm font-medium">O que é um projeto?</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Los proyectos guardan chats, archivos e instrucciones personalizadas en 
-                un solo lugar. Úsalos para el trabajo en curso o para mantener todo 
+                Os projetos guardam chats, arquivos e instruções personalizadas em 
+                um só lugar. Use-os para o trabalho em curso ou para manter tudo 
                 organizado.
               </p>
             </div>
@@ -92,7 +84,7 @@ const CreateProjectDialog = ({ open, onOpenChange }: CreateProjectDialogProps) =
             disabled={!projectName.trim()}
             className="bg-gray-500 hover:bg-gray-600"
           >
-            Crear proyecto
+            Criar projeto
           </Button>
         </DialogFooter>
       </DialogContent>
