@@ -38,7 +38,7 @@ export const formatMedicalTable = (content: string) => {
           line.split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim())
         );
         
-        // Create HTML for the table
+        // Create HTML for the table with minimal spacing
         const tableHtml = `
         <div class="prescription-table">
           <table>
@@ -58,8 +58,8 @@ export const formatMedicalTable = (content: string) => {
         </div>
         `;
         
-        // Replace table in original content with minimal spacing around it
-        return `${contentBeforeTable.trim()}\n${tableHtml}\n${contentAfterTable.trim()}`;
+        // Replace table in original content with no spacing
+        return `${contentBeforeTable.trim()}${tableHtml}${contentAfterTable.trim()}`;
       }
     }
   }
@@ -128,10 +128,9 @@ export const formatMedicalPrescription = (content: string) => {
       }
     }
     
-    // If we have prescription items, render as a custom table
+    // If we have prescription items, render as a custom table with minimal spacing
     if (prescriptionItems.length > 0) {
-      const tableContent = `
-        <div class="prescription-table">
+      const tableContent = `<div class="prescription-table">
           <table class="w-full border-collapse">
             <thead>
               <tr>
@@ -154,14 +153,13 @@ export const formatMedicalPrescription = (content: string) => {
               `).join('')}
             </tbody>
           </table>
-        </div>
-      `;
+        </div>`;
       
-      // Replace prescription section with formatted table - reduce whitespace and improve spacing
+      // Replace prescription section with formatted table - eliminate all whitespace
       return content.replace(
         new RegExp(`(Condutas?\\s+Iniciais?:|Prescrição:|Medicamentos?:|\\*\\*Condutas\\s+ou\\s+Prescrição:\\*\\*)[\\s\\S]*?(##|#\\s|Observações:|$)`, 'i'),
         (match, prefix, suffix) => {
-          return `${prefix.trim()}\n${tableContent}\n${suffix.trim()}`;
+          return `${prefix.trim()}${tableContent}${suffix.trim()}`;
         }
       );
     }

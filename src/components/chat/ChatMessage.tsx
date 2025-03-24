@@ -18,11 +18,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "message-container p-4 rounded-lg",
+        "message-container p-3 rounded-lg", // Reduced padding from p-4 to p-3
         message.role === "user" ? "user" : "ai"
       )}
     >
-      <div className="flex gap-3">
+      <div className="flex gap-2"> {/* Reduced gap from gap-3 to gap-2 */}
         <Avatar className="h-8 w-8">
           {message.role === "user" ? (
             <>
@@ -40,13 +40,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           )}
         </Avatar>
         <div className="message-content flex-1 min-w-0">
-          <div className="font-medium mb-0.5">
+          <div className="font-medium mb-0.5 text-xs"> {/* Reduced font size to text-xs */}
             {message.role === "user" ? "Médico" : "Arcyon"}
           </div>
           <div className="prose prose-xs dark:prose-invert max-w-none text-left text-sm">
             {message.role === "assistant" ? (
               <div 
-                className="prescription-content text-left text-sm"
+                className="prescription-content text-left text-xs space-y-0" // Reduced font size and removed vertical spacing
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
@@ -78,7 +78,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                   },
                   table(props) {
                     return (
-                      <div className="my-2 overflow-x-auto rounded-md border">
+                      <div className="my-0 overflow-x-auto rounded-md border"> {/* Removed vertical margin */}
                         <Table className="w-full">{props.children}</Table>
                       </div>
                     );
