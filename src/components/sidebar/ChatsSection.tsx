@@ -15,6 +15,15 @@ interface ChatsSectionProps {
   onChatSelect: (chatId: string) => void;
 }
 
+// Ordem de prioridade para os grupos de tempo
+const timeGroupOrder = [
+  "Hoje",
+  "Ontem",
+  "7 dias anteriores",
+  "30 dias anteriores",
+  "Mais antigos"
+];
+
 const ChatsSection = ({
   groupedChats,
   collapsed,
@@ -26,30 +35,44 @@ const ChatsSection = ({
   handleKeyDown,
   onChatSelect
 }: ChatsSectionProps) => {
+  // Organizar os chats dentro de cada grupo por data/hora (mais recentes primeiro)
+  const sortedGroups: Record<string, Chat[]> = {};
+  Object.keys(groupedChats).forEach(group => {
+    sortedGroups[group] = [...groupedChats[group]].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+  });
+
   return (
     <ScrollArea className="h-[calc(100vh-160px)]">
       <div className="px-2 py-2">
-        {Object.entries(groupedChats).map(([date, dateChats]) => (
-          <div key={date} className="mb-2">
-            {!collapsed && (
-              <h3 className="mb-1 px-2 text-xs font-medium text-muted-foreground">{date}</h3>
-            )}
-            {dateChats.map((chat) => (
-              <ChatItem
-                key={chat.id}
-                chat={chat}
-                collapsed={collapsed}
-                editingChatId={editingChatId}
-                editTitle={editTitle}
-                setEditTitle={setEditTitle}
-                startEditing={startEditing}
-                saveTitle={saveTitle}
-                handleKeyDown={handleKeyDown}
-                onChatSelect={onChatSelect}
-              />
-            ))}
-          </div>
-        ))}
+        {timeGroupOrder.map((groupName) => {
+          if (!sortedGroups[groupName] || sortedGroups[groupName].length === 0) {
+            return null;
+          }
+
+          return (
+            <div key={groupName} className="mb-2">
+              {!collapsed && (
+                <h3 className="mb-1 px-2 text-xs font-medium text-muted-foreground">{groupName}</h3>
+              )}
+              {sortedGroups[groupName].map((chat) => (
+                <ChatItem
+                  key={chat.id}
+                  chat={chat}
+                  collapsed={collapsed}
+                  editingChatId={editingChatId}
+                  editTitle={editTitle}
+                  setEditTitle={setEditTitle}
+                  startEditing={startEditing}
+                  saveTitle={saveTitle}
+                  handleKeyDown={handleKeyDown}
+                  onChatSelect={onChatSelect}
+                />
+              ))}
+            </div>
+          );
+        })}
       </div>
     </ScrollArea>
   );

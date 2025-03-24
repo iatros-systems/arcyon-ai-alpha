@@ -10,11 +10,36 @@ import SidebarNavigation from "./sidebar/SidebarNavigation";
 import ChatsSection from "./sidebar/ChatsSection";
 import PatientsSection from "./sidebar/PatientsSection";
 import SidebarFooter from "./sidebar/SidebarFooter";
+import { Chat } from "@/types";
 
 interface SidebarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
 }
+
+// Função para determinar em qual grupo temporal o chat pertence
+const getChatTimeGroup = (chatDate: Date): string => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const sevenDaysAgo = new Date(today);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  if (chatDate >= today) {
+    return "Hoje";
+  } else if (chatDate >= yesterday) {
+    return "Ontem";
+  } else if (chatDate >= sevenDaysAgo) {
+    return "7 dias anteriores";
+  } else if (chatDate >= thirtyDaysAgo) {
+    return "30 dias anteriores";
+  } else {
+    return "Mais antigos";
+  }
+};
 
 const Sidebar = ({ open, setOpen }: SidebarProps) => {
   const { chats, startNewChat, setCurrentChat, updateChatTitle } = useChatStore();
@@ -37,13 +62,15 @@ const Sidebar = ({ open, setOpen }: SidebarProps) => {
     }
   };
 
-  // Group chats by date
-  const groupedChats = chats.reduce((acc: Record<string, typeof chats>, chat) => {
-    const date = new Date(chat.createdAt).toLocaleDateString();
-    if (!acc[date]) {
-      acc[date] = [];
+  // Group chats by time periods
+  const groupedChats = chats.reduce((acc: Record<string, Chat[]>, chat) => {
+    const date = new Date(chat.createdAt);
+    const group = getChatTimeGroup(date);
+    
+    if (!acc[group]) {
+      acc[group] = [];
     }
-    acc[date].push(chat);
+    acc[group].push(chat);
     return acc;
   }, {});
 
