@@ -1,4 +1,3 @@
-
 import { useEffect, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,6 +7,7 @@ import { Bot, User } from "lucide-react";
 import Markdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -100,6 +100,29 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
                                 {children}
                               </code>
                             );
+                          },
+                          // Custom table renderer using shadcn/ui components
+                          table(props) {
+                            return (
+                              <div className="my-4 overflow-x-auto rounded-md border">
+                                <Table className="w-full">{props.children}</Table>
+                              </div>
+                            );
+                          },
+                          thead(props) {
+                            return <TableHeader>{props.children}</TableHeader>;
+                          },
+                          tbody(props) {
+                            return <TableBody>{props.children}</TableBody>;
+                          },
+                          tr(props) {
+                            return <TableRow>{props.children}</TableRow>;
+                          },
+                          th(props) {
+                            return <TableHead className="font-semibold bg-muted/50">{props.children}</TableHead>;
+                          },
+                          td(props) {
+                            return <TableCell className="p-2">{props.children}</TableCell>;
                           },
                         }}
                       >
