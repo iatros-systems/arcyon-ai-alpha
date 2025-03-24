@@ -21,21 +21,29 @@ interface SettingsDialogProps {
 const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [activeSection, setActiveSection] = useState("general");
   
-  // Cleanup function to ensure body styles are reset when component unmounts
+  // Handle body style cleanup
+  const resetBodyStyles = () => {
+    // Force cleanup of all potentially problematic styles
+    document.body.style.removeProperty("pointer-events");
+    document.body.style.removeProperty("pointerEvents");
+    document.body.style.removeProperty("overflow");
+    document.body.style.position = "";
+  };
+  
+  // Cleanup when component unmounts
   useEffect(() => {
-    return () => {
-      // Using removeProperty to ensure complete style removal
-      document.body.style.removeProperty("pointerEvents");
-      document.body.style.removeProperty("overflow");
-    };
+    return resetBodyStyles;
   }, []);
 
-  // Additional effect to ensure styles are reset when dialog closes
+  // Cleanup when dialog closes
   useEffect(() => {
     if (!open) {
-      // Immediate cleanup when dialog closes
-      document.body.style.removeProperty("pointerEvents");
-      document.body.style.removeProperty("overflow");
+      // Immediate cleanup
+      resetBodyStyles();
+      
+      // Additional delayed cleanup to handle animation timing issues
+      setTimeout(resetBodyStyles, 100);
+      setTimeout(resetBodyStyles, 300);
     }
   }, [open]);
 
@@ -50,8 +58,16 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
     }
   };
   
+  // Custom handler to ensure cleanup when dialog closes
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      resetBodyStyles();
+    }
+    onOpenChange(newOpen);
+  };
+  
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <DialogHeader className="mb-4">
           <DialogTitle>Configurações</DialogTitle>

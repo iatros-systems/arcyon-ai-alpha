@@ -20,12 +20,17 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Helper function to reset body styles
+  const resetBodyStyles = () => {
+    document.body.style.removeProperty("pointer-events");
+    document.body.style.removeProperty("pointerEvents");
+    document.body.style.removeProperty("overflow");
+    document.body.style.position = "";
+  };
+  
   // Effect to clean up body styles when component unmounts
   useEffect(() => {
-    return () => {
-      document.body.style.removeProperty("pointerEvents");
-      document.body.style.removeProperty("overflow");
-    };
+    return resetBodyStyles;
   }, []);
 
   const handleMenuItemClick = (path: string) => {
@@ -39,13 +44,15 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
   const handleSettingsClose = (open: boolean) => {
     setSettingsOpen(open);
     
-    // Important: Use setTimeout to ensure this runs after the dialog closing animation
-    setTimeout(() => {
-      if (!open) {
-        document.body.style.removeProperty("pointerEvents");
-        document.body.style.removeProperty("overflow");
-      }
-    }, 300); // Match the duration of dialog closing animation
+    if (!open) {
+      // Immediate cleanup
+      resetBodyStyles();
+      
+      // Additional cleanup with delays to handle different timing issues
+      setTimeout(resetBodyStyles, 100);
+      setTimeout(resetBodyStyles, 300);
+      setTimeout(resetBodyStyles, 500);
+    }
   };
 
   return (
