@@ -15,7 +15,74 @@ interface ChatMessagesProps {
   loading: boolean;
 }
 
-// Função para detectar e formatar conteúdo de prescrição médica
+// Função para detectar e formatar tabelas de prescrição médica
+const formatMedicalTable = (content: string) => {
+  // Verificar se o conteúdo contém uma tabela markdown
+  if (content.includes('|') && content.includes('---')) {
+    const lines = content.split('\n');
+    const tableStartIndex = lines.findIndex(line => line.trim().startsWith('|'));
+    
+    if (tableStartIndex !== -1) {
+      // Verificar se é uma tabela de condutas médicas
+      const headerLine = lines[tableStartIndex].toLowerCase();
+      const isMedicalTable = headerLine.includes('conduta') || 
+                             headerLine.includes('dose') || 
+                             headerLine.includes('medicamento') || 
+                             headerLine.includes('intervalo');
+      
+      if (isMedicalTable) {
+        // Extrair linhas da tabela
+        let tableLines = [];
+        let i = tableStartIndex;
+        
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          tableLines.push(lines[i]);
+          i++;
+        }
+        
+        // Remover a tabela original do conteúdo
+        const contentBeforeTable = lines.slice(0, tableStartIndex).join('\n');
+        const contentAfterTable = lines.slice(i).join('\n');
+        
+        // Processar cabeçalhos e linhas da tabela
+        const headers = tableLines[0].split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim());
+        
+        // Pular a linha de separação (---|---)
+        const dataRows = tableLines.slice(2).map(line => 
+          line.split('|').filter(cell => cell.trim() !== '').map(cell => cell.trim())
+        );
+        
+        // Criar HTML para a tabela
+        const tableHtml = `
+        <div class="prescription-table">
+          <table>
+            <thead>
+              <tr>
+                ${headers.map(header => `<th>${header}</th>`).join('')}
+              </tr>
+            </thead>
+            <tbody>
+              ${dataRows.map(row => `
+                <tr>
+                  ${row.map(cell => `<td>${cell === 'N/A' ? '-' : cell}</td>`).join('')}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        `;
+        
+        // Substituir a tabela no conteúdo original
+        return `${contentBeforeTable}\n\n${tableHtml}\n\n${contentAfterTable}`;
+      }
+    }
+  }
+  
+  // Caso não seja uma tabela médica, continue com a detecção de prescrição
+  return formatMedicalPrescription(content);
+};
+
+// Função original para detectar e formatar conteúdo de prescrição médica
 const formatMedicalPrescription = (content: string) => {
   // Detectar padrões como "Condutas Iniciais:" ou listas de prescrições no formato chave: valor
   const conductPattern = /Condutas?\s+Iniciais?:|Condutas?\s*:|Prescrição:|Conduta:\s*([^\n]+)\nDose\/Comp\/Amp:/i;
@@ -187,7 +254,7 @@ const ChatMessages = ({ messages, loading }: ChatMessagesProps) => {
                         <div 
                           className="prescription-content"
                           dangerouslySetInnerHTML={{ 
-                            __html: formatMedicalPrescription(message.content)
+                            __html: formatMedicalTable(message.content)
                               .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
                                 return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
                               })

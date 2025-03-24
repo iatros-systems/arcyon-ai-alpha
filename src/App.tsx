@@ -46,10 +46,17 @@ const App = () => {
       }
       
       /* Estilos para tabelas de prescrição médica */
+      .prescription-table {
+        width: 100%;
+        overflow-x: auto;
+        margin: 1rem 0;
+        border-radius: 0.375rem;
+      }
+      
       .prescription-table table {
         width: 100%;
         border-collapse: collapse;
-        margin: 1rem 0;
+        margin: 0;
         font-size: 0.875rem;
       }
       
@@ -57,16 +64,18 @@ const App = () => {
         background-color: hsl(var(--muted) / 0.5);
         font-weight: 500;
         text-align: left;
-        padding: 0.5rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid hsl(var(--border));
       }
       
       .prescription-table td {
-        padding: 0.5rem;
-        border-bottom: 1px solid hsl(var(--border));
+        padding: 0.75rem 1rem;
+        border: 1px solid hsl(var(--border));
+        vertical-align: top;
       }
       
-      .prescription-table tr:last-child td {
-        border-bottom: none;
+      .prescription-table tr:nth-child(even) {
+        background-color: hsl(var(--muted) / 0.2);
       }
       
       .prescription-content {
@@ -75,6 +84,19 @@ const App = () => {
       
       .prescription-content table {
         margin: 1rem 0;
+      }
+      
+      /* Estilos responsivos para tabelas em telas pequenas */
+      @media (max-width: 640px) {
+        .prescription-table {
+          overflow-x: auto;
+        }
+        
+        .prescription-table th, 
+        .prescription-table td {
+          padding: 0.5rem;
+          font-size: 0.75rem;
+        }
       }
     `;
     document.head.appendChild(style);
