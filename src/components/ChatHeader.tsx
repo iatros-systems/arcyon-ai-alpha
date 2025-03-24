@@ -21,11 +21,15 @@ const ChatHeader = ({
 }: ChatHeaderProps) => {
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <header className="flex h-14 items-center justify-between border-b px-4 md:px-6">
       <div className="flex items-center">
         <Button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
+          onClick={toggleSidebar}
           variant="ghost"
           size="icon"
           className="md:hidden"

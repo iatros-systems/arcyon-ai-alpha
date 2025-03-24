@@ -21,16 +21,22 @@ const Chat = () => {
     return savedState ? savedState === "true" : false;
   });
 
-  // Listen for sidebar collapse changes
+  // Listen for sidebar state changes
   useEffect(() => {
-    const handleStorageChange = () => {
+    const handleSidebarStateChange = () => {
       const collapsed = localStorage.getItem("sidebar-collapsed") === "true";
       setSidebarCollapsed(collapsed);
     };
 
-    window.addEventListener("storage", handleStorageChange);
+    // Listen for the custom event fired when sidebar state changes
+    window.addEventListener("sidebar-state-changed", handleSidebarStateChange);
+    
+    // Also listen for storage events for cross-tab synchronization
+    window.addEventListener("storage", handleSidebarStateChange);
+    
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("sidebar-state-changed", handleSidebarStateChange);
+      window.removeEventListener("storage", handleSidebarStateChange);
     };
   }, []);
 
@@ -221,7 +227,11 @@ const Chat = () => {
       />
       
       <div 
-        className={`flex flex-col flex-1 h-full ml-0 md:${sidebarCollapsed ? 'ml-16' : 'ml-72'} transition-all duration-300`}
+        className={`flex flex-col flex-1 h-full transition-all duration-300 ${
+          sidebarCollapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-72'
+        }`}
       >
         <ChatHeader 
           sidebarOpen={sidebarOpen} 
