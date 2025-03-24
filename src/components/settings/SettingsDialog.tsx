@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import SettingsSidebar from "./SettingsSidebar";
@@ -20,13 +21,23 @@ interface SettingsDialogProps {
 const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
   const [activeSection, setActiveSection] = useState("general");
   
-  // Garantimos que o body esteja navegável quando o componente é desmontado
+  // Cleanup function to ensure body styles are reset when component unmounts
   useEffect(() => {
     return () => {
+      // Using removeProperty to ensure complete style removal
       document.body.style.removeProperty("pointerEvents");
       document.body.style.removeProperty("overflow");
     };
   }, []);
+
+  // Additional effect to ensure styles are reset when dialog closes
+  useEffect(() => {
+    if (!open) {
+      // Immediate cleanup when dialog closes
+      document.body.style.removeProperty("pointerEvents");
+      document.body.style.removeProperty("overflow");
+    }
+  }, [open]);
 
   const renderActiveSection = () => {
     switch (activeSection) {
@@ -44,6 +55,9 @@ const SettingsDialog = ({ open, onOpenChange }: SettingsDialogProps) => {
       <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
         <DialogHeader className="mb-4">
           <DialogTitle>Configurações</DialogTitle>
+          <DialogDescription className="sr-only">
+            Configurações da aplicação
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex h-[calc(100vh-6rem)]">

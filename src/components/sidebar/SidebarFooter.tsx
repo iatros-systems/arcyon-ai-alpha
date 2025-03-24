@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,6 +20,14 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // Effect to clean up body styles when component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.removeProperty("pointerEvents");
+      document.body.style.removeProperty("overflow");
+    };
+  }, []);
+
   const handleMenuItemClick = (path: string) => {
     navigate(path);
   };
@@ -30,11 +38,14 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
 
   const handleSettingsClose = (open: boolean) => {
     setSettingsOpen(open);
-    // Garantimos que o body esteja navegável quando o modal é fechado
-    if (!open) {
-      document.body.style.removeProperty("pointerEvents");
-      document.body.style.removeProperty("overflow");
-    }
+    
+    // Important: Use setTimeout to ensure this runs after the dialog closing animation
+    setTimeout(() => {
+      if (!open) {
+        document.body.style.removeProperty("pointerEvents");
+        document.body.style.removeProperty("overflow");
+      }
+    }, 300); // Match the duration of dialog closing animation
   };
 
   return (
