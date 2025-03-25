@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User, Stethoscope } from "lucide-react";
@@ -44,11 +43,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           </div>
         </div>
         
-        <div className="message-content pl-10 overflow-x-auto w-full"> 
+        <div className="message-content pl-2 overflow-x-auto w-full text-left"> 
           {message.role === "assistant" ? (
-            <div className="prose prose-sm dark:prose-invert max-w-none text-left">
+            <div className="prose prose-sm dark:prose-invert max-w-none">
               <div 
-                className="prescription-content text-left text-sm space-y-3"
+                className="prescription-content text-sm space-y-3"
                 dangerouslySetInnerHTML={{ 
                   __html: formatMedicalTable(message.content)
                     .replace(/```(\w*)([\s\S]*?)```/g, (match, lang, code) => {
