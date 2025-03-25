@@ -84,7 +84,7 @@ const WorkspaceSidebar = ({ activeSection = "members" }: WorkspaceSidebarProps) 
           />
           <WorkspaceSidebarItem 
             icon={<DollarSign className="h-4 w-4" />} 
-            label="GPT" 
+            label="Arcyon AI" 
             href="/workspace/gpt"
             isActive={activeSection === "gpt"}
           />
