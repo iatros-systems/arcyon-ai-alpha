@@ -27,7 +27,7 @@ const ChatHeader = ({
 
   return (
     <header className="flex h-14 items-center justify-between border-b px-4 md:px-6 bg-background">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Button
           onClick={toggleSidebar}
           variant="ghost"
@@ -36,17 +36,6 @@ const ChatHeader = ({
         >
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        
-        <div className="hidden md:flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/9c6a7a02-a819-4f62-bfda-f4c27c57306f.png" 
-              alt="Arcyon Logo" 
-              className="h-8 w-8" 
-            />
-          </div>
-          <h1 className="text-xl font-semibold text-[#6366f1]">Arcyon</h1>
-        </div>
       </div>
       
       <div className="flex items-center gap-2">

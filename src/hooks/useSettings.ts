@@ -74,7 +74,7 @@ export function useSettings() {
         systemInstructions
       });
       
-      // Determine which system prompt to use
+      // Update system prompt in all chats
       let systemPrompt = '';
       if (systemInstructions) {
         systemPrompt = systemInstructions;
@@ -82,8 +82,10 @@ export function useSettings() {
         systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
       }
       
-      // Update system prompt in all chats if required
-      // Note: This is now handled by the PromptSettingsTab component's handleSaveAndUpdateChats method
+      if (systemPrompt && chats.length > 0) {
+        const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
+        setChats(updatedChats);
+      }
       
       toast({
         title: "Configurações salvas",

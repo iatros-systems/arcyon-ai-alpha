@@ -7,11 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { UploadCloud, Save, FileText, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useRef } from "react";
-import { useSettings } from "@/hooks/useSettings";
+import { useSettingsContext } from "@/contexts/SettingsContext";
 import { useChatStore } from "@/store/chat-store";
 import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
-import { useToast } from "@/components/ui/use-toast";
 
 const PromptSettingsTab = () => {
   const {
@@ -21,12 +20,11 @@ const PromptSettingsTab = () => {
     setSystemInstructions,
     handleSave,
     isSaving
-  } = useSettings();
+  } = useSettingsContext();
   
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { chats, setChats } = useChatStore();
-  const { toast } = useToast();
+  const { chats, setChats, currentChat } = useChatStore();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -34,11 +32,7 @@ const PromptSettingsTab = () => {
 
     // Only accept markdown files
     if (file.type !== "text/markdown" && !file.name.endsWith(".md")) {
-      toast({
-        title: "Formato inválido",
-        description: "Por favor, selecione apenas arquivos Markdown (.md)",
-        variant: "destructive"
-      });
+      alert("Por favor, selecione apenas arquivos Markdown (.md)");
       return;
     }
 
@@ -75,15 +69,10 @@ const PromptSettingsTab = () => {
       systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
     }
     
-    if (systemPrompt && chats.length > 0) {
+    if (systemPrompt) {
       // Update all chats with the new system prompt
       const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
       setChats(updatedChats);
-      
-      toast({
-        title: "Prompt atualizado",
-        description: "O prompt do sistema foi atualizado em todas as conversas existentes.",
-      });
     }
   };
 
@@ -179,6 +168,11 @@ const PromptSettingsTab = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="border rounded-md p-4 bg-muted/50 prose prose-sm max-w-none dark:prose-invert">
+            {/* 
+              For simplicity, we're just displaying the raw markdown.
+              In a real app, you would use a markdown renderer like react-markdown:
+              <ReactMarkdown>{systemInstructions}</ReactMarkdown>
+            */}
             <pre className="whitespace-pre-wrap">{systemInstructions}</pre>
           </div>
         </DialogContent>
