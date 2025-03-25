@@ -78,12 +78,12 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[95%] max-w-[95%] sm:w-auto">
         {!showSettingsAuth ? (
           <>
             <DialogHeader>
               <DialogTitle>Configurar API da Gemini</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="break-words">
                 Insira sua chave de API do Gemini para utilizar o assistente.
                 Obtenha sua chave em{" "}
                 <a
@@ -96,7 +96,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 </a>
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-4 py-2">
               <div className="grid gap-2">
                 <Label htmlFor="api-key">Chave da API</Label>
                 <Input
@@ -109,7 +109,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 />
               </div>
             </div>
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
@@ -146,7 +146,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 Digite a senha para acessar as configurações avançadas
               </DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-4 py-2">
               <div className="grid gap-2">
                 <Label htmlFor="settings-password">Senha</Label>
                 <Input
@@ -163,7 +163,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 </p>
               </div>
             </div>
-            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
               <Button
                 variant="outline"
                 onClick={() => setShowSettingsAuth(false)}
