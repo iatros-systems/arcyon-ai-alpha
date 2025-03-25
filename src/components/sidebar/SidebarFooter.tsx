@@ -66,7 +66,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
               RF
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 text-left">
                 <p className="text-sm font-medium truncate">Dr. Romulo Farias</p>
                 <p className="text-xs text-muted-foreground truncate">Emergência</p>
               </div>
