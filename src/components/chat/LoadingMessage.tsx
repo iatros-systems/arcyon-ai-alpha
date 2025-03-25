@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Stethoscope } from "lucide-react";
 
 const LoadingMessage = () => {
   return (
@@ -10,8 +9,16 @@ const LoadingMessage = () => {
         <div className="flex items-start">
           <div className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
+              <AvatarImage 
+                src="/lovable-uploads/9c6a7a02-a819-4f62-bfda-f4c27c57306f.png" 
+                alt="Arcyon Logo" 
+              />
               <AvatarFallback className="bg-sky-100">
-                <Stethoscope className="h-4 w-4" color="#33C3F0" />
+                <img 
+                  src="/lovable-uploads/9c6a7a02-a819-4f62-bfda-f4c27c57306f.png" 
+                  alt="Arcyon Logo" 
+                  className="h-4 w-4" 
+                />
               </AvatarFallback>
             </Avatar>
             <div className="font-medium">Arcyon</div>
