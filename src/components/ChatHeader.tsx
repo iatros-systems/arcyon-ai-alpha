@@ -38,8 +38,12 @@ const ChatHeader = ({
         </Button>
         
         <div className="hidden md:flex items-center gap-2">
-          <div className="h-8 w-8 bg-[#6366f1] rounded-md flex items-center justify-center">
-            <span className="text-white font-semibold">A</span>
+          <div className="h-8 w-8 rounded-md flex items-center justify-center">
+            <img 
+              src="/lovable-uploads/9c6a7a02-a819-4f62-bfda-f4c27c57306f.png" 
+              alt="Arcyon Logo" 
+              className="h-8 w-8" 
+            />
           </div>
           <h1 className="text-xl font-semibold text-[#6366f1]">Arcyon</h1>
         </div>
