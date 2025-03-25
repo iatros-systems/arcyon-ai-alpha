@@ -17,6 +17,7 @@ import WorkspaceLayout from "./pages/workspace/WorkspaceLayout";
 import WorkspaceHome from "./pages/workspace/WorkspaceHome";
 import WorkspaceMembers from "./pages/workspace/WorkspaceMembers";
 import WorkspaceBilling from "./pages/workspace/WorkspaceBilling";
+import WorkspaceGpt from "./pages/workspace/WorkspaceGpt";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => {
                 <Route index element={<WorkspaceHome />} />
                 <Route path="members" element={<WorkspaceMembers />} />
                 <Route path="billing" element={<WorkspaceBilling />} />
+                <Route path="gpt" element={<WorkspaceGpt />} />
               </Route>
               <Route 
                 path="/settings" 
