@@ -84,15 +84,6 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
               <DialogTitle>Configurar API</DialogTitle>
               <DialogDescription className="break-words">
                 Insira sua chave de API para utilizar o assistente.
-                Obtenha sua chave em{" "}
-                <a
-                  href="https://ai.google.dev/tutorials/setup"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-primary underline"
-                >
-                  ai.google.dev
-                </a>
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-4 py-2">
