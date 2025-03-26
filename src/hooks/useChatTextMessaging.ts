@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useChatStore } from "@/store/chat-store";
 import { sendMessageToGemini, hasApiKey } from "@/services/api";
@@ -21,10 +20,11 @@ export const useChatTextMessaging = () => {
     }
 
     try {
+      // Set loading to true before adding the user message
+      setLoading(true);
+      
       // Add user message to chat
       addMessage(messageContent, "user");
-      
-      setLoading(true);
       
       // Prepare messages for API
       if (!currentChat) {
@@ -41,6 +41,9 @@ export const useChatTextMessaging = () => {
           content: messageContent,
         });
       }
+      
+      // Small delay to ensure the UI updates and shows the loading indicator
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       // Send messages to API
       const response = await sendMessageToGemini(messagesToSend);

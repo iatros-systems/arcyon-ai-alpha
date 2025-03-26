@@ -138,7 +138,9 @@ export const sendMessageToGemini = async (
     }
 
     const textResponse = data.candidates[0].content.parts[0].text;
-    return textResponse;
+    // Remove o texto indesejado da resposta
+    const cleanedResponse = textResponse.replace(/# No tool code needed for this request\./g, '').trim();
+    return cleanedResponse;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     throw error;

@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Message } from "@/types";
 import Markdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { nord } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { formatMedicalTable } from "@/utils/tableFormatters";
 
@@ -27,13 +26,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             {message.role === "user" ? (
               <>
                 <AvatarFallback className="bg-iatros-blue text-white">
-                  <User className="h-4 w-4" />
+                  <Stethoscope className="h-4 w-4" />
                 </AvatarFallback>
               </>
             ) : (
               <>
                 <AvatarFallback className="bg-sky-100">
-                  <Stethoscope className="h-4 w-4" color="#33C3F0" />
+                  <img src="/logo.svg" alt="Arcyon Logo" className="h-5 w-5" />
                 </AvatarFallback>
               </>
             )}
@@ -87,7 +86,6 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                   return match ? (
                     <SyntaxHighlighter
                       language={match[1]}
-                      style={nord}
                       PreTag="div"
                       className="rounded-md text-sm my-3"
                     >

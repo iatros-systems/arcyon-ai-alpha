@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, Users, Palette } from "lucide-react";
+import { LogOut, Settings, Users, Palette, Stethoscope } from "lucide-react";
 import SettingsDialog from "../settings/SettingsDialog";
 
 interface SidebarFooterProps {
@@ -63,7 +62,7 @@ const SidebarFooter = ({ collapsed }: SidebarFooterProps) => {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
             <div className="h-9 w-9 rounded-full bg-iatros-blue flex items-center justify-center text-white">
-              RF
+              <Stethoscope className="h-5 w-5" />
             </div>
             {!collapsed && (
               <div className="flex-1 text-left">
