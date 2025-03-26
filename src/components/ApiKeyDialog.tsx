@@ -77,7 +77,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95%] max-w-md mx-auto">
+      <DialogContent className="w-[95%] max-w-lg mx-auto">
         {!showSettingsAuth ? (
           <>
             <DialogHeader>
