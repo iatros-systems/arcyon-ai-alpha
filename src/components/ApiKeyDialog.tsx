@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -78,7 +77,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md w-[95%] max-w-[95%] sm:w-auto">
+      <DialogContent className="w-[95%] max-w-md mx-auto">
         {!showSettingsAuth ? (
           <>
             <DialogHeader>
