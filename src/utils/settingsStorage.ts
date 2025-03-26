@@ -1,5 +1,6 @@
-
 // Utility functions for managing application settings in localStorage
+
+import { FileAttachment } from "@/services/api";
 
 // API Key management
 export const getStoredApiKey = (): string => {
@@ -53,6 +54,56 @@ export const saveSystemPromptSettings = (settings: {
 }): void => {
   localStorage.setItem("system-prompt-pathology", settings.pathology);
   localStorage.setItem("system-instructions", settings.systemInstructions);
+};
+
+// Pathology-specific settings interface
+export interface PathologySettings {
+  systemPrompt: string;
+  attachments: FileAttachment[];
+}
+
+// Pathology-specific system prompt management
+export const getPathologySystemPrompt = (pathology: string): string => {
+  try {
+    const key = `pathology-${pathology}-system-prompt`;
+    const stored = localStorage.getItem(key);
+    return stored || "";
+  } catch (error) {
+    console.error("Error getting pathology system prompt:", error);
+    return "";
+  }
+};
+
+export const savePathologySystemPrompt = (pathology: string, prompt: string): void => {
+  try {
+    const key = `pathology-${pathology}-system-prompt`;
+    localStorage.setItem(key, prompt);
+  } catch (error) {
+    console.error("Error saving pathology system prompt:", error);
+  }
+};
+
+// Pathology-specific attachments management
+export const getPathologyAttachments = (pathology: string): FileAttachment[] => {
+  try {
+    const key = `pathology-${pathology}-attachments`;
+    const stored = localStorage.getItem(key);
+    if (!stored) return [];
+    
+    return JSON.parse(stored);
+  } catch (error) {
+    console.error("Error getting pathology attachments:", error);
+    return [];
+  }
+};
+
+export const savePathologyAttachments = (pathology: string, attachments: FileAttachment[]): void => {
+  try {
+    const key = `pathology-${pathology}-attachments`;
+    localStorage.setItem(key, JSON.stringify(attachments));
+  } catch (error) {
+    console.error("Error saving pathology attachments:", error);
+  }
 };
 
 // Password management

@@ -1,4 +1,3 @@
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { ChatState } from "./chat/types";
@@ -32,8 +31,8 @@ export const useChatStore = create<ChatState>()(
         }));
       },
 
-      addMessage: (content, role) => {
-        const message = createMessage(content, role);
+      addMessage: (content, role, reasoningContent, apiUsed) => {
+        const message = createMessage(content, role, reasoningContent, apiUsed);
 
         set((state) => {
           if (!state.currentChat) return state;
@@ -77,6 +76,27 @@ export const useChatStore = create<ChatState>()(
             currentChat: state.currentChat?.id === chatId
               ? updatedCurrentChat
               : state.currentChat,
+          };
+        });
+      },
+
+      updateChatMetadata: (chatId, metadata) => {
+        set((state) => {
+          // Atualizar os metadados do chat específico
+          const updatedChats = state.chats.map((chat) => 
+            chat.id === chatId 
+              ? { ...chat, metadata: { ...chat.metadata, ...metadata } }
+              : chat
+          );
+          
+          // Atualizar também o chat atual se for o mesmo
+          const updatedCurrentChat = state.currentChat?.id === chatId
+            ? { ...state.currentChat, metadata: { ...state.currentChat.metadata, ...metadata } }
+            : state.currentChat;
+          
+          return {
+            chats: updatedChats,
+            currentChat: updatedCurrentChat,
           };
         });
       },

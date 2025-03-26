@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useChatStore } from "@/store/chat-store";
-import { sendMessageToGemini, hasApiKey } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
 import { prepareMessagesForApi } from "@/utils/chatMessageUtils";
+import { sendMessage, hasAnyApiConfigured, getActiveApiName } from "@/services/messageService";
 
 export const useChatTextMessaging = () => {
   const { currentChat, addMessage } = useChatStore();
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [responseTime, setResponseTime] = useState<number | null>(null);
 
   const sendTextMessage = async (messageContent: string): Promise<boolean> => {
-    if (!hasApiKey()) {
+    if (!hasAnyApiConfigured()) {
       toast({
-        title: "Chave de API não configurada",
-        description: "Configure sua chave de API nas configurações.",
+        title: "API não configurada",
+        description: "Configure pelo menos uma API nas configurações.",
         variant: "destructive",
       });
       return false;
@@ -45,11 +46,34 @@ export const useChatTextMessaging = () => {
       // Small delay to ensure the UI updates and shows the loading indicator
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Send messages to API
-      const response = await sendMessageToGemini(messagesToSend);
+      // Get the name of the active API for the toast notification
+      const apiName = getActiveApiName();
       
-      // Add AI response to chat
-      addMessage(response, "assistant");
+      // Registrar o tempo de início
+      const startTime = Date.now();
+      
+      // Send messages to API using the new service
+      const response = await sendMessage(messagesToSend);
+      
+      // Calcular o tempo de resposta
+      const endTime = Date.now();
+      const responseTimeInSeconds = Math.round((endTime - startTime) / 1000);
+      setResponseTime(responseTimeInSeconds);
+      
+      // Add AI response to chat with reasoning content if available and the API name used
+      if (response.reasoningContent) {
+        addMessage(response.content, "assistant", response.reasoningContent, apiName);
+      } else {
+        addMessage(response.content, "assistant", undefined, apiName);
+      }
+      
+      // Show a subtle toast notification indicating which API was used
+      toast({
+        title: `Resposta gerada por ${apiName}`,
+        description: "A resposta foi processada com sucesso.",
+        duration: 3000,
+      });
+      
       return true;
     } catch (error) {
       console.error("Error sending message:", error);
@@ -67,6 +91,8 @@ export const useChatTextMessaging = () => {
   return {
     loading,
     setLoading,
-    sendTextMessage
+    sendTextMessage,
+    responseTime,
+    getActiveApiName // Exportar a função para uso em outros componentes
   };
 };

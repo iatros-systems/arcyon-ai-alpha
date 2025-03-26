@@ -13,9 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Settings, ShieldCheck } from "lucide-react";
 import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
-import { hasDeepSeekApiKey, setDeepSeekApiKey, getDeepSeekApiKey } from "@/services/deepseek";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ApiKeyDialogProps {
   open: boolean;
@@ -25,23 +23,16 @@ interface ApiKeyDialogProps {
 const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
   const navigate = useNavigate();
   const [apiKey, setApiKeyState] = useState("");
-  const [deepseekApiKey, setDeepseekApiKeyState] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showSettingsAuth, setShowSettingsAuth] = useState(false);
   const [password, setPassword] = useState("");
-  const [activeTab, setActiveTab] = useState("gemini");
 
   useEffect(() => {
-    // Load existing API keys if available
+    // Load existing API key if available
     if (open) {
       const existingKey = getApiKey();
       if (existingKey) {
         setApiKeyState(existingKey);
-      }
-      
-      const existingDeepseekKey = getDeepSeekApiKey();
-      if (existingDeepseekKey) {
-        setDeepseekApiKeyState(existingDeepseekKey);
       }
       
       // Reset other states
@@ -51,27 +42,16 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
   }, [open]);
 
   const handleSave = () => {
-    if (activeTab === "gemini" && !apiKey.trim()) {
-      toast.error("Por favor, insira uma chave de API válida para o Gemini");
-      return;
-    }
-    
-    if (activeTab === "deepseek" && !deepseekApiKey.trim()) {
-      toast.error("Por favor, insira uma chave de API válida para o DeepSeek");
+    if (!apiKey.trim()) {
+      toast.error("Por favor, insira uma chave de API válida");
       return;
     }
     
     setIsSaving(true);
     try {
-      if (activeTab === "gemini") {
-        setApiKey(apiKey);
-        toast.success("API key do Gemini salva com sucesso");
-      } else if (activeTab === "deepseek") {
-        setDeepSeekApiKey(deepseekApiKey);
-        toast.success("API key do DeepSeek salva com sucesso");
-      }
-      
+      setApiKey(apiKey);
       onOpenChange(false);
+      toast.success("API key salva com sucesso");
     } catch (error) {
       console.error("Failed to save API key:", error);
       toast.error("Erro ao salvar API key");
@@ -106,49 +86,19 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 Insira sua chave de API para utilizar o assistente.
               </DialogDescription>
             </DialogHeader>
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="gemini">Gemini</TabsTrigger>
-                <TabsTrigger value="deepseek">DeepSeek R1</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="gemini">
-                <div className="flex flex-col gap-4 py-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="api-key">Chave da API Gemini</Label>
-                    <Input
-                      id="api-key"
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKeyState(e.target.value)}
-                      placeholder="sua-chave-de-api-gemini"
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="deepseek">
-                <div className="flex flex-col gap-4 py-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="deepseek-api-key">Chave da API DeepSeek</Label>
-                    <Input
-                      id="deepseek-api-key"
-                      type="password"
-                      value={deepseekApiKey}
-                      onChange={(e) => setDeepseekApiKeyState(e.target.value)}
-                      placeholder="sua-chave-de-api-deepseek"
-                      className="w-full"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      O DeepSeek R1 com DeepThin expõe o processo de pensamento interno do modelo na resposta da API.
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-            
+            <div className="flex flex-col gap-4 py-2">
+              <div className="grid gap-2">
+                <Label htmlFor="api-key">Chave da API</Label>
+                <Input
+                  id="api-key"
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKeyState(e.target.value)}
+                  placeholder="sua-chave-de-api"
+                  className="w-full"
+                />
+              </div>
+            </div>
             <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
               <Button
                 variant="outline"
@@ -160,7 +110,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={(activeTab === "gemini" && !apiKey) || (activeTab === "deepseek" && !deepseekApiKey) || isSaving}
+                disabled={!apiKey || isSaving}
                 className="sm:order-2"
               >
                 {isSaving ? "Salvando..." : "Salvar"}

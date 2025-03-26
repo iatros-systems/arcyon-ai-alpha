@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { setApiKey, getApiKey, hasApiKey } from "@/services/api";
@@ -14,6 +13,10 @@ import {
 import { useChatStore } from "@/store/chat-store"; 
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
 import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
+import { getDeepSeekApiKey, hasDeepSeekApiKey } from "@/services/deepseek";
+
+// Tipo para as APIs disponíveis
+export type ApiProvider = "gemini" | "deepseek";
 
 export function useSettings() {
   const { toast } = useToast();
@@ -26,6 +29,8 @@ export function useSettings() {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [pathology, setPathology] = useState("");
   const [systemInstructions, setSystemInstructions] = useState("");
+  const [preferredApiProvider, setPreferredApiProvider] = useState<ApiProvider>("gemini");
+  const [showModelThinking, setShowModelThinking] = useState(true);
   const { chats, setChats } = useChatStore();
   
   // Password management states
@@ -47,6 +52,25 @@ export function useSettings() {
     setMaxTokens(modelSettings.maxTokens);
     setAdvancedMode(modelSettings.advancedMode);
     
+    // Load preferred API provider
+    const storedProvider = localStorage.getItem("preferred-api-provider") as ApiProvider;
+    if (storedProvider) {
+      setPreferredApiProvider(storedProvider);
+    } else {
+      // Define a API padrão com base nas chaves disponíveis
+      if (hasDeepSeekApiKey()) {
+        setPreferredApiProvider("deepseek");
+      } else if (hasApiKey()) {
+        setPreferredApiProvider("gemini");
+      }
+    }
+    
+    // Load show model thinking setting
+    const storedShowThinking = localStorage.getItem("show-model-thinking");
+    if (storedShowThinking !== null) {
+      setShowModelThinking(storedShowThinking === "true");
+    }
+    
     // Load system prompt settings
     const promptSettings = getStoredSystemPromptSettings();
     setPathology(promptSettings.pathology);
@@ -58,6 +82,12 @@ export function useSettings() {
     try {
       // Save API key
       setApiKey(apiKey);
+      
+      // Save preferred API provider
+      localStorage.setItem("preferred-api-provider", preferredApiProvider);
+      
+      // Save show model thinking setting
+      localStorage.setItem("show-model-thinking", showModelThinking.toString());
       
       // Save model settings
       saveModelSettings({
@@ -166,6 +196,8 @@ export function useSettings() {
     currentPassword,
     newPassword,
     confirmPassword,
+    preferredApiProvider,
+    showModelThinking,
 
     // Setters
     setApiKeyState,
@@ -179,6 +211,8 @@ export function useSettings() {
     setCurrentPassword,
     setNewPassword,
     setConfirmPassword,
+    setPreferredApiProvider,
+    setShowModelThinking,
 
     // Handlers
     handleSave,

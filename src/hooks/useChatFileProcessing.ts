@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useChatStore } from "@/store/chat-store";
-import { sendMessageToGemini } from "@/services/api";
 import { useToast } from "@/components/ui/use-toast";
+import { sendMessage, hasAnyApiConfigured, getActiveApiName } from "@/services/messageService";
 
 export const useChatFileProcessing = () => {
   const { currentChat, addMessage } = useChatStore();
@@ -10,6 +9,15 @@ export const useChatFileProcessing = () => {
   const { toast } = useToast();
 
   const processImageFile = async (file: File, messageContent: string): Promise<boolean> => {
+    if (!hasAnyApiConfigured()) {
+      toast({
+        title: "API não configurada",
+        description: "Configure pelo menos uma API nas configurações.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
     try {
       // Add the file info message to the chat
       const fileNames = file.name;
@@ -31,7 +39,10 @@ export const useChatFileProcessing = () => {
           setLoading(true);
           
           try {
-            // Send the image data to Gemini
+            // Get the name of the active API for the toast notification
+            const apiName = getActiveApiName();
+            
+            // Send the image data to the selected API
             const systemMessage = currentChat?.messages.find(m => m.role === "system");
             const messagesToSend = [];
             
@@ -47,8 +58,22 @@ export const useChatFileProcessing = () => {
               content: imageMessage,
             });
             
-            const response = await sendMessageToGemini(messagesToSend);
-            addMessage(response, "assistant");
+            const response = await sendMessage(messagesToSend);
+            
+            // Add AI response to chat with reasoning content if available
+            if (response.reasoningContent) {
+              addMessage(response.content, "assistant", response.reasoningContent);
+            } else {
+              addMessage(response.content, "assistant");
+            }
+            
+            // Show a subtle toast notification indicating which API was used
+            toast({
+              title: `Imagem processada por ${apiName}`,
+              description: "A imagem foi analisada com sucesso.",
+              duration: 3000,
+            });
+            
             resolve(true);
           } catch (error) {
             console.error("Error processing image:", error);

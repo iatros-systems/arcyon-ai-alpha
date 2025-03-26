@@ -29,8 +29,37 @@ export const hasApiKey = () => {
   return false;
 };
 
+// Interface para representar um arquivo anexado
+export interface FileAttachment {
+  name: string;
+  type: string;
+  size: number;
+  base64: string;
+}
+
+// Função para determinar o MIME type com base na extensão do arquivo
+export const getMimeTypeFromExtension = (filename: string): string => {
+  const extension = filename.split('.').pop()?.toLowerCase();
+  
+  const mimeTypes: Record<string, string> = {
+    'pdf': 'application/pdf',
+    'txt': 'text/plain',
+    'doc': 'application/msword',
+    'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'xls': 'application/vnd.ms-excel',
+    'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'csv': 'text/csv',
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg'
+  };
+  
+  return extension && mimeTypes[extension] ? mimeTypes[extension] : 'application/octet-stream';
+};
+
 export const sendMessageToGemini = async (
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
+  attachments?: FileAttachment[]
 ): Promise<string> => {
   const apiKey = getApiKey();
   
@@ -52,6 +81,33 @@ export const sendMessageToGemini = async (
       if (role === "user") role = "user";
       if (role === "assistant") role = "model";
       if (role === "system") role = "user"; // Gemini doesn't have a system role, prepend to first user message
+      
+      // Se for uma mensagem do sistema e tiver anexos, adicione-os à mensagem
+      if (role === "user" && msg.role === "system" && attachments && attachments.length > 0) {
+        const contentParts = [];
+        
+        // Adicionar o texto do prompt do sistema
+        contentParts.push({ text: msg.content });
+        
+        // Adicionar cada anexo como uma parte da mensagem
+        for (const attachment of attachments) {
+          // Determinar o MIME type correto
+          const mimeType = attachment.type || getMimeTypeFromExtension(attachment.name);
+          
+          // Adicionar o arquivo como inline data
+          contentParts.push({
+            inlineData: {
+              mimeType: mimeType,
+              data: attachment.base64
+            }
+          });
+        }
+        
+        return {
+          role,
+          parts: contentParts
+        };
+      }
       
       // If this is an image message, format it specially for the Gemini 1.5 API
       if (isImageMessage && role === "user") {

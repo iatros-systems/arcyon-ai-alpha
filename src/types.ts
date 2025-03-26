@@ -1,9 +1,10 @@
-
 export interface Message {
   id: string;
   role: string;
   content: string;
   createdAt: string;
+  reasoningContent?: string;
+  apiUsed?: string;
 }
 
 export interface Chat {
@@ -26,4 +27,26 @@ export interface GeminiResponse {
       }[];
     };
   }[];
+}
+
+// Add DeepSeekResponse interface for the API
+export interface DeepSeekResponse {
+  id: string;
+  object: string;
+  created: number;
+  model: string;
+  choices: {
+    index: number;
+    message: {
+      role: string;
+      content: string;
+      reasoning_content?: string;
+    };
+    finish_reason: string;
+  }[];
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }

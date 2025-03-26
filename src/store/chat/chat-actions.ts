@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from "uuid";
 import { Chat } from "./types";
 import { Message } from "@/types";
@@ -39,12 +38,19 @@ export const createNewChat = (projectId?: string): Chat => {
   };
 };
 
-export const createMessage = (content: string, role: string): Message => {
+export const createMessage = (
+  content: string, 
+  role: string, 
+  reasoningContent?: string,
+  apiUsed?: string
+): Message => {
   return {
     id: uuidv4(),
     role,
     content,
     createdAt: new Date().toISOString(),
+    reasoningContent,
+    apiUsed,
   };
 };
 
