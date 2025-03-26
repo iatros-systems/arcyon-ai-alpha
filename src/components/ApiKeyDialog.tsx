@@ -81,9 +81,9 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
         {!showSettingsAuth ? (
           <>
             <DialogHeader>
-              <DialogTitle>Configurar API da Gemini</DialogTitle>
+              <DialogTitle>Configurar API</DialogTitle>
               <DialogDescription className="break-words">
-                Insira sua chave de API do Gemini para utilizar o assistente.
+                Insira sua chave de API para utilizar o assistente.
                 Obtenha sua chave em{" "}
                 <a
                   href="https://ai.google.dev/tutorials/setup"
@@ -103,7 +103,7 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKeyState(e.target.value)}
-                  placeholder="AIzaSyA..."
+                  placeholder="sua-chave-de-api"
                   className="w-full"
                 />
               </div>
