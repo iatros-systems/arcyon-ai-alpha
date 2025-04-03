@@ -72,11 +72,11 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
   // Verificar se há um prompt de sistema e anexos
   useEffect(() => {
-    checkSystemPromptAndAttachments();
+    checkPathologyResources();
 
     // Verificar periodicamente
     const intervalId = setInterval(() => {
-      checkSystemPromptAndAttachments();
+      checkPathologyResources();
     }, 5000);
 
     return () => {
@@ -84,26 +84,28 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     };
   }, []);
 
-  const checkSystemPromptAndAttachments = () => {
-    // Obter a patologia atual
-    const settings = getStoredSystemPromptSettings();
-    const pathology = settings.pathology;
-    setCurrentPathology(pathology);
-
-    // Verificar se há um prompt de sistema
+  const checkPathologyResources = async () => {
+    const { pathology } = currentChat?.metadata || {};
+    
     if (!pathology) {
       setHasSystemPrompt(false);
       setHasAttachments(false);
       return;
     }
 
-    // Verificar se há um prompt de sistema para a patologia atual
-    const systemPrompt = getPathologySystemPrompt(pathology);
-    setHasSystemPrompt(!!systemPrompt && systemPrompt.trim() !== "");
+    try {
+      // Verificar se há um prompt de sistema para a patologia atual
+      const systemPrompt = await getPathologySystemPrompt(pathology);
+      setHasSystemPrompt(!!systemPrompt && systemPrompt.trim() !== "");
 
-    // Verificar se há anexos para a patologia atual
-    const attachments = getPathologyAttachments(pathology);
-    setHasAttachments(attachments && attachments.length > 0);
+      // Verificar se há anexos para a patologia atual
+      const attachments = await getPathologyAttachments(pathology);
+      setHasAttachments(attachments && attachments.length > 0);
+    } catch (error) {
+      console.error("Erro ao verificar recursos da patologia:", error);
+      setHasSystemPrompt(false);
+      setHasAttachments(false);
+    }
   };
 
   // Função para aceitar os termos

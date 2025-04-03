@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { NavigateFunction } from "react-router-dom";
 import { useSettingsContext } from "@/contexts/SettingsContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Settings, LightbulbIcon, Paperclip, X, FileText, Upload } from "lucide-react";
+import { Brain, Settings, LightbulbIcon, Paperclip, X, FileText, Upload, Mic, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { getDeepSeekApiKey, setDeepSeekApiKey, hasDeepSeekApiKey } from "@/services/deepseek";
+import { getDeepSeekApiKey, setDeepSeekApiKey, hasDeepSeekApiKey, hasDeepSeekApiKeySync } from "@/services/deepseek";
+import { getElevenlabsApiKey, setElevenlabsApiKey, hasElevenlabsApiKey, hasElevenlabsApiKeySync } from "@/services/elevenlabs";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { hasApiKey } from "@/services/api";
@@ -18,6 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { FileAttachment } from "@/services/api";
+import { loadElevenlabsWidget, removeElevenlabsWidget } from "@/services/elevenlabs";
+import { checkFirestoreConnection } from "@/services/firestoreService";
 
 interface ApiSettingsTabProps {
   navigate: NavigateFunction;
@@ -37,9 +40,15 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
   
   const [activeTab, setActiveTab] = useState("gemini");
   const [deepseekApiKey, setDeepseekApiKey] = useState("");
+  const [elevenlabsApiKey, setElevenlabsApiKeyState] = useState("");
   const [isSavingDeepseek, setIsSavingDeepseek] = useState(false);
+  const [isSavingElevenlabs, setIsSavingElevenlabs] = useState(false);
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
   const [hasDeepseekKey, setHasDeepseekKey] = useState(false);
+  const [hasElevenlabsKey, setHasElevenlabsKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showDeepseekKey, setShowDeepseekKey] = useState(false);
+  const [showElevenlabsKey, setShowElevenlabsKey] = useState(false);
   
   // Referência para o input de arquivo
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,15 +57,31 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   
   useEffect(() => {
-    // Carregar a chave da API DeepSeek se disponível
-    const storedKey = getDeepSeekApiKey();
-    if (storedKey) {
-      setDeepseekApiKey(storedKey);
-      setHasDeepseekKey(true);
-    }
+    // Carregar as chaves de API e verificar disponibilidade
+    const loadApiKeys = async () => {
+      try {
+        // Carregar a chave da API DeepSeek se disponível
+        const deepseekKey = await getDeepSeekApiKey();
+        if (deepseekKey) {
+          setDeepseekApiKey(deepseekKey);
+          setHasDeepseekKey(true);
+        }
+        
+        // Carregar a chave da API Elevenlabs se disponível
+        const elevenlabsKey = await getElevenlabsApiKey();
+        if (elevenlabsKey) {
+          setElevenlabsApiKeyState(elevenlabsKey);
+          setHasElevenlabsKey(true);
+        }
+        
+        // Verificar se há chave da API Gemini
+        setHasGeminiKey(hasApiKey());
+      } catch (error) {
+        console.error("Erro ao carregar chaves de API:", error);
+      }
+    };
     
-    // Verificar se há chave da API Gemini
-    setHasGeminiKey(hasApiKey());
+    loadApiKeys();
     
     // Carregar anexos do localStorage
     const storedAttachments = localStorage.getItem("system-prompt-attachments");
@@ -69,7 +94,7 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
     }
   }, []);
 
-  const handleSaveDeepseek = () => {
+  const handleSaveDeepseek = async () => {
     if (!deepseekApiKey.trim()) {
       toast.error("Por favor, insira uma chave de API válida para o DeepSeek");
       return;
@@ -79,7 +104,20 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
     try {
       setDeepSeekApiKey(deepseekApiKey);
       setHasDeepseekKey(true);
-      toast.success("API key do DeepSeek salva com sucesso");
+      
+      // Verificar conectividade com o Firestore
+      const isFirestoreConnected = await checkFirestoreConnection();
+      
+      // Exibir mensagem personalizada com base na conectividade
+      if (isFirestoreConnected) {
+        toast.success("API key do DeepSeek salva na nuvem", {
+          description: "Sua chave foi armazenada no Firestore com sucesso."
+        });
+      } else {
+        toast.error("Erro ao salvar a chave da API DeepSeek", {
+          description: "Não foi possível conectar ao Firestore. Verifique sua conexão e tente novamente."
+        });
+      }
     } catch (error) {
       console.error("Erro ao salvar a chave da API DeepSeek:", error);
       toast.error("Erro ao salvar a chave da API DeepSeek");
@@ -88,17 +126,62 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
     }
   };
 
+  const handleSaveElevenlabs = async () => {
+    if (!elevenlabsApiKey.trim()) {
+      toast.error("Por favor, insira uma chave de API válida para o Elevenlabs");
+      return;
+    }
+    
+    setIsSavingElevenlabs(true);
+    try {
+      setElevenlabsApiKey(elevenlabsApiKey);
+      setHasElevenlabsKey(true);
+      
+      // Verificar conectividade com o Firestore
+      const isFirestoreConnected = await checkFirestoreConnection();
+      
+      // Exibir mensagem personalizada com base na conectividade
+      if (isFirestoreConnected) {
+        toast.success("API key do Elevenlabs salva na nuvem", {
+          description: "Sua chave foi armazenada no Firestore com sucesso."
+        });
+      } else {
+        toast.error("Erro ao salvar a chave da API Elevenlabs", {
+          description: "Não foi possível conectar ao Firestore. Verifique sua conexão e tente novamente."
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao salvar a chave da API Elevenlabs:", error);
+      toast.error("Erro ao salvar a chave da API Elevenlabs");
+    } finally {
+      setIsSavingElevenlabs(false);
+    }
+  };
+
   const handleApiProviderChange = (value: string) => {
     setPreferredApiProvider(value as ApiProvider);
   };
 
-  const handleSaveAll = () => {
+  const handleSaveAll = async () => {
     // Salvar anexos no localStorage
     localStorage.setItem("system-prompt-attachments", JSON.stringify(attachments));
     
+    // Verificar conectividade com o Firestore
+    const isFirestoreConnected = await checkFirestoreConnection();
+    
     // Salvar outras configurações
     handleSave();
-    toast.success("Configurações salvas com sucesso");
+    
+    // Exibir mensagem personalizada com base na conectividade
+    if (isFirestoreConnected) {
+      toast.success("Configurações salvas na nuvem", {
+        description: "Suas configurações foram armazenadas no Firestore com sucesso."
+      });
+    } else {
+      toast.error("Erro ao salvar configurações", {
+        description: "Não foi possível conectar ao Firestore. Verifique sua conexão e tente novamente."
+      });
+    }
   };
 
   // Verifica se as APIs estão disponíveis para seleção
@@ -184,6 +267,19 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
     else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const [isElevenlabsWidgetActive, setIsElevenlabsWidgetActive] = useState(false);
+
+  const handleToggleElevenlabsWidget = () => {
+    if (!isElevenlabsWidgetActive) {
+      loadElevenlabsWidget();
+    } else {
+      removeElevenlabsWidget();
+    }
+    setIsElevenlabsWidgetActive(!isElevenlabsWidgetActive);
+  };
+  
+  
+
   return (
     <Card>
       <CardHeader>
@@ -193,24 +289,74 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Dropdown de seleção de API movido para cima das abas */}
+        <div className="grid gap-2 mb-6">
+          <Label htmlFor="api-provider">API do Chat</Label>
+          <Select 
+            value={preferredApiProvider} 
+            onValueChange={handleApiProviderChange}
+            disabled={!hasGeminiKey && !hasDeepseekKey}
+          >
+            <SelectTrigger id="api-provider" className="w-full">
+              <SelectValue placeholder="Selecione a API padrão" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem 
+                value="gemini" 
+                disabled={!hasGeminiKey}
+              >
+                Google Gemini
+              </SelectItem>
+              <SelectItem 
+                value="deepseek" 
+                disabled={!hasDeepseekKey}
+              >
+                DeepSeek R1
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Selecione qual API será utilizada por padrão ao enviar mensagens no chat.
+            {!hasGeminiKey && !hasDeepseekKey && (
+              <span className="text-red-500 block mt-1">
+                Configure pelo menos uma chave de API para selecionar a API padrão.
+              </span>
+            )}
+          </p>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="gemini">Gemini</TabsTrigger>
             <TabsTrigger value="deepseek">DeepSeek R1</TabsTrigger>
+            <TabsTrigger value="elevenlabs">Elevenlabs</TabsTrigger>
           </TabsList>
           
           <TabsContent value="gemini">
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="api-key">Chave da API Gemini</Label>
-                <Input
-                  id="api-key"
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKeyState(e.target.value)}
-                  placeholder="AIzaSyA..."
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="api-key"
+                    type={showGeminiKey ? "text" : "password"}
+                    value={apiKey}
+                    onChange={(e) => setApiKeyState(e.target.value)}
+                    placeholder="AIzaSyA..."
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowGeminiKey(!showGeminiKey)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    {showGeminiKey ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Obtenha sua chave em{" "}
                   <a
@@ -221,43 +367,6 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
                   >
                     ai.google.dev
                   </a>
-                </p>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div className="grid gap-2">
-                <Label htmlFor="api-provider">API do Chat</Label>
-                <Select 
-                  value={preferredApiProvider} 
-                  onValueChange={handleApiProviderChange}
-                  disabled={!hasGeminiKey && !hasDeepseekKey}
-                >
-                  <SelectTrigger id="api-provider" className="w-full">
-                    <SelectValue placeholder="Selecione a API padrão" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem 
-                      value="gemini" 
-                      disabled={!hasGeminiKey}
-                    >
-                      Google Gemini
-                    </SelectItem>
-                    <SelectItem 
-                      value="deepseek" 
-                      disabled={!hasDeepseekKey}
-                    >
-                      DeepSeek R1
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Selecione qual API será utilizada por padrão ao enviar mensagens no chat.
-                  {!hasGeminiKey && !hasDeepseekKey && (
-                    <span className="text-red-500 block mt-1">
-                      Configure pelo menos uma chave de API para selecionar a API padrão.
-                    </span>
-                  )}
                 </p>
               </div>
               
@@ -311,14 +420,27 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="deepseek-api-key">Chave da API DeepSeek</Label>
-                <Input
-                  id="deepseek-api-key"
-                  type="password"
-                  value={deepseekApiKey}
-                  onChange={(e) => setDeepseekApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="w-full"
-                />
+                <div className="relative">
+                  <Input
+                    id="deepseek-api-key"
+                    type={showDeepseekKey ? "text" : "password"}
+                    value={deepseekApiKey}
+                    onChange={(e) => setDeepseekApiKey(e.target.value)}
+                    placeholder="sk-..."
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowDeepseekKey(!showDeepseekKey)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    {showDeepseekKey ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
                 <div className="flex items-start gap-2 mt-2">
                   <Brain className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-muted-foreground">
@@ -338,57 +460,27 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
               
               <Separator className="my-4" />
               
-              <div className="grid gap-2">
-                <Label htmlFor="api-provider-deepseek">API do Chat</Label>
-                <Select 
-                  value={preferredApiProvider} 
-                  onValueChange={handleApiProviderChange}
-                  disabled={!hasGeminiKey && !hasDeepseekKey}
-                >
-                  <SelectTrigger id="api-provider-deepseek" className="w-full">
-                    <SelectValue placeholder="Selecione a API padrão" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem 
-                      value="gemini" 
-                      disabled={!hasGeminiKey}
-                    >
-                      Google Gemini
-                    </SelectItem>
-                    <SelectItem 
-                      value="deepseek" 
-                      disabled={!hasDeepseekKey}
-                    >
-                      DeepSeek R1
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Selecione qual API será utilizada por padrão ao enviar mensagens no chat.
-                  {!hasGeminiKey && !hasDeepseekKey && (
-                    <span className="text-red-500 block mt-1">
-                      Configure pelo menos uma chave de API para selecionar a API padrão.
-                    </span>
-                  )}
-                </p>
-              </div>
-              
-              <Separator className="my-4" />
-              
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="show-thinking-deepseek" 
                   checked={showModelThinking}
                   onCheckedChange={(checked) => setShowModelThinking(checked as boolean)}
+                  disabled={!hasDeepseekKey}
                 />
                 <div className="grid gap-1.5 leading-none">
                   <Label
                     htmlFor="show-thinking-deepseek"
+                    className={!hasDeepseekKey ? "text-muted-foreground cursor-not-allowed" : ""}
                   >
                     Mostrar o pensamento do modelo no chat
                   </Label>
                   <p className="text-xs text-muted-foreground">
                     Exibe o processo de raciocínio interno do modelo DeepSeek R1 nas respostas.
+                    {!hasDeepseekKey && (
+                      <span className="text-amber-500 block mt-1">
+                        Disponível apenas quando o DeepSeek R1 está configurado.
+                      </span>
+                    )}
                   </p>
                 </div>
               </div>
@@ -407,6 +499,86 @@ const ApiSettingsTab = ({ navigate }: ApiSettingsTabProps) => {
                   disabled={!deepseekApiKey || isSavingDeepseek}
                 >
                   {isSavingDeepseek ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="elevenlabs">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="elevenlabs-api-key">Chave da API Elevenlabs</Label>
+                <div className="relative">
+                  <Input
+                    id="elevenlabs-api-key"
+                    type={showElevenlabsKey ? "text" : "password"}
+                    value={elevenlabsApiKey}
+                    onChange={(e) => setElevenlabsApiKeyState(e.target.value)}
+                    placeholder="sk-..."
+                    className="w-full pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowElevenlabsKey(!showElevenlabsKey)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  >
+                    {showElevenlabsKey ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                <div className="flex items-start gap-2 mt-2">
+                  <Mic className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    O Elevenlabs permite converter texto em fala natural e utilizar o widget de conversação por áudio. Obtenha sua chave em{" "}
+                    <a
+                      href="https://elevenlabs.io/app/account"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary underline"
+                    >
+                      elevenlabs.io
+                    </a>
+                  </p>
+                </div>
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="grid gap-2">
+                <Label>Widget de Conversação por Áudio</Label>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={handleToggleElevenlabsWidget}
+                    variant={isElevenlabsWidgetActive ? "default" : "outline"}
+                    className="flex gap-2"
+                  >
+                    <Mic className="h-4 w-4" />
+                    {isElevenlabsWidgetActive ? "Desativar Widget" : "Ativar Widget"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  O widget de conversação por áudio permite interagir com o assistente usando voz.
+                  Ao ativar, o widget aparecerá no canto inferior direito da tela.
+                </p>
+              </div>
+              
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground">
+                  Sua chave é armazenada apenas em seu dispositivo e nunca é enviada para nossos servidores.
+                </p>
+              </div>
+              <div className="flex justify-between mt-4">
+                <Button variant="outline" onClick={() => navigate("/chat")}>
+                  Cancelar
+                </Button>
+                <Button 
+                  onClick={handleSaveElevenlabs} 
+                  disabled={!elevenlabsApiKey || isSavingElevenlabs}
+                >
+                  {isSavingElevenlabs ? "Salvando..." : "Salvar"}
                 </Button>
               </div>
             </div>

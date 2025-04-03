@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X, SunMoon, Moon, Settings, Brain, AlertTriangle, FileX } from "lucide-react";
+import { Menu, X, SunMoon, Moon, Settings, Brain, FileX } from "lucide-react";
 import { Link } from "react-router-dom";
 import ApiKeyDialog from "@/components/ApiKeyDialog";
 import { useState, useEffect } from "react";
 import { getActiveApiName, hasAnyApiConfigured } from "@/services/messageService";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { getPathologySystemPrompt, getPathologyAttachments } from "@/utils/settingsStorage";
+import { getPathologyAttachments } from "@/utils/settingsStorage";
 import { getStoredSystemPromptSettings } from "@/utils/settingsStorage";
 
 interface ChatHeaderProps {
@@ -24,7 +24,6 @@ const ChatHeader = ({
 }: ChatHeaderProps) => {
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [activeApi, setActiveApi] = useState("");
-  const [hasSystemPrompt, setHasSystemPrompt] = useState(true);
   const [hasAttachments, setHasAttachments] = useState(true);
   const [currentPathology, setCurrentPathology] = useState("");
 
@@ -32,13 +31,13 @@ const ChatHeader = ({
     // Atualizar o nome da API ativa quando o componente montar
     setActiveApi(getActiveApiName());
 
-    // Verificar se há um prompt de sistema e anexos
-    checkSystemPromptAndAttachments();
+    // Verificar se há anexos
+    checkAttachments();
 
     // Adicionar um listener para mudanças no localStorage
     const handleStorageChange = () => {
       setActiveApi(getActiveApiName());
-      checkSystemPromptAndAttachments();
+      checkAttachments();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -46,7 +45,7 @@ const ChatHeader = ({
     // Verificar periodicamente se a API mudou (a cada 5 segundos)
     const intervalId = setInterval(() => {
       setActiveApi(getActiveApiName());
-      checkSystemPromptAndAttachments();
+      checkAttachments();
     }, 5000);
 
     return () => {
@@ -55,26 +54,20 @@ const ChatHeader = ({
     };
   }, []);
 
-  const checkSystemPromptAndAttachments = () => {
+  const checkAttachments = async () => {
     // Obter a patologia atual
     const settings = getStoredSystemPromptSettings();
     const pathology = settings.pathology;
     setCurrentPathology(pathology);
 
-    // Verificar se há um prompt de sistema
-    if (!pathology) {
-      setHasSystemPrompt(false);
+    try {
+      // Verificar se há anexos para a patologia atual
+      const attachments = await getPathologyAttachments(pathology);
+      setHasAttachments(attachments && attachments.length > 0);
+    } catch (error) {
+      console.error("Erro ao verificar anexos da patologia:", error);
       setHasAttachments(false);
-      return;
     }
-
-    // Verificar se há um prompt de sistema para a patologia atual
-    const systemPrompt = getPathologySystemPrompt(pathology);
-    setHasSystemPrompt(!!systemPrompt && systemPrompt.trim() !== "");
-
-    // Verificar se há anexos para a patologia atual
-    const attachments = getPathologyAttachments(pathology);
-    setHasAttachments(attachments && attachments.length > 0);
   };
 
   const toggleSidebar = () => {
@@ -127,33 +120,8 @@ const ChatHeader = ({
           </TooltipProvider>
         )}
         
-        {/* Indicador de prompt de sistema vazio */}
-        {!hasSystemPrompt && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="ml-2">
-                  <Badge 
-                    variant="destructive" 
-                    className="px-2 py-0 h-6 flex items-center gap-1"
-                  >
-                    <AlertTriangle className="h-3 w-3" />
-                    <span className="text-xs font-medium">
-                      Sem Prompt
-                    </span>
-                  </Badge>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Prompt do sistema não configurado para {currentPathology || "a patologia atual"}</p>
-                <p className="text-xs mt-1">Configure o prompt na aba "Prompt do Sistema"</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        
         {/* Indicador de ausência de arquivos anexados */}
-        {hasSystemPrompt && !hasAttachments && (
+        {!hasAttachments && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>

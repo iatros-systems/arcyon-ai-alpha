@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,15 +17,61 @@ import WorkspaceHome from "./pages/workspace/WorkspaceHome";
 import WorkspaceMembers from "./pages/workspace/WorkspaceMembers";
 import WorkspaceBilling from "./pages/workspace/WorkspaceBilling";
 import WorkspaceGpt from "./pages/workspace/WorkspaceGpt";
+import { getApiKeyFromFirestore, checkFirestoreConnection } from "./services/firestoreService";
+import { toast } from "sonner";
+import { setApiKey } from "./services/api";
+import { setDeepSeekApiKey } from "./services/deepseek";
+import { setElevenlabsApiKey } from "./services/elevenlabs";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [isSettingsAuthenticated, setIsSettingsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFirestoreConnected, setIsFirestoreConnected] = useState(false);
   
   // Set document title
   useEffect(() => {
     document.title = "Arcyon - Assistente para Dor Torácica";
+  }, []);
+
+  // Carregar chaves de API do Firestore
+  useEffect(() => {
+    const loadApiKeys = async () => {
+      setIsLoading(true);
+      try {
+        // Verificar conectividade com o Firestore
+        const connected = await checkFirestoreConnection();
+        setIsFirestoreConnected(connected);
+        
+        if (connected) {
+          // Carregar chaves de API
+          const geminiKey = await getApiKeyFromFirestore('gemini');
+          const deepseekKey = await getApiKeyFromFirestore('deepseek');
+          const elevenlabsKey = await getApiKeyFromFirestore('elevenlabs');
+          
+          // Definir chaves de API em memória
+          if (geminiKey) setApiKey(geminiKey);
+          if (deepseekKey) setDeepSeekApiKey(deepseekKey);
+          if (elevenlabsKey) setElevenlabsApiKey(elevenlabsKey);
+          
+          console.log('API keys loaded from Firestore');
+        } else {
+          toast.error("Não foi possível conectar ao Firestore", {
+            description: "O aplicativo funcionará com funcionalidade limitada. Verifique sua conexão."
+          });
+        }
+      } catch (error) {
+        console.error('Error loading API keys:', error);
+        toast.error("Erro ao carregar chaves de API", {
+          description: "Ocorreu um erro ao carregar as chaves de API do Firestore."
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadApiKeys();
   }, []);
 
   // Função para autenticar acesso às configurações

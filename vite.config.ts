@@ -19,4 +19,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    exclude: [
+      'firebase',
+      'firebase/app',
+      'firebase/firestore',
+      'firebase/auth',
+      'firebase/storage'
+    ]
+  },
 }));

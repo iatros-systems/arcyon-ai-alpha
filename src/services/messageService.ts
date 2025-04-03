@@ -2,13 +2,36 @@ import { sendMessageToGemini, FileAttachment } from "./api";
 import { sendMessageToDeepSeek } from "./deepseek";
 import { ApiProvider } from "@/hooks/useSettings";
 import { hasApiKey } from "./api";
-import { hasDeepSeekApiKey } from "./deepseek";
+import { hasDeepSeekApiKeySync } from "./deepseek";
+import { getApiKeyFromFirestore } from "./firestoreService";
 
 // Interface para a resposta unificada das APIs
 export interface ApiResponse {
   content: string;
   reasoningContent?: string;
 }
+
+// Variáveis para armazenar configurações
+let preferredApiProvider: ApiProvider | null = null;
+let showModelThinkingSetting: boolean | null = null;
+
+// Função para carregar configurações do Firestore
+const loadSettings = async () => {
+  try {
+    // Tentar obter configurações do Firestore
+    const configDoc = await getApiKeyFromFirestore('config');
+    if (configDoc) {
+      const config = JSON.parse(configDoc);
+      preferredApiProvider = config.preferredApiProvider || "gemini";
+      showModelThinkingSetting = config.showModelThinking !== false;
+    }
+  } catch (error) {
+    console.error("Erro ao carregar configurações do Firestore:", error);
+  }
+};
+
+// Inicializar carregamento de configurações
+loadSettings();
 
 /**
  * Envia uma mensagem para a API selecionada pelo usuário
@@ -22,15 +45,14 @@ export const sendMessage = async (
   preferredProvider?: ApiProvider,
   attachments?: FileAttachment[]
 ): Promise<ApiResponse> => {
-  // Obtém a API preferida do localStorage se não for fornecida
-  const provider = preferredProvider || 
-    (localStorage.getItem("preferred-api-provider") as ApiProvider || "gemini");
+  // Obtém a API preferida
+  const provider = preferredProvider || preferredApiProvider || "gemini";
   
   // Verifica se o usuário deseja ver o pensamento do modelo
-  const showModelThinking = localStorage.getItem("show-model-thinking") !== "false";
+  const showModelThinking = showModelThinkingSetting !== false;
   
   // Verifica se a API preferida está disponível
-  if (provider === "deepseek" && hasDeepSeekApiKey()) {
+  if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
     try {
       const response = await sendMessageToDeepSeek(messages);
       
@@ -56,7 +78,7 @@ export const sendMessage = async (
     } catch (error) {
       console.error("Erro ao enviar mensagem para Gemini, tentando DeepSeek como fallback:", error);
       // Fallback para DeepSeek se Gemini falhar e DeepSeek estiver disponível
-      if (hasDeepSeekApiKey()) {
+      if (hasDeepSeekApiKeySync()) {
         const response = await sendMessageToDeepSeek(messages);
         
         // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
@@ -73,7 +95,7 @@ export const sendMessage = async (
     if (hasApiKey()) {
       const geminiResponse = await sendMessageToGemini(messages, attachments);
       return { content: geminiResponse };
-    } else if (hasDeepSeekApiKey()) {
+    } else if (hasDeepSeekApiKeySync()) {
       const response = await sendMessageToDeepSeek(messages);
       
       // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
@@ -93,7 +115,7 @@ export const sendMessage = async (
  * @returns true se pelo menos uma API estiver configurada
  */
 export const hasAnyApiConfigured = (): boolean => {
-  return hasApiKey() || hasDeepSeekApiKey();
+  return hasApiKey() || hasDeepSeekApiKeySync();
 };
 
 /**
@@ -101,16 +123,16 @@ export const hasAnyApiConfigured = (): boolean => {
  * @returns Nome da API que será utilizada
  */
 export const getActiveApiName = (): string => {
-  const provider = localStorage.getItem("preferred-api-provider") as ApiProvider || "gemini";
-  const showModelThinking = localStorage.getItem("show-model-thinking") !== "false";
+  const provider = preferredApiProvider || "gemini";
+  const showModelThinking = showModelThinkingSetting !== false;
   
-  if (provider === "deepseek" && hasDeepSeekApiKey()) {
+  if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
     return showModelThinking ? "DeepSeek R1 (com raciocínio)" : "DeepSeek R1";
   } else if (provider === "gemini" && hasApiKey()) {
     return "Google Gemini";
   } else if (hasApiKey()) {
     return "Google Gemini";
-  } else if (hasDeepSeekApiKey()) {
+  } else if (hasDeepSeekApiKeySync()) {
     return showModelThinking ? "DeepSeek R1 (com raciocínio)" : "DeepSeek R1";
   } else {
     return "Nenhuma API configurada";
@@ -122,5 +144,5 @@ export const getActiveApiName = (): string => {
  * @returns true se o pensamento do modelo estiver ativado
  */
 export const isModelThinkingEnabled = (): boolean => {
-  return localStorage.getItem("show-model-thinking") !== "false";
+  return showModelThinkingSetting !== false;
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { setApiKey, getApiKey, hasApiKey } from "@/services/api";
+import { setApiKey, hasApiKey, hasApiKeyAsync } from "@/services/api";
 import { 
   getStoredModelSettings, 
   saveModelSettings, 
@@ -13,7 +13,9 @@ import {
 import { useChatStore } from "@/store/chat-store"; 
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
 import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
-import { getDeepSeekApiKey, hasDeepSeekApiKey } from "@/services/deepseek";
+import { hasDeepSeekApiKeySync } from "@/services/deepseek";
+import { saveApiKeyToFirestore, getApiKeyFromFirestore, checkFirestoreConnection } from "@/services/firestoreService";
+import { toast as sonnerToast } from "sonner";
 
 // Tipo para as APIs disponíveis
 export type ApiProvider = "gemini" | "deepseek";
@@ -39,57 +41,101 @@ export function useSettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   
   useEffect(() => {
-    // Load existing API key if available
-    if (hasApiKey()) {
-      setApiKeyState(getApiKey());
-    }
-    
-    // Load model settings
-    const modelSettings = getStoredModelSettings();
-    setTemperature(modelSettings.temperature);
-    setTopP(modelSettings.topP);
-    setTopK(modelSettings.topK);
-    setMaxTokens(modelSettings.maxTokens);
-    setAdvancedMode(modelSettings.advancedMode);
-    
-    // Load preferred API provider
-    const storedProvider = localStorage.getItem("preferred-api-provider") as ApiProvider;
-    if (storedProvider) {
-      setPreferredApiProvider(storedProvider);
-    } else {
-      // Define a API padrão com base nas chaves disponíveis
-      if (hasDeepSeekApiKey()) {
-        setPreferredApiProvider("deepseek");
-      } else if (hasApiKey()) {
-        setPreferredApiProvider("gemini");
+    // Função para carregar as configurações
+    const loadSettings = async () => {
+      try {
+        // Carregar a chave da API se disponível
+        const apiKeyValue = await getApiKeyFromFirestore('gemini');
+        if (apiKeyValue) {
+          setApiKeyState(apiKeyValue);
+        }
+        
+        // Carregar configurações do modelo
+        const modelSettings = await getStoredModelSettings();
+        setTemperature(modelSettings.temperature);
+        setTopP(modelSettings.topP);
+        setTopK(modelSettings.topK);
+        setMaxTokens(modelSettings.maxTokens);
+        setAdvancedMode(modelSettings.advancedMode);
+        
+        // Carregar o provedor de API preferido
+        const configDoc = await getApiKeyFromFirestore('config');
+        if (configDoc) {
+          try {
+            const config = JSON.parse(configDoc);
+            if (config.preferredApiProvider) {
+              setPreferredApiProvider(config.preferredApiProvider);
+            } else {
+              // Define a API padrão com base nas chaves disponíveis
+              const hasDeepseekKey = await hasApiKeyAsync('deepseek');
+              const hasGeminiKey = await hasApiKeyAsync('gemini');
+              if (hasDeepseekKey) {
+                setPreferredApiProvider("deepseek");
+              } else if (hasGeminiKey) {
+                setPreferredApiProvider("gemini");
+              }
+            }
+            
+            // Carregar configuração de exibição do pensamento do modelo
+            if (config.showModelThinking !== undefined) {
+              setShowModelThinking(config.showModelThinking);
+            }
+          } catch (error) {
+            console.error("Erro ao analisar configurações:", error);
+          }
+        } else {
+          // Define a API padrão com base nas chaves disponíveis
+          const hasDeepseekKey = await hasApiKeyAsync('deepseek');
+          const hasGeminiKey = await hasApiKeyAsync('gemini');
+          if (hasDeepseekKey) {
+            setPreferredApiProvider("deepseek");
+          } else if (hasGeminiKey) {
+            setPreferredApiProvider("gemini");
+          }
+        }
+        
+        // Carregar configurações do system prompt
+        const promptSettings = await getStoredSystemPromptSettings();
+        setPathology(promptSettings.pathology);
+        
+        // Se houver uma patologia selecionada, carregue o prompt específico do Firestore
+        if (promptSettings.pathology) {
+          console.log(`[useSettings] Loading system prompt for pathology: "${promptSettings.pathology}"`);
+          const pathologyPrompt = await getPathologySystemPrompt(promptSettings.pathology);
+          console.log(`[useSettings] Loaded system prompt from Firestore: ${pathologyPrompt ? 'Found' : 'Not found'}`);
+          setSystemInstructions(pathologyPrompt || "");
+        } else {
+          // Se não houver patologia selecionada, use as instruções gerais
+          setSystemInstructions(promptSettings.systemInstructions || "");
+        }
+      } catch (error) {
+        console.error("Erro ao carregar configurações:", error);
       }
-    }
+    };
     
-    // Load show model thinking setting
-    const storedShowThinking = localStorage.getItem("show-model-thinking");
-    if (storedShowThinking !== null) {
-      setShowModelThinking(storedShowThinking === "true");
-    }
-    
-    // Load system prompt settings
-    const promptSettings = getStoredSystemPromptSettings();
-    setPathology(promptSettings.pathology);
-    setSystemInstructions(promptSettings.systemInstructions);
+    loadSettings();
   }, []);
   
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Save API key
+      // Salvar a chave da API
       setApiKey(apiKey);
       
-      // Save preferred API provider
-      localStorage.setItem("preferred-api-provider", preferredApiProvider);
+      // Verificar conectividade com o Firestore
+      const isFirestoreConnected = await checkFirestoreConnection();
       
-      // Save show model thinking setting
-      localStorage.setItem("show-model-thinking", showModelThinking.toString());
+      // Salvar provedor de API preferido e configuração de exibição do pensamento do modelo
+      const configData = JSON.stringify({
+        preferredApiProvider,
+        showModelThinking
+      });
       
-      // Save model settings
+      if (isFirestoreConnected) {
+        await saveApiKeyToFirestore('config', configData);
+      }
+      
+      // Salvar configurações do modelo
       saveModelSettings({
         temperature,
         topP,
@@ -98,13 +144,13 @@ export function useSettings() {
         advancedMode
       });
       
-      // Save system prompt settings
+      // Salvar configurações do system prompt
       saveSystemPromptSettings({
         pathology,
         systemInstructions
       });
       
-      // Update system prompt in all chats
+      // Atualizar o system prompt em todos os chats
       let systemPrompt = '';
       if (systemInstructions) {
         systemPrompt = systemInstructions;
@@ -117,12 +163,18 @@ export function useSettings() {
         setChats(updatedChats);
       }
       
-      toast({
-        title: "Configurações salvas",
-        description: "Suas configurações foram salvas com sucesso.",
-      });
+      // Exibir mensagem personalizada com base na conectividade
+      if (isFirestoreConnected) {
+        sonnerToast.success("Configurações salvas na nuvem", {
+          description: "Suas configurações foram armazenadas no Firestore com sucesso."
+        });
+      } else {
+        sonnerToast.error("Erro ao salvar configurações", {
+          description: "Não foi possível conectar ao Firestore. Verifique sua conexão e tente novamente."
+        });
+      }
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      console.error("Erro ao salvar configurações:", error);
       toast({
         title: "Erro ao salvar configurações",
         description: "Ocorreu um erro ao salvar suas configurações.",

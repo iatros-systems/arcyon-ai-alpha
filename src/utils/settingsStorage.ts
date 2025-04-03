@@ -1,59 +1,123 @@
-// Utility functions for managing application settings in localStorage
+// Utility functions for managing application settings in Firestore
 
 import { FileAttachment } from "@/services/api";
+import { 
+  saveApiKeyToFirestore, 
+  getApiKeyFromFirestore, 
+  saveDataToFirestore, 
+  getDataFromFirestore 
+} from "@/services/firestoreService";
+// Import the prompt file directly
+import promptSystemEs from '@/store/prompt-system-es.md?raw';
 
-// API Key management
-export const getStoredApiKey = (): string => {
-  return localStorage.getItem("gemini-api-key") || "";
+// API Key management - Deprecated, use functions from api.ts instead
+export const getStoredApiKey = async (): Promise<string> => {
+  return await getApiKeyFromFirestore('gemini') || "";
 };
 
-export const setStoredApiKey = (key: string): void => {
-  localStorage.setItem("gemini-api-key", key);
+export const setStoredApiKey = async (key: string): Promise<void> => {
+  await saveApiKeyToFirestore('gemini', key);
 };
 
-export const hasStoredApiKey = (): boolean => {
-  return !!getStoredApiKey();
+export const hasStoredApiKey = async (): Promise<boolean> => {
+  const key = await getStoredApiKey();
+  return !!key;
 };
 
 // Model settings
-export const getStoredModelSettings = () => {
+export const getStoredModelSettings = async () => {
+  try {
+    const modelSettingsJson = await getDataFromFirestore('modelSettings');
+    if (modelSettingsJson) {
+      const settings = JSON.parse(modelSettingsJson);
+      return {
+        temperature: settings.temperature || 0.3,
+        topP: settings.topP || 0.85,
+        topK: settings.topK || 40,
+        maxTokens: settings.maxTokens || 4096,
+        advancedMode: settings.advancedMode || false
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao obter configurações do modelo:", error);
+  }
+  
+  // Default values if no settings found
   return {
-    temperature: parseFloat(localStorage.getItem("gemini-temperature") || "0.3"),
-    topP: parseFloat(localStorage.getItem("gemini-topP") || "0.85"),
-    topK: parseInt(localStorage.getItem("gemini-topK") || "40"),
-    maxTokens: parseInt(localStorage.getItem("gemini-maxTokens") || "4096"),
-    advancedMode: localStorage.getItem("gemini-advancedMode") === "true"
+    temperature: 0.3,
+    topP: 0.85,
+    topK: 40,
+    maxTokens: 4096,
+    advancedMode: false
   };
 };
 
-export const saveModelSettings = (settings: {
+// Synchronous version for backward compatibility
+export const getStoredModelSettingsSync = () => {
+  // Default values
+  return {
+    temperature: 0.3,
+    topP: 0.85,
+    topK: 40,
+    maxTokens: 4096,
+    advancedMode: false
+  };
+};
+
+export const saveModelSettings = async (settings: {
   temperature: number;
   topP: number;
   topK: number;
   maxTokens: number;
   advancedMode: boolean;
-}): void => {
-  localStorage.setItem("gemini-temperature", settings.temperature.toString());
-  localStorage.setItem("gemini-topP", settings.topP.toString());
-  localStorage.setItem("gemini-topK", settings.topK.toString());
-  localStorage.setItem("gemini-maxTokens", settings.maxTokens.toString());
-  localStorage.setItem("gemini-advancedMode", settings.advancedMode.toString());
+}): Promise<void> => {
+  try {
+    await saveDataToFirestore('modelSettings', JSON.stringify(settings));
+  } catch (error) {
+    console.error("Erro ao salvar configurações do modelo:", error);
+  }
 };
 
 // System prompt settings
-export const getStoredSystemPromptSettings = () => {
+export const getStoredSystemPromptSettings = async () => {
+  try {
+    const promptSettingsJson = await getDataFromFirestore('systemPromptSettings');
+    if (promptSettingsJson) {
+      const settings = JSON.parse(promptSettingsJson);
+      return {
+        pathology: settings.pathology || "",
+        systemInstructions: settings.systemInstructions || ""
+      };
+    }
+  } catch (error) {
+    console.error("Erro ao obter configurações do system prompt:", error);
+  }
+  
+  // Default values if no settings found
   return {
-    pathology: localStorage.getItem("system-prompt-pathology") || "",
-    systemInstructions: localStorage.getItem("system-instructions") || ""
+    pathology: "",
+    systemInstructions: ""
   };
 };
 
-export const saveSystemPromptSettings = (settings: {
+// Synchronous version for backward compatibility
+export const getStoredSystemPromptSettingsSync = () => {
+  // Default values
+  return {
+    pathology: "",
+    systemInstructions: ""
+  };
+};
+
+export const saveSystemPromptSettings = async (settings: {
   pathology: string;
   systemInstructions: string;
-}): void => {
-  localStorage.setItem("system-prompt-pathology", settings.pathology);
-  localStorage.setItem("system-instructions", settings.systemInstructions);
+}): Promise<void> => {
+  try {
+    await saveDataToFirestore('systemPromptSettings', JSON.stringify(settings));
+  } catch (error) {
+    console.error("Erro ao salvar configurações do system prompt:", error);
+  }
 };
 
 // Pathology-specific settings interface
@@ -62,32 +126,119 @@ export interface PathologySettings {
   attachments: FileAttachment[];
 }
 
-// Pathology-specific system prompt management
-export const getPathologySystemPrompt = (pathology: string): string => {
+// Function to save system prompt to Firestore for a specific pathology
+export const saveSystemPromptToFirestore = async (pathology: string, prompt: string): Promise<void> => {
   try {
     const key = `pathology-${pathology}-system-prompt`;
-    const stored = localStorage.getItem(key);
-    return stored || "";
+    await saveDataToFirestore(key, prompt);
+    console.log(`System prompt for pathology ${pathology} saved to Firestore`);
   } catch (error) {
-    console.error("Error getting pathology system prompt:", error);
+    console.error(`Error saving system prompt for pathology ${pathology} to Firestore:`, error);
+    throw error;
+  }
+};
+
+// Function to get system prompt from Firestore for a specific pathology
+export const getSystemPromptFromFirestore = async (pathology: string): Promise<string | null> => {
+  try {
+    const key = `pathology-${pathology}-system-prompt`;
+    console.log(`Attempting to fetch system prompt for pathology "${pathology}" with key "${key}" from Firestore`);
+    
+    const prompt = await getDataFromFirestore(key);
+    
+    if (prompt) {
+      console.log(`Successfully retrieved system prompt for pathology "${pathology}" from Firestore`);
+      console.log(`Prompt content (first 50 chars): ${prompt.substring(0, 50)}...`);
+      return prompt;
+    } else {
+      console.log(`No system prompt found for pathology "${pathology}" in Firestore`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error getting system prompt for pathology ${pathology} from Firestore:`, error);
+    return null;
+  }
+};
+
+// Function to get system prompt from local file for a specific pathology
+export const getSystemPromptFromLocalFile = async (pathology: string): Promise<string | null> => {
+  try {
+    // Use the imported prompt file directly
+    console.log(`Successfully retrieved system prompt from local file for pathology "${pathology}"`);
+    console.log(`Prompt content (first 50 chars): ${promptSystemEs.substring(0, 50)}...`);
+    return promptSystemEs;
+  } catch (error) {
+    console.error(`Error getting system prompt from local file:`, error);
+    return null;
+  }
+};
+
+// Pathology-specific system prompt management
+export const getPathologySystemPrompt = async (pathology: string): Promise<string> => {
+  try {
+    if (!pathology) {
+      console.log("No pathology provided to getPathologySystemPrompt");
+      return "";
+    }
+    
+    console.log(`[getPathologySystemPrompt] Fetching system prompt for pathology: "${pathology}"`);
+    
+    // First try to get from Firestore
+    const firestorePrompt = await getSystemPromptFromFirestore(pathology);
+    
+    if (firestorePrompt) {
+      console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from Firestore for pathology: "${pathology}"`);
+      return firestorePrompt;
+    }
+    
+    // If not found in Firestore, try to get from local file as fallback
+    console.log(`[getPathologySystemPrompt] No prompt found in Firestore, trying local file for pathology: "${pathology}"`);
+    const localPrompt = await getSystemPromptFromLocalFile(pathology);
+    
+    if (localPrompt) {
+      console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from local file for pathology: "${pathology}"`);
+      return localPrompt;
+    }
+    
+    // If not found in Firestore or local file, return empty string
+    console.log(`[getPathologySystemPrompt] No system prompt found for pathology "${pathology}" in Firestore or local file`);
+    return "";
+  } catch (error) {
+    console.error("[getPathologySystemPrompt] Error getting pathology system prompt:", error);
     return "";
   }
 };
 
-export const savePathologySystemPrompt = (pathology: string, prompt: string): void => {
+// Synchronous version for backward compatibility
+export const getPathologySystemPromptSync = (pathology: string): string => {
+  // This is a synchronous function, so we can't use Firestore directly
+  // It's meant for backward compatibility only
+  return "";
+};
+
+export const savePathologySystemPrompt = async (pathology: string, prompt: string): Promise<void> => {
   try {
-    const key = `pathology-${pathology}-system-prompt`;
-    localStorage.setItem(key, prompt);
+    // Save to Firestore
+    await saveSystemPromptToFirestore(pathology, prompt);
   } catch (error) {
     console.error("Error saving pathology system prompt:", error);
   }
 };
 
+// Synchronous version for backward compatibility
+export const savePathologySystemPromptSync = (pathology: string, prompt: string): void => {
+  // Schedule an async save to Firestore
+  setTimeout(() => {
+    savePathologySystemPrompt(pathology, prompt)
+      .catch(error => console.error("Error in delayed save of pathology system prompt:", error));
+  }, 0);
+};
+
 // Pathology-specific attachments management
-export const getPathologyAttachments = (pathology: string): FileAttachment[] => {
+export const getPathologyAttachments = async (pathology: string): Promise<FileAttachment[]> => {
   try {
     const key = `pathology-${pathology}-attachments`;
-    const stored = localStorage.getItem(key);
+    const stored = await getDataFromFirestore(key);
     if (!stored) return [];
     
     return JSON.parse(stored);
@@ -97,24 +248,59 @@ export const getPathologyAttachments = (pathology: string): FileAttachment[] => 
   }
 };
 
-export const savePathologyAttachments = (pathology: string, attachments: FileAttachment[]): void => {
+export const savePathologyAttachments = async (pathology: string, attachments: FileAttachment[]): Promise<void> => {
   try {
     const key = `pathology-${pathology}-attachments`;
-    localStorage.setItem(key, JSON.stringify(attachments));
+    await saveDataToFirestore(key, JSON.stringify(attachments));
   } catch (error) {
     console.error("Error saving pathology attachments:", error);
   }
 };
 
 // Password management
-export const getStoredPassword = (): string => {
-  return localStorage.getItem("settings-password") || "admin123";
+export const getStoredPassword = async (): Promise<string> => {
+  try {
+    const password = await getDataFromFirestore('settings-password');
+    return password || "admin123";
+  } catch (error) {
+    console.error("Error getting stored password:", error);
+    return "admin123";
+  }
 };
 
-export const setStoredPassword = (password: string): void => {
-  localStorage.setItem("settings-password", password);
+export const setStoredPassword = async (password: string): Promise<void> => {
+  try {
+    await saveDataToFirestore('settings-password', password);
+  } catch (error) {
+    console.error("Error setting stored password:", error);
+  }
 };
 
-export const validatePassword = (input: string): boolean => {
-  return input === getStoredPassword();
+export const validatePassword = async (input: string): Promise<boolean> => {
+  const storedPassword = await getStoredPassword();
+  return input === storedPassword;
+};
+
+// Elevenlabs API Key management
+export const getElevenlabsApiKey = async (): Promise<string> => {
+  try {
+    const apiKey = await getDataFromFirestore('elevenlabs-api-key');
+    return apiKey || "";
+  } catch (error) {
+    console.error("Error getting elevenlabs API key:", error);
+    return "";
+  }
+};
+
+export const setElevenlabsApiKey = async (key: string): Promise<void> => {
+  try {
+    await saveDataToFirestore('elevenlabs-api-key', key);
+  } catch (error) {
+    console.error("Error setting elevenlabs API key:", error);
+  }
+};
+
+export const hasElevenlabsApiKey = async (): Promise<boolean> => {
+  const key = await getElevenlabsApiKey();
+  return !!key;
 };

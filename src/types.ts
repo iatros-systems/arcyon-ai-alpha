@@ -50,3 +50,46 @@ export interface DeepSeekResponse {
     total_tokens: number;
   };
 }
+
+// Elevenlabs API interfaces
+export interface ElevenlabsVoice {
+  voice_id: string;
+  name: string;
+  category: string;
+  description: string;
+  preview_url: string;
+  available_for_tiers: string[];
+  settings: {
+    stability: number;
+    similarity_boost: number;
+    style: number;
+    use_speaker_boost: boolean;
+  };
+}
+
+export interface ElevenlabsVoicesResponse {
+  voices: ElevenlabsVoice[];
+}
+
+export interface ElevenlabsTextToSpeechRequest {
+  text: string;
+  model_id: string;
+  voice_id: string;
+  voice_settings?: {
+    stability: number;
+    similarity_boost: number;
+    style?: number;
+    use_speaker_boost?: boolean;
+  };
+}
+
+export interface ElevenlabsTextToSpeechResponse {
+  audio: string; // Base64 encoded audio
+}
+
+export interface ElevenlabsError {
+  detail: {
+    status: string;
+    message: string;
+  };
+}

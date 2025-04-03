@@ -1,28 +1,43 @@
 import { GeminiResponse } from "@/types";
-import { getStoredApiKey, setStoredApiKey, hasStoredApiKey, getStoredModelSettings } from "@/utils/settingsStorage";
+import { saveApiKeyToFirestore, getApiKeyFromFirestore } from "./firestoreService";
 
-// Since the user would need to provide their own API key in a production app
-// Here we'll allow them to input it in the app
+// Variável para armazenar a chave da API
 let GEMINI_API_KEY = "";
 
-export const setApiKey = (key: string) => {
-  GEMINI_API_KEY = key;
-  setStoredApiKey(key);
-};
-
-export const getApiKey = () => {
+// Função para obter a chave da API
+export const getApiKey = async () => {
   if (!GEMINI_API_KEY) {
-    GEMINI_API_KEY = getStoredApiKey();
+    // Get from Firestore
+    const firestoreKey = await getApiKeyFromFirestore('gemini');
+    if (firestoreKey) {
+      GEMINI_API_KEY = firestoreKey;
+    }
   }
   return GEMINI_API_KEY;
 };
 
+// Função para definir a chave da API
+export const setApiKey = (key: string) => {
+  GEMINI_API_KEY = key;
+  
+  // Save to Firestore only
+  saveApiKeyToFirestore('gemini', key)
+    .catch(error => console.error('Error saving Gemini API key to Firestore:', error));
+};
+
+// Função para verificar se existe uma chave de API
 export const hasApiKey = () => {
+  return !!GEMINI_API_KEY;
+};
+
+// Função assíncrona para verificar se existe uma chave de API
+export const hasApiKeyAsync = async () => {
   if (GEMINI_API_KEY) return true;
   
-  const storedKey = getStoredApiKey();
-  if (storedKey) {
-    GEMINI_API_KEY = storedKey;
+  // Check Firestore
+  const firestoreKey = await getApiKeyFromFirestore('gemini');
+  if (firestoreKey) {
+    GEMINI_API_KEY = firestoreKey;
     return true;
   }
   
@@ -61,7 +76,7 @@ export const sendMessageToGemini = async (
   messages: { role: string; content: string }[],
   attachments?: FileAttachment[]
 ): Promise<string> => {
-  const apiKey = getApiKey();
+  const apiKey = await getApiKey();
   
   if (!apiKey) {
     throw new Error("API key is required");

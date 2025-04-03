@@ -1,5 +1,6 @@
 import { DeepSeekResponse } from "@/types";
-import { getStoredApiKey, getStoredModelSettings } from "@/utils/settingsStorage";
+import { getStoredModelSettings } from "@/utils/settingsStorage";
+import { saveApiKeyToFirestore, getApiKeyFromFirestore } from "./firestoreService";
 
 // Variável para armazenar a chave da API DeepSeek
 let DEEPSEEK_API_KEY = "";
@@ -7,38 +8,51 @@ let DEEPSEEK_API_KEY = "";
 // Endpoint da API DeepSeek
 const DEEPSEEK_API_ENDPOINT = "https://api.deepseek.com/v1/chat/completions";
 
-// Função para definir a chave da API
-export const setDeepSeekApiKey = (key: string) => {
-  DEEPSEEK_API_KEY = key;
-  localStorage.setItem("deepseek-api-key", key);
-};
-
 // Função para obter a chave da API
-export const getDeepSeekApiKey = () => {
+export const getDeepSeekApiKey = async () => {
   if (!DEEPSEEK_API_KEY) {
-    DEEPSEEK_API_KEY = localStorage.getItem("deepseek-api-key") || "";
+    // Get from Firestore
+    const firestoreKey = await getApiKeyFromFirestore('deepseek');
+    if (firestoreKey) {
+      DEEPSEEK_API_KEY = firestoreKey;
+    }
   }
   return DEEPSEEK_API_KEY;
 };
 
+// Função para definir a chave da API
+export const setDeepSeekApiKey = (key: string) => {
+  DEEPSEEK_API_KEY = key;
+  
+  // Save to Firestore only
+  saveApiKeyToFirestore('deepseek', key)
+    .catch(error => console.error('Error saving DeepSeek API key to Firestore:', error));
+};
+
 // Função para verificar se existe uma chave de API
-export const hasDeepSeekApiKey = () => {
+export const hasDeepSeekApiKey = async () => {
   if (DEEPSEEK_API_KEY) return true;
   
-  const storedKey = localStorage.getItem("deepseek-api-key");
-  if (storedKey) {
-    DEEPSEEK_API_KEY = storedKey;
+  // Check Firestore
+  const firestoreKey = await getApiKeyFromFirestore('deepseek');
+  if (firestoreKey) {
+    DEEPSEEK_API_KEY = firestoreKey;
     return true;
   }
   
   return false;
 };
 
+// Versão síncrona para compatibilidade com código existente
+export const hasDeepSeekApiKeySync = () => {
+  return !!DEEPSEEK_API_KEY;
+};
+
 // Função para enviar mensagens para o DeepSeek R1
 export const sendMessageToDeepSeek = async (
   messages: { role: string; content: string }[]
 ): Promise<{ content: string; reasoningContent?: string }> => {
-  const apiKey = getDeepSeekApiKey();
+  const apiKey = await getDeepSeekApiKey();
   
   if (!apiKey) {
     throw new Error("DeepSeek API key is required");

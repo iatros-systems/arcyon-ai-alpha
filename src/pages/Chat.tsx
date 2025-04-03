@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useChatStore } from "@/store/chat-store";
 import { useApiKeyDialog } from "@/hooks/useApiKeyDialog";
@@ -20,13 +19,13 @@ const Chat = () => {
     }
   }, [currentChat, startNewChat]);
 
-  // Check if API key exists when component mounts
-  useEffect(() => {
-    // This will check localStorage and memory cache
-    if (!hasApiKey()) {
-      setApiKeyDialogOpen(true);
-    }
-  }, [setApiKeyDialogOpen]);
+  // Eliminamos la verificación automática que abre el diálogo de API
+  // useEffect(() => {
+  //   // This will check localStorage and memory cache
+  //   if (!hasApiKey()) {
+  //     setApiKeyDialogOpen(true);
+  //   }
+  // }, [setApiKeyDialogOpen]);
 
   return (
     <ChatLayout

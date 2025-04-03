@@ -3,24 +3,19 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { UploadCloud, Save, FileText, Eye, X, Paperclip, Upload } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Upload, Eye, FileText, Save, Trash2, X, FileUp } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useSettingsContext } from "@/contexts/SettingsContext";
 import { useChatStore } from "@/store/chat-store";
 import { CHEST_PAIN_SYSTEM_PROMPT } from "@/store/chat/constants";
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
-import { 
-  getPathologySystemPrompt, 
-  savePathologySystemPrompt, 
-  getPathologyAttachments, 
-  savePathologyAttachments,
-  PathologySettings
-} from "@/utils/settingsStorage";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { getPathologySystemPrompt, savePathologySystemPrompt, getPathologyAttachments, savePathologyAttachments } from "@/utils/settingsStorage";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileAttachment } from "@/services/api";
+import { storage } from "@/services/firebase";
+import { ref, uploadBytes, getDownloadURL, listAll, getMetadata } from "firebase/storage";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const PromptSettingsTab = () => {
   const {
@@ -35,24 +30,70 @@ const PromptSettingsTab = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const dropAreaRef = useRef<HTMLDivElement>(null);
   const { chats, setChats, currentChat } = useChatStore();
-  
-  // Estado para anexos da patologia atual
   const [pathologyAttachments, setPathologyAttachments] = useState<FileAttachment[]>([]);
-  
-  // Carregar prompt e anexos quando a patologia mudar
+  const [isDragging, setIsDragging] = useState(false);
+
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState<{
+    attachment: FileAttachment;
+    exists: boolean;
+  }[]>([]);
+  const [currentUploadIndex, setCurrentUploadIndex] = useState(0);
+
+  // Carregar prompt quando a patologia mudar
   useEffect(() => {
-    if (pathology) {
-      // Carregar o prompt específico da patologia
-      const savedPrompt = getPathologySystemPrompt(pathology);
-      if (savedPrompt) {
-        setSystemInstructions(savedPrompt);
+    const loadPathologyData = async () => {
+      if (pathology) {
+        try {
+          console.log(`[PromptSettingsTab] Loading data for pathology: "${pathology}"`);
+          
+          // Limpar o campo de instruções enquanto carrega
+          setSystemInstructions("");
+          
+          // Carregar o prompt específico da patologia de forma assíncrona
+          console.log(`[PromptSettingsTab] Attempting to load system prompt for pathology: "${pathology}"`);
+          const savedPrompt = await getPathologySystemPrompt(pathology);
+          console.log(`[PromptSettingsTab] Result from getPathologySystemPrompt:`, 
+            savedPrompt ? `Found (${savedPrompt.length} chars)` : "Not found", 
+            savedPrompt ? `Content (first 50 chars): ${savedPrompt.substring(0, 50)}...` : ""
+          );
+          
+          if (savedPrompt) {
+            console.log(`[PromptSettingsTab] Setting system instructions with prompt from Firestore`);
+            // Ensure we're setting a string value
+            const promptText = String(savedPrompt);
+            console.log(`[PromptSettingsTab] Setting systemInstructions to: ${promptText.substring(0, 50)}...`);
+            setSystemInstructions(promptText);
+          } else {
+            console.log(`[PromptSettingsTab] No system prompt found for pathology: "${pathology}"`);
+            setSystemInstructions("");
+          }
+
+          // Carregar anexos da patologia
+          const attachments = await getPathologyAttachments(pathology);
+          if (attachments && attachments.length > 0) {
+            console.log(`[PromptSettingsTab] Loaded ${attachments.length} attachments for pathology: "${pathology}"`);
+            setPathologyAttachments(attachments);
+          } else {
+            console.log(`[PromptSettingsTab] No attachments found for pathology: "${pathology}"`);
+            setPathologyAttachments([]);
+          }
+        } catch (error) {
+          console.error("[PromptSettingsTab] Error loading pathology data:", error);
+          toast.error("Erro ao carregar dados da patologia");
+          setSystemInstructions("");
+          setPathologyAttachments([]);
+        }
+      } else {
+        // Limpar os campos se não houver patologia selecionada
+        setSystemInstructions("");
+        setPathologyAttachments([]);
       }
-      
-      // Carregar os anexos específicos da patologia
-      const savedAttachments = getPathologyAttachments(pathology);
-      setPathologyAttachments(savedAttachments);
-    }
+    };
+    
+    loadPathologyData();
   }, [pathology]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,123 +122,459 @@ const PromptSettingsTab = () => {
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
-  
-  // Função para lidar com upload de anexos
-  const handleAttachmentUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+
+  // Função para formatar o tamanho do arquivo
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' bytes';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
+  };
+
+  // Função para lidar com o upload de anexos
+  const handleAttachmentUpload = (files: FileList | File[]) => {
+    const validFiles: FileAttachment[] = [];
+    const invalidFiles: string[] = [];
+    const maxSize = 5 * 1024 * 1024; // 5MB
     
-    // Verificar se a patologia foi selecionada
-    if (!pathology) {
-      toast.error("Por favor, selecione uma patologia antes de anexar arquivos");
-      return;
-    }
-    
-    // Verificar o tamanho total dos anexos (limite de 20MB)
-    const totalSize = Array.from(files).reduce((acc, file) => acc + file.size, 0);
-    const currentSize = pathologyAttachments.reduce((acc, attachment) => acc + attachment.size, 0);
-    
-    if (totalSize + currentSize > 20 * 1024 * 1024) {
-      toast.error("O tamanho total dos anexos não pode exceder 20MB");
-      return;
-    }
-    
-    // Processar cada arquivo
     Array.from(files).forEach(file => {
-      // Verificar tipos de arquivo permitidos
-      const allowedTypes = [
-        'application/pdf', 
-        'text/plain', 
-        'application/msword', 
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/csv',
-        'image/png',
-        'image/jpeg'
-      ];
+      // Verificar o tipo de arquivo (aceitar apenas PDF, imagens e arquivos de texto)
+      const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'text/plain', 'text/markdown'];
+      const isValidType = validTypes.includes(file.type) || 
+                          file.name.endsWith('.pdf') || 
+                          file.name.endsWith('.jpg') || 
+                          file.name.endsWith('.jpeg') || 
+                          file.name.endsWith('.png') || 
+                          file.name.endsWith('.gif') || 
+                          file.name.endsWith('.txt') || 
+                          file.name.endsWith('.md');
       
-      const fileExtension = file.name.split('.').pop()?.toLowerCase();
-      const allowedExtensions = ['pdf', 'txt', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'png', 'jpg', 'jpeg'];
-      
-      if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension || '')) {
-        toast.error(`Tipo de arquivo não suportado: ${file.name}`);
+      if (!isValidType) {
+        invalidFiles.push(`${file.name} (tipo inválido)`);
         return;
       }
       
-      // Converter para base64
+      // Verificar o tamanho do arquivo
+      if (file.size > maxSize) {
+        invalidFiles.push(`${file.name} (tamanho excede 5MB)`);
+        return;
+      }
+      
+      // Converter o arquivo para base64
       const reader = new FileReader();
       reader.onload = (e) => {
-        const base64 = e.target?.result as string;
-        // Remover o prefixo "data:*/*;base64," para economizar espaço
-        const base64Data = base64.split(',')[1];
+        const base64data = e.target?.result as string;
         
-        // Adicionar ao estado
-        setPathologyAttachments(prev => [
-          ...prev, 
-          {
-            name: file.name,
-            type: file.type || `application/${fileExtension}`,
-            size: file.size,
-            base64: base64Data
-          }
-        ]);
+        // Criar um objeto de anexo
+        const attachment: FileAttachment = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          base64data: base64data
+        };
+        
+        // Adicionar à lista de anexos
+        setPathologyAttachments(prev => [...prev, attachment]);
       };
+      
       reader.readAsDataURL(file);
+      validFiles.push({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        base64data: '' // Será preenchido pelo leitor
+      });
     });
     
-    // Limpar o input
+    // Mostrar mensagens de erro para arquivos inválidos
+    if (invalidFiles.length > 0) {
+      toast.error(`Arquivos inválidos: ${invalidFiles.join(', ')}`);
+    }
+    
+    // Mostrar mensagem de sucesso para arquivos válidos
+    if (validFiles.length > 0) {
+      toast.success(`${validFiles.length} arquivo(s) adicionado(s) com sucesso`);
+    }
+    
+    // Limpar o input de arquivo
     if (attachmentInputRef.current) {
-      attachmentInputRef.current.value = "";
+      attachmentInputRef.current.value = '';
     }
   };
-  
+
   // Função para remover um anexo
   const handleRemoveAttachment = (index: number) => {
     setPathologyAttachments(prev => prev.filter((_, i) => i !== index));
   };
+
+  // Funções para drag and drop
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
   
-  // Função para formatar o tamanho do arquivo
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' bytes';
-    else if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+  
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleAttachmentUpload(e.dataTransfer.files);
+    }
   };
 
-  // Custom save handler to also update all existing chats
-  const handleSaveAndUpdateChats = () => {
+  const handleAttachmentClick = () => {
+    attachmentInputRef.current?.click();
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      handleAttachmentUpload(e.target.files);
+    }
+  };
+
+  // Função para verificar se um arquivo existe no Firebase Storage
+  const checkFileExists = async (pathology: string, fileName: string): Promise<boolean> => {
+    try {
+      // Usar o caminho correto do Firebase Storage
+      const storageRef = ref(storage, `arcyon/prompts-files/${pathology}/${fileName}`);
+      console.log(`[PromptSettingsTab] Verificando existência em: gs://iatros-template.firebasestorage.app/arcyon/prompts-files/${pathology}/${fileName}`);
+      await getMetadata(storageRef);
+      return true; // Se não lançar erro, o arquivo existe
+    } catch (error) {
+      console.log(`[PromptSettingsTab] Arquivo não encontrado em: gs://iatros-template.firebasestorage.app/arcyon/prompts-files/${pathology}/${fileName}`);
+      return false; // Se lançar erro, o arquivo não existe
+    }
+  };
+
+  // Função para fazer upload de um arquivo para o Firebase Storage
+  const uploadFileToStorage = async (attachment: FileAttachment, pathology: string): Promise<void> => {
+    console.log(`[PromptSettingsTab] uploadFileToStorage - INICIO`, {
+      attachmentName: attachment.name,
+      attachmentType: attachment.type,
+      attachmentSize: attachment.size,
+      pathology: pathology,
+      hasBase64: !!attachment.base64data,
+      base64Prefix: attachment.base64data ? attachment.base64data.substring(0, 30) + '...' : 'N/A'
+    });
+
+    if (!attachment.base64data || !attachment.base64data.startsWith('data:')) {
+      console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" já foi enviado anteriormente`);
+      return;
+    }
+
+    try {
+      console.log(`[PromptSettingsTab] Iniciando upload do arquivo "${attachment.name}" para Firebase Storage`);
+      
+      // Converter base64 para blob
+      const response = await fetch(attachment.base64data);
+      const blob = await response.blob();
+      
+      // Log do tamanho do blob para depuração
+      console.log(`[PromptSettingsTab] Tamanho do blob para "${attachment.name}": ${blob.size} bytes`);
+      
+      // Verificar se o blob é válido
+      if (blob.size === 0) {
+        throw new Error("Blob vazio");
+      }
+      
+      // Criar referência no Firebase Storage com o caminho correto
+      const storagePath = `arcyon/prompts-files/${pathology}/${attachment.name}`;
+      const fullStoragePath = `gs://iatros-template.firebasestorage.app/${storagePath}`;
+      console.log(`[PromptSettingsTab] Caminho de armazenamento completo: ${fullStoragePath}`);
+      console.log(`[PromptSettingsTab] Detalhes do caminho:`, {
+        storagePath,
+        fullStoragePath,
+        pathology,
+        fileName: attachment.name
+      });
+      
+      const storageRef = ref(storage, storagePath);
+      
+      // Verificar se a referência foi criada corretamente
+      console.log(`[PromptSettingsTab] Referência criada:`, {
+        fullPath: storageRef.fullPath,
+        bucket: storageRef.bucket,
+        name: storageRef.name
+      });
+      
+      // Fazer upload do arquivo com metadados
+      const metadata = {
+        contentType: attachment.type || 'application/octet-stream',
+        customMetadata: {
+          uploadedAt: new Date().toISOString(),
+          pathology: pathology,
+          storageBucket: 'iatros-template.firebasestorage.app'
+        }
+      };
+      
+      console.log(`[PromptSettingsTab] Iniciando uploadBytes para "${attachment.name}" com metadados:`, metadata);
+      const uploadResult = await uploadBytes(storageRef, blob, metadata);
+      console.log(`[PromptSettingsTab] Upload concluído para "${attachment.name}"`, {
+        metadata: uploadResult.metadata,
+        ref: uploadResult.ref.fullPath,
+        totalBytes: uploadResult.metadata.size
+      });
+      
+      // Obter URL do arquivo para confirmar que o upload foi bem-sucedido
+      try {
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        console.log(`[PromptSettingsTab] URL de download para "${attachment.name}": ${downloadURL}`);
+      } catch (urlError) {
+        console.error(`[PromptSettingsTab] Erro ao obter URL de download para "${attachment.name}":`, {
+          error: urlError,
+          code: urlError instanceof Error && 'code' in urlError ? (urlError as any).code : 'unknown',
+          message: urlError instanceof Error ? urlError.message : String(urlError)
+        });
+        // Não lançar erro aqui, pois o upload já foi concluído
+      }
+    } catch (error) {
+      console.error(`[PromptSettingsTab] Erro detalhado ao fazer upload do arquivo "${attachment.name}":`, {
+        error,
+        code: error instanceof Error && 'code' in error ? (error as any).code : 'unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
+      // Verificar se é um erro de permissão
+      if (error instanceof Error && error.message.includes('permission-denied')) {
+        console.error('[PromptSettingsTab] Erro de permissão. Verifique as regras de segurança do Firebase Storage.');
+        toast.error(`Erro de permissão ao enviar "${attachment.name}". Verifique as regras do Firebase Storage.`);
+      } 
+      // Verificar se é um erro de rede
+      else if (error instanceof Error && (error.message.includes('network') || error.message.includes('connection'))) {
+        console.error('[PromptSettingsTab] Erro de rede. Verifique sua conexão com a internet.');
+        toast.error(`Erro de rede ao enviar "${attachment.name}". Verifique sua conexão.`);
+      }
+      // Verificar se é um erro de quota
+      else if (error instanceof Error && error.message.includes('quota')) {
+        console.error('[PromptSettingsTab] Erro de quota excedida no Firebase Storage.');
+        toast.error(`Quota excedida ao enviar "${attachment.name}". Contate o administrador.`);
+      }
+      // Outros erros
+      else {
+        toast.error(`Erro ao enviar arquivo "${attachment.name}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      }
+      
+      throw error;
+    }
+  };
+
+  // Função para processar o próximo arquivo na fila de uploads
+  const processNextUpload = async () => {
+    console.log(`[PromptSettingsTab] processNextUpload: índice atual = ${currentUploadIndex}, total = ${pendingUploads.length}`);
+    
+    if (currentUploadIndex >= pendingUploads.length) {
+      // Todos os uploads foram processados
+      console.log('[PromptSettingsTab] Todos os uploads foram processados');
+      setPendingUploads([]);
+      setCurrentUploadIndex(0);
+      toast.success("Configurações da patologia salvas com sucesso");
+      return;
+    }
+
+    const { attachment, exists } = pendingUploads[currentUploadIndex];
+    console.log(`[PromptSettingsTab] Processando arquivo: "${attachment.name}", existe = ${exists}`);
+
+    if (exists) {
+      // Se o arquivo existe, mostrar diálogo de confirmação
+      console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" já existe. Mostrando diálogo de confirmação.`);
+      setIsConfirmDialogOpen(true);
+    } else {
+      // Se o arquivo não existe, fazer upload diretamente
+      console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" não existe. Iniciando upload.`);
+      try {
+        await uploadFileToStorage(attachment, pathology);
+        console.log(`[PromptSettingsTab] Upload bem-sucedido para "${attachment.name}"`);
+        
+        // Processar o próximo arquivo
+        setCurrentUploadIndex(prevIndex => prevIndex + 1);
+        // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload novamente
+        setTimeout(() => {
+          processNextUpload();
+        }, 100);
+      } catch (error) {
+        console.error(`[PromptSettingsTab] Erro ao fazer upload do arquivo "${attachment.name}":`, error);
+        // Continuar com o próximo arquivo mesmo em caso de erro
+        setCurrentUploadIndex(prevIndex => prevIndex + 1);
+        // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload novamente
+        setTimeout(() => {
+          processNextUpload();
+        }, 100);
+      }
+    }
+  };
+
+  // Função para confirmar a substituição de um arquivo
+  const handleConfirmReplace = async () => {
+    setIsConfirmDialogOpen(false);
+    
+    if (currentUploadIndex < pendingUploads.length) {
+      const { attachment } = pendingUploads[currentUploadIndex];
+      console.log(`[PromptSettingsTab] Confirmada substituição do arquivo "${attachment.name}"`);
+      
+      try {
+        await uploadFileToStorage(attachment, pathology);
+        console.log(`[PromptSettingsTab] Substituição bem-sucedida para "${attachment.name}"`);
+      } catch (error) {
+        console.error(`[PromptSettingsTab] Erro ao substituir o arquivo "${attachment.name}":`, error);
+      }
+      
+      // Processar o próximo arquivo
+      setCurrentUploadIndex(prevIndex => prevIndex + 1);
+      // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload novamente
+      setTimeout(() => {
+        processNextUpload();
+      }, 100);
+    }
+  };
+
+  // Função para cancelar a substituição de um arquivo
+  const handleCancelReplace = () => {
+    setIsConfirmDialogOpen(false);
+    
+    if (currentUploadIndex < pendingUploads.length) {
+      const { attachment } = pendingUploads[currentUploadIndex];
+      console.log(`[PromptSettingsTab] Cancelada substituição do arquivo "${attachment.name}"`);
+    }
+    
+    // Pular este arquivo e processar o próximo
+    setCurrentUploadIndex(prevIndex => prevIndex + 1);
+    // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload novamente
+    setTimeout(() => {
+      processNextUpload();
+    }, 100);
+  };
+
+  // Função para salvar configurações e atualizar chats
+  const handleSaveAndUpdateChats = async () => {
     if (!pathology) {
       toast.error("Por favor, selecione uma patologia antes de salvar");
       return;
     }
     
-    // Salvar o prompt específico para a patologia
-    savePathologySystemPrompt(pathology, systemInstructions);
-    
-    // Salvar os anexos específicos para a patologia
-    savePathologyAttachments(pathology, pathologyAttachments);
-    
-    // First save settings as normal
-    handleSave();
-    
-    // Determine which system prompt to use
-    let systemPrompt = '';
-    
-    if (systemInstructions) {
-      // If custom instructions are provided, use those
-      systemPrompt = systemInstructions;
-    } else if (pathology === 'iamWithST' || pathology === 'iamWithoutST' || pathology === 'aorticSyndrome') {
-      // If a pathology is selected but no custom instructions, use the default chest pain prompt
-      systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
+    try {
+      console.log("[PromptSettingsTab] Iniciando salvamento de configurações para patologia:", pathology);
+      console.log("[PromptSettingsTab] Número de anexos:", pathologyAttachments.length);
+      console.log("[PromptSettingsTab] Detalhes da patologia e anexos:", {
+        pathology,
+        pathologyAttachments: pathologyAttachments.map(att => ({
+          name: att.name,
+          type: att.type,
+          size: att.size,
+          hasBase64: !!att.base64data,
+          base64Prefix: att.base64data ? att.base64data.substring(0, 30) + '...' : 'N/A'
+        }))
+      });
+      
+      // First save settings as normal to avoid race conditions
+      handleSave();
+      console.log("[PromptSettingsTab] Configurações básicas salvas");
+      
+      // Salvar o prompt específico para a patologia de forma assíncrona
+      try {
+        await savePathologySystemPrompt(pathology, systemInstructions);
+        console.log("[PromptSettingsTab] Prompt do sistema salvo com sucesso");
+      } catch (promptError) {
+        console.error("[PromptSettingsTab] Erro ao salvar prompt do sistema:", promptError);
+        toast.error("Erro ao salvar prompt do sistema");
+        // Continue with other operations
+      }
+      
+      // Salvar os anexos da patologia
+      try {
+        await savePathologyAttachments(pathology, pathologyAttachments);
+        console.log("[PromptSettingsTab] Anexos salvos com sucesso no Firestore");
+      } catch (attachmentsError) {
+        console.error("[PromptSettingsTab] Erro ao salvar anexos no Firestore:", {
+          error: attachmentsError,
+          message: attachmentsError instanceof Error ? attachmentsError.message : String(attachmentsError),
+          stack: attachmentsError instanceof Error ? attachmentsError.stack : 'No stack trace'
+        });
+        toast.error("Erro ao salvar anexos no Firestore");
+        // Continue with other operations
+      }
+      
+      // Verificar quais arquivos já existem no Firebase Storage
+      const newPendingUploads = [];
+      
+      console.log("[PromptSettingsTab] Verificando arquivos existentes no Firebase Storage para a patologia:", pathology);
+      
+      for (const attachment of pathologyAttachments) {
+        console.log(`[PromptSettingsTab] Verificando arquivo: ${attachment.name}`, {
+          hasBase64: !!attachment.base64data,
+          base64Prefix: attachment.base64data ? attachment.base64data.substring(0, 30) + '...' : 'N/A',
+          size: attachment.size,
+          type: attachment.type
+        });
+        
+        if (attachment.base64data && attachment.base64data.startsWith('data:')) {
+          console.log(`[PromptSettingsTab] Verificando existência do arquivo "${attachment.name}"`);
+          const exists = await checkFileExists(pathology, attachment.name);
+          console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" existe? ${exists}`);
+          newPendingUploads.push({ attachment, exists });
+        } else {
+          console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" não tem dados base64 ou já foi enviado`);
+        }
+      }
+      
+      // Se não houver arquivos para fazer upload, pular esta etapa
+      if (newPendingUploads.length === 0) {
+        console.log("[PromptSettingsTab] Nenhum arquivo novo para fazer upload");
+        toast.success("Configurações da patologia salvas com sucesso");
+      } else {
+        console.log(`[PromptSettingsTab] ${newPendingUploads.length} arquivos para upload:`, 
+          newPendingUploads.map(item => ({
+            name: item.attachment.name,
+            exists: item.exists
+          }))
+        );
+        // Configurar a fila de uploads e iniciar o processamento
+        setPendingUploads(newPendingUploads);
+        setCurrentUploadIndex(0);
+        // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload
+        setTimeout(() => {
+          processNextUpload();
+        }, 100);
+      }
+      
+      // Determine which system prompt to use
+      let systemPrompt = '';
+      
+      if (systemInstructions) {
+        // If custom instructions are provided, use those
+        systemPrompt = systemInstructions;
+      } else if (pathology === 'iamWithST' || pathology === 'iamWithoutST' || pathology === 'aorticSyndrome') {
+        // If a pathology is selected but no custom instructions, use the default chest pain prompt
+        systemPrompt = CHEST_PAIN_SYSTEM_PROMPT;
+      }
+      
+      if (systemPrompt) {
+        try {
+          // Update all chats with the new system prompt
+          const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
+          setChats(updatedChats);
+          console.log("[PromptSettingsTab] Chats atualizados com o novo prompt do sistema");
+        } catch (chatsError) {
+          console.error("[PromptSettingsTab] Erro ao atualizar chats:", chatsError);
+          // No mostrar toast para evitar confusión
+        }
+      }
+    } catch (error) {
+      console.error("[PromptSettingsTab] Erro geral ao salvar configurações da patologia:", error);
+      toast.error("Erro ao salvar configurações da patologia");
     }
-    
-    if (systemPrompt) {
-      // Update all chats with the new system prompt
-      const updatedChats = chats.map(chat => updateChatSystemPrompt(chat, systemPrompt));
-      setChats(updatedChats);
-    }
-    
-    toast.success("Configurações da patologia salvas com sucesso");
   };
 
   return (
@@ -242,7 +619,7 @@ const PromptSettingsTab = () => {
                   onClick={handleUploadClick} 
                   title="Fazer upload de arquivo Markdown"
                 >
-                  <UploadCloud className="h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline" 
@@ -273,88 +650,79 @@ const PromptSettingsTab = () => {
               Você pode usar a formatação Markdown para organizar o conteúdo.
             </p>
           </div>
-          
-          {/* Seção de anexos específicos para a patologia */}
+
+          {/* Área de anexos */}
           <div className="grid gap-2">
             <div className="flex justify-between items-center">
-              <Label htmlFor="attachments">Arquivos para o System Prompt</Label>
+              <Label>Arquivos para o System Prompt</Label>
               <Button 
                 variant="outline" 
-                onClick={() => attachmentInputRef.current?.click()}
-                disabled={!pathology}
-                className="text-xs flex items-center gap-1"
+                size="sm" 
+                onClick={handleAttachmentClick}
+                className="flex items-center gap-1"
               >
-                <Upload className="h-4 w-4" />
-                Anexar Arquivos
+                <FileUp className="h-4 w-4" />
+                Anexar Arquivo
               </Button>
               <input 
                 type="file" 
                 ref={attachmentInputRef} 
-                onChange={handleAttachmentUpload} 
-                accept=".pdf,.txt,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg" 
+                onChange={handleFileInputChange} 
                 className="hidden" 
-                multiple
+                multiple 
               />
             </div>
             
-            {pathologyAttachments.length > 0 ? (
-              <div className="border rounded-md">
-                {pathologyAttachments.map((attachment, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-center justify-between p-3 border-b last:border-b-0"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{attachment.name}</p>
-                        <p className="text-xs text-muted-foreground">{formatFileSize(attachment.size)}</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleRemoveAttachment(index)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <div className="p-3 bg-muted/30 border-t flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium">{pathologyAttachments.length} {pathologyAttachments.length === 1 ? 'arquivo' : 'arquivos'}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatFileSize(pathologyAttachments.reduce((acc, file) => acc + file.size, 0))}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="border border-dashed rounded-md p-8 flex flex-col items-center justify-center text-center">
-                <Paperclip className="h-8 w-8 text-muted-foreground/50 mb-2" />
+            {/* Área de arrastar e soltar */}
+            <div 
+              ref={dropAreaRef}
+              className={`border-2 border-dashed rounded-md p-4 transition-colors ${
+                isDragging ? 'border-primary bg-primary/10' : 'border-muted-foreground/20'
+              }`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <div className="text-center py-4">
                 <p className="text-sm text-muted-foreground">
-                  {!pathology 
-                    ? "Selecione uma patologia para anexar arquivos" 
-                    : "Nenhum arquivo anexado para esta patologia"}
+                  Arraste e solte arquivos aqui ou clique em "Anexar Arquivo"
                 </p>
-                {pathology && (
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={() => attachmentInputRef.current?.click()}
-                    className="mt-4"
-                  >
-                    <Upload className="h-3 w-3 mr-1" />
-                    Anexar Arquivos
-                  </Button>
-                )}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Formatos aceitos: PDF, imagens (JPG, PNG, GIF) e arquivos de texto (TXT, MD)
+                </p>
+              </div>
+            </div>
+            
+            {/* Lista de arquivos anexados */}
+            {pathologyAttachments.length > 0 && (
+              <div className="mt-2">
+                <h4 className="text-sm font-medium mb-2">Arquivos anexados:</h4>
+                <div className="space-y-2">
+                  {pathologyAttachments.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-muted/50 p-2 rounded-md">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileText className="h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm truncate">{file.name}</span>
+                        <span className="text-xs text-muted-foreground">({formatFileSize(file.size)})</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleRemoveAttachment(index)}
+                        className="h-6 w-6"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             
             <p className="text-xs text-muted-foreground mt-1">
-              Estes arquivos serão enviados ao modelo Gemini junto com o prompt do sistema.
-              Formatos suportados: PDF, TXT, DOC, DOCX, XLS, XLSX, CSV, PNG, JPG.
+              Anexe arquivos relevantes que serão associados ao prompt do sistema para esta patologia.
+              Estes arquivos serão armazenados e disponibilizados para o assistente durante as conversas.
             </p>
           </div>
         </div>
@@ -387,6 +755,26 @@ const PromptSettingsTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Substituir arquivo existente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {currentUploadIndex < pendingUploads.length && (
+                <>
+                  O arquivo "{pendingUploads[currentUploadIndex]?.attachment.name}" já existe na pasta da patologia.
+                  Deseja substituí-lo pelo novo arquivo?
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelReplace}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmReplace}>Substituir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

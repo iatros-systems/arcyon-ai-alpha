@@ -11,9 +11,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Settings, ShieldCheck } from "lucide-react";
+import { Settings, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { hasApiKey, setApiKey, getApiKey } from "@/services/api";
 import { hasDeepSeekApiKey, setDeepSeekApiKey, getDeepSeekApiKey } from "@/services/deepseek";
+import { hasElevenlabsApiKey, setElevenlabsApiKey, getElevenlabsApiKey } from "@/services/elevenlabs";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -26,10 +27,14 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
   const navigate = useNavigate();
   const [apiKey, setApiKeyState] = useState("");
   const [deepseekApiKey, setDeepseekApiKeyState] = useState("");
+  const [elevenlabsApiKey, setElevenlabsApiKeyState] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [showSettingsAuth, setShowSettingsAuth] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState("gemini");
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showDeepseekKey, setShowDeepseekKey] = useState(false);
+  const [showElevenlabsKey, setShowElevenlabsKey] = useState(false);
 
   useEffect(() => {
     // Load existing API keys if available
@@ -42,6 +47,11 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
       const existingDeepseekKey = getDeepSeekApiKey();
       if (existingDeepseekKey) {
         setDeepseekApiKeyState(existingDeepseekKey);
+      }
+      
+      const existingElevenlabsKey = getElevenlabsApiKey();
+      if (existingElevenlabsKey) {
+        setElevenlabsApiKeyState(existingElevenlabsKey);
       }
       
       // Reset other states
@@ -61,6 +71,11 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
       return;
     }
     
+    if (activeTab === "elevenlabs" && !elevenlabsApiKey.trim()) {
+      toast.error("Por favor, insira uma chave de API válida para o Elevenlabs");
+      return;
+    }
+    
     setIsSaving(true);
     try {
       if (activeTab === "gemini") {
@@ -69,6 +84,9 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
       } else if (activeTab === "deepseek") {
         setDeepSeekApiKey(deepseekApiKey);
         toast.success("API key do DeepSeek salva com sucesso");
+      } else if (activeTab === "elevenlabs") {
+        setElevenlabsApiKey(elevenlabsApiKey);
+        toast.success("API key do Elevenlabs salva com sucesso");
       }
       
       onOpenChange(false);
@@ -108,23 +126,37 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
             </DialogHeader>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="gemini">Gemini</TabsTrigger>
                 <TabsTrigger value="deepseek">DeepSeek R1</TabsTrigger>
+                <TabsTrigger value="elevenlabs">Elevenlabs</TabsTrigger>
               </TabsList>
               
               <TabsContent value="gemini">
                 <div className="flex flex-col gap-4 py-2">
                   <div className="grid gap-2">
                     <Label htmlFor="api-key">Chave da API Gemini</Label>
-                    <Input
-                      id="api-key"
-                      type="password"
-                      value={apiKey}
-                      onChange={(e) => setApiKeyState(e.target.value)}
-                      placeholder="sua-chave-de-api-gemini"
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="api-key"
+                        type={showGeminiKey ? "text" : "password"}
+                        value={apiKey}
+                        onChange={(e) => setApiKeyState(e.target.value)}
+                        placeholder="sua-chave-de-api-gemini"
+                        className="w-full pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowGeminiKey(!showGeminiKey)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      >
+                        {showGeminiKey ? (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
@@ -133,16 +165,61 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
                 <div className="flex flex-col gap-4 py-2">
                   <div className="grid gap-2">
                     <Label htmlFor="deepseek-api-key">Chave da API DeepSeek</Label>
-                    <Input
-                      id="deepseek-api-key"
-                      type="password"
-                      value={deepseekApiKey}
-                      onChange={(e) => setDeepseekApiKeyState(e.target.value)}
-                      placeholder="sua-chave-de-api-deepseek"
-                      className="w-full"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="deepseek-api-key"
+                        type={showDeepseekKey ? "text" : "password"}
+                        value={deepseekApiKey}
+                        onChange={(e) => setDeepseekApiKeyState(e.target.value)}
+                        placeholder="sua-chave-de-api-deepseek"
+                        className="w-full pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDeepseekKey(!showDeepseekKey)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      >
+                        {showDeepseekKey ? (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       O DeepSeek R1 com DeepThin expõe o processo de pensamento interno do modelo na resposta da API.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="elevenlabs">
+                <div className="flex flex-col gap-4 py-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="elevenlabs-api-key">Chave da API Elevenlabs</Label>
+                    <div className="relative">
+                      <Input
+                        id="elevenlabs-api-key"
+                        type={showElevenlabsKey ? "text" : "password"}
+                        value={elevenlabsApiKey}
+                        onChange={(e) => setElevenlabsApiKeyState(e.target.value)}
+                        placeholder="sua-chave-de-api-elevenlabs"
+                        className="w-full pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowElevenlabsKey(!showElevenlabsKey)}
+                        className="absolute inset-y-0 right-0 flex items-center pr-3"
+                      >
+                        {showElevenlabsKey ? (
+                          <EyeOff className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      O Elevenlabs permite converter texto em fala natural e utilizar o widget de conversação por áudio.
                     </p>
                   </div>
                 </div>
@@ -160,7 +237,10 @@ const ApiKeyDialog = ({ open, onOpenChange }: ApiKeyDialogProps) => {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={(activeTab === "gemini" && !apiKey) || (activeTab === "deepseek" && !deepseekApiKey) || isSaving}
+                disabled={(activeTab === "gemini" && !apiKey) || 
+                         (activeTab === "deepseek" && !deepseekApiKey) || 
+                         (activeTab === "elevenlabs" && !elevenlabsApiKey) || 
+                         isSaving}
                 className="sm:order-2"
               >
                 {isSaving ? "Salvando..." : "Salvar"}
