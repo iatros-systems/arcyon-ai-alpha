@@ -154,6 +154,7 @@ import {
         (widget as HTMLElement).style.display = 'block';
         
         // Asegurarse de que los atributos estén correctamente establecidos
+        widget.setAttribute('agent-id', 'agent_01jwrtyvs7f2e8gz51rk9gspf2'); // Actualizar el ID del agente aquí
         widget.setAttribute('branding', 'false');
         widget.setAttribute('feedbackPrompt', 'false');
         widget.setAttribute('hideAttribution', 'true');
@@ -166,7 +167,8 @@ import {
             elevenlabs-convai .footer,
             elevenlabs-convai [class*="footer"],
             elevenlabs-convai [class*="powered-by"],
-            elevenlabs-convai [class*="attribution"] {
+            elevenlabs-convai [class*="attribution"],
+            elevenlabs-convai [class*="convai-footer"] {
               display: none !important;
               visibility: hidden !important;
               opacity: 0 !important;
@@ -187,15 +189,16 @@ import {
     // Carrega o script se ainda não foi carregado
     const script = document.createElement('script');
     script.id = 'elevenlabs-widget-script';
-    script.src = 'https://elevenlabs.io/convai-widget/index.js';
+    script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
     script.async = true;
     script.type = 'text/javascript';
     document.body.appendChild(script);
 
     // Cria o widget se não existir
     if (!document.querySelector('elevenlabs-convai')) {
+      // Y actualizar el ID del agente:
       const widget = document.createElement('elevenlabs-convai');
-      widget.setAttribute('agent-id', '9oyM6StlzWD31XEsi5bK');
+      widget.setAttribute('agent-id', 'agent_01jwrtyvs7f2e8gz51rk9gspf2');
       widget.setAttribute('branding', 'false');
       widget.setAttribute('feedbackPrompt', 'false');
       widget.setAttribute('hideAttribution', 'true');
