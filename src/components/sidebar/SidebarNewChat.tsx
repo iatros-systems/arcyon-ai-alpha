@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { v4 as uuidv4 } from "uuid";
 
 interface SidebarNewChatProps {
   collapsed: boolean;
@@ -21,5 +22,20 @@ const SidebarNewChat = ({ collapsed, onNewChat }: SidebarNewChatProps) => {
     </div>
   );
 };
+
+const handleNewChat = (selectedPathology: string) => {
+  const newChat = {
+    id: uuidv4(),
+    messages: [],
+    metadata: {
+      pathology: selectedPathology,
+      // otros campos...
+    },
+    // otros campos...
+  };
+  // Añade el chat al store o estado global
+};
+
+
 
 export default SidebarNewChat;

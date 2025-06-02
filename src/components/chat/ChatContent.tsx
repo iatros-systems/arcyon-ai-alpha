@@ -17,6 +17,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+import { hasFirestoreAttachments } from "@/utils/settingsStorage";
+
 interface ChatContentProps {
   sidebarCollapsed: boolean;
 }
@@ -84,28 +86,46 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     };
   }, []);
 
+
+
   const checkPathologyResources = async () => {
     const { pathology } = currentChat?.metadata || {};
-    
-    if (!pathology) {
+    //const pathology: any = currentChat?.metadata?.pathology;
+
+
+    console.log("DEBUG: currentChat", currentChat);
+    console.log("DEBUG: currentChat?.metadata", currentChat?.metadata);
+    console.log("DEBUG: currentChat?.metadata?.pathology", currentChat?.metadata?.pathology);
+
+    /*if (!pathology) {
+      setHasSystemPrompt(false);
+      setHasAttachments(false);
+      return;
+    }*/
+
+    console.log("DEBUG: pathology para anexos:", pathology);
+    if (!pathology || pathology === "undefined") {
       setHasSystemPrompt(false);
       setHasAttachments(false);
       return;
     }
 
+    
+
     try {
-      // Verificar se há um prompt de sistema para a patologia atual
+      // Verificar si hay prompt de sistema
       const systemPrompt = await getPathologySystemPrompt(pathology);
       setHasSystemPrompt(!!systemPrompt && systemPrompt.trim() !== "");
-
-      // Verificar se há anexos para a patologia atual
-      const attachments = await getPathologyAttachments(pathology);
-      setHasAttachments(attachments && attachments.length > 0);
+  
+      // NUEVO: Verificar anexos directamente en Firestore
+      const exists = await hasFirestoreAttachments(pathology);
+    setHasAttachments(exists);
+    console.log("Patología usada para anexos:", pathology);
     } catch (error) {
-      console.error("Erro ao verificar recursos da patologia:", error);
-      setHasSystemPrompt(false);
-      setHasAttachments(false);
-    }
+    console.error("Erro ao verificar recursos da patologia:", error);
+    setHasSystemPrompt(false);
+    setHasAttachments(false);
+  }
   };
 
   // Função para aceitar os termos
@@ -128,8 +148,10 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     // Verificar se os termos foram aceitos
     if (!termsAccepted) {
       setShowTermsDialog(true);
+      console.log("⚠️ Medico nao aceitou o termos e condicoes.");
       return false;
     }
+    
     
     // Verificar se há um prompt de sistema configurado
     if (!hasSystemPrompt) {
@@ -137,17 +159,20 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
         role: "system",
         content: "⚠️ Não é possível enviar mensagens sem um prompt de sistema configurado. Por favor, configure o prompt do sistema nas configurações."
       });
+      console.log("⚠️ Não é possível enviar mensagens sem um prompt de sistema configurado. Por favor, configure o prompt do sistema nas configurações.");
       return false;
     }
 
-    // Verificar se há anexos configurados
+    /*// Verificar se há anexos configurados
     if (!hasAttachments) {
       addMessage({
         role: "system",
         content: "⚠️ Não é possível enviar mensagens sem anexos configurados para o prompt do sistema. Por favor, adicione anexos nas configurações."
       });
+      console.log("⚠️ Não é possível enviar mensagens sem anexos configurados para o prompt do sistema. Por favor, adicione anexos nas configurações.", files);
+
       return false;
-    }
+    }*/
 
     setLoading(true);
     startTimeRef.current = Date.now(); // Registra o tempo de início
@@ -159,6 +184,9 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
       // Calcula o tempo decorrido
       const elapsedTime = Math.round((Date.now() - startTimeRef.current) / 1000);
       setResponseTime(elapsedTime);
+
+      console.log("Mensagem enviada pelo usuário:", messageContent, files);
+
       
       return result;
     } finally {
@@ -355,7 +383,7 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
       <div className="z-10 w-full bg-background">
         <ChatInput 
           onSubmit={handleSubmit} 
-          disabled={loading || apiLoading || !hasSystemPrompt || !hasAttachments || !termsAccepted} 
+          disabled= {loading || apiLoading || !hasSystemPrompt || !termsAccepted} 
         />
       </div>
     </div>

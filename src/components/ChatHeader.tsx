@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getPathologyAttachments } from "@/utils/settingsStorage";
 import { getStoredSystemPromptSettings } from "@/utils/settingsStorage";
+import ChatHeaderElevenLabsWidget from "./ChatHeaderElevenLabsWidget";
 
 interface ChatHeaderProps {
   sidebarOpen: boolean;
@@ -178,6 +179,8 @@ const ChatHeader = ({
           </Link>
         </Button>
       </div>
+      
+      <ChatHeaderElevenLabsWidget />
       
       <ApiKeyDialog
         open={apiKeyDialogOpen}

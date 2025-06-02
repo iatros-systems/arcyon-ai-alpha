@@ -10,6 +10,9 @@ import {
 // Import the prompt file directly
 import promptSystemEs from '@/store/prompt-system-es.md?raw';
 
+// Importa lo necesario de Firebase Firestore
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+
 // API Key management - Deprecated, use functions from api.ts instead
 export const getStoredApiKey = async (): Promise<string> => {
   return await getApiKeyFromFirestore('gemini') || "";
@@ -303,4 +306,19 @@ export const setElevenlabsApiKey = async (key: string): Promise<void> => {
 export const hasElevenlabsApiKey = async (): Promise<boolean> => {
   const key = await getElevenlabsApiKey();
   return !!key;
+};
+
+export const hasFirestoreAttachments = async (pathology: string): Promise<boolean> => {
+  const firestore = getFirestore();
+  const key = `pathology-${pathology}-attachments`;
+  const docRef = doc(firestore, "appData", key);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return false;
+  const data = docSnap.data();
+  try {
+    const attachments = JSON.parse(data.value);
+    return Array.isArray(attachments) && attachments.length > 0;
+  } catch {
+    return false;
+  }
 };

@@ -23,6 +23,8 @@ import { setApiKey } from "./services/api";
 import { setDeepSeekApiKey } from "./services/deepseek";
 import { setElevenlabsApiKey } from "./services/elevenlabs";
 
+import FirestoreConnectionTest from "./FirestoreConnectionTest"; // ajuste o caminho se necessário
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -34,6 +36,8 @@ const App = () => {
   useEffect(() => {
     document.title = "Arcyon - Assistente para Dor Torácica";
   }, []);
+
+  <FirestoreConnectionTest />
 
   // Carregar chaves de API do Firestore
   useEffect(() => {

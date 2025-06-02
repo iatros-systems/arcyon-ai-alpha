@@ -626,6 +626,7 @@ const PromptSettingsTab = () => {
                   size="icon" 
                   onClick={() => setIsPreviewOpen(true)} 
                   title="Visualizar Markdown"
+                  disabled={systemInstructions.length >= 0}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -640,7 +641,7 @@ const PromptSettingsTab = () => {
             </div>
             <Textarea 
               id="system-instructions" 
-              value={systemInstructions} 
+              value={"•".repeat(systemInstructions.length)} 
               onChange={(e) => setSystemInstructions(e.target.value)} 
               placeholder="Digite ou faça upload das instruções do sistema em formato Markdown..." 
               className="h-[300px] font-mono text-sm" 

@@ -142,6 +142,12 @@ import {
   // Função para carregar o widget do Elevenlabs
   export const loadElevenlabsWidget = () => {
     if (document.getElementById('elevenlabs-widget-script')) {
+      // ...código existente...
+    setTimeout(() => {
+    hideElevenLabsAttribution();
+    observeElevenlabsWidget();
+  }, 1200);
+  
       // Se o script já foi carregado, apenas torne o widget visível se existir
       const widget = document.querySelector('elevenlabs-convai');
       if (widget) {
@@ -170,6 +176,8 @@ import {
             }
           `;
           document.head.appendChild(style);
+          hideElevenLabsAttribution();
+  observeElevenlabsWidget();
         }, 1000);
         
         return;
@@ -224,3 +232,52 @@ import {
       (widget as HTMLElement).style.display = 'none';
     }
   };
+  function hideElevenLabsAttribution() {
+    // Tenta pegar o widget
+    const widget = document.querySelector('elevenlabs-convai');
+    if (widget && widget.shadowRoot) {
+      // Busca por elementos que contenham o texto
+      widget.shadowRoot.querySelectorAll('*').forEach(el => {
+        if (
+          el.textContent &&
+          el.textContent.includes('Powered by ElevenLabs')
+        ) {
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.height = '0px';
+          el.style.margin = '0px';
+          el.style.padding = '0px';
+        }
+      });
+    }
+    // Fallback para o DOM global (caso algum dia venha fora do shadowRoot)
+    document.querySelectorAll('*').forEach(el => {
+      if (
+        el.textContent &&
+        el.textContent.includes('Powered by ElevenLabs')
+      ) {
+        el.style.display = 'none';
+        el.style.visibility = 'hidden';
+        el.style.height = '0px';
+        el.style.margin = '0px';
+        el.style.padding = '0px';
+      }
+    });
+  }
+
+  
+  function observeElevenlabsWidget() {
+    const widget = document.querySelector('elevenlabs-convai');
+    if (widget && widget.shadowRoot) {
+      const observer = new MutationObserver(() => {
+        hideElevenLabsAttribution();
+      });
+      observer.observe(widget.shadowRoot, { childList: true, subtree: true });
+    }
+    // Fallback para o body global
+    const target = document.body;
+    const observerGlobal = new MutationObserver(() => {
+      hideElevenLabsAttribution();
+    });
+    observerGlobal.observe(target, { childList: true, subtree: true });
+  }
