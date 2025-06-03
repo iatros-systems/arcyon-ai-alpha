@@ -8,7 +8,8 @@ import {
   saveSystemPromptSettings,
   getStoredPassword,
   setStoredPassword,
-  validatePassword
+  validatePassword,
+  getPathologySystemPrompt
 } from "@/utils/settingsStorage";
 import { useChatStore } from "@/store/chat-store"; 
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";

@@ -221,9 +221,19 @@ export const getPathologySystemPrompt = async (pathology: string): Promise<strin
 
 // Synchronous version for backward compatibility
 export const getPathologySystemPromptSync = (pathology: string): string => {
-  // This is a synchronous function, so we can't use Firestore directly
-  // It's meant for backward compatibility only
-  return "";
+  // Verificação defensiva para evitar acessos síncronos indevidos
+  if (!pathology || pathology === "undefined") {
+    console.log("[getPathologySystemPromptSync] Pathology is undefined or invalid, returning empty prompt");
+    return "";
+  }
+  
+  try {
+    // Implementação original (síncrona)
+    return localStorage.getItem(`pathology-${pathology}-prompt`) || "";
+  } catch (error) {
+    console.error("[getPathologySystemPromptSync] Error:", error);
+    return "";
+  }
 };
 
 export const savePathologySystemPrompt = async (pathology: string, prompt: string): Promise<void> => {
@@ -247,6 +257,12 @@ export const savePathologySystemPromptSync = (pathology: string, prompt: string)
 // Pathology-specific attachments management
 export const getPathologyAttachments = async (pathology: string): Promise<FileAttachment[]> => {
   try {
+    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
+    if (!pathology || pathology === "undefined") {
+      console.log("[getPathologyAttachments] Pathology is undefined, returning empty array");
+      return [];
+    }
+    
     const key = `pathology-${pathology}-attachments`;
     const stored = await getDataFromFirestore(key);
     if (!stored) return [];
@@ -260,10 +276,42 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
 
 export const savePathologyAttachments = async (pathology: string, attachments: FileAttachment[]): Promise<void> => {
   try {
+    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
+    if (!pathology || pathology === "undefined") {
+      console.log("[savePathologyAttachments] Pathology is undefined, skipping save operation");
+      return;
+    }
+    
     const key = `pathology-${pathology}-attachments`;
     await saveDataToFirestore(key, JSON.stringify(attachments));
   } catch (error) {
     console.error("Error saving pathology attachments:", error);
+  }
+};
+
+export const hasFirestoreAttachments = async (pathology: string): Promise<boolean> => {
+  try {
+    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
+    if (!pathology || pathology === "undefined") {
+      console.log("[hasFirestoreAttachments] Pathology is undefined, returning false");
+      return false;
+    }
+    
+    const firestore = getFirestore();
+    const key = `pathology-${pathology}-attachments`;
+    const docRef = doc(firestore, "appData", key);
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) return false;
+    const data = docSnap.data();
+    try {
+      const attachments = JSON.parse(data.value);
+      return Array.isArray(attachments) && attachments.length > 0;
+    } catch {
+      return false;
+    }
+  } catch (error) {
+    console.error("Error checking for Firestore attachments:", error);
+    return false;
   }
 };
 
@@ -313,19 +361,4 @@ export const setElevenlabsApiKey = async (key: string): Promise<void> => {
 export const hasElevenlabsApiKey = async (): Promise<boolean> => {
   const key = await getElevenlabsApiKey();
   return !!key;
-};
-
-export const hasFirestoreAttachments = async (pathology: string): Promise<boolean> => {
-  const firestore = getFirestore();
-  const key = `pathology-${pathology}-attachments`;
-  const docRef = doc(firestore, "appData", key);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) return false;
-  const data = docSnap.data();
-  try {
-    const attachments = JSON.parse(data.value);
-    return Array.isArray(attachments) && attachments.length > 0;
-  } catch {
-    return false;
-  }
 };
