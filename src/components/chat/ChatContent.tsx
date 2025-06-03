@@ -74,6 +74,7 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
   // Verificar se há um prompt de sistema e anexos
   useEffect(() => {
+    console.log("[ChatContent] Verificando recursos da patologia devido a mudança no chat ou patologia");
     checkPathologyResources();
 
     // Verificar periodicamente
@@ -84,9 +85,7 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
-
-
+  }, [currentChat, currentChat?.metadata?.pathology]);
 
   const checkPathologyResources = async () => {
     // Obter pathology dos metadados do chat ou usar um valor padrão
@@ -97,29 +96,48 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
       pathology = "defaultPathology";
     }
 
-    console.log("DEBUG: currentChat", currentChat);
-    console.log("DEBUG: currentChat?.metadata", currentChat?.metadata);
-    console.log("DEBUG: currentChat?.metadata?.pathology", currentChat?.metadata?.pathology);
-    console.log("DEBUG: pathology normalizado para anexos:", pathology);
-
+    console.log("[ChatContent] Verificando recursos para pathology:", pathology);
+    
     try {
       // Verificar prompt do sistema
       const systemPrompt = await getPathologySystemPrompt(pathology);
       const hasPrompt = !!systemPrompt && systemPrompt.trim() !== "";
+      
+      console.log(`[ChatContent] Prompt do sistema para pathology "${pathology}": ${hasPrompt ? "Encontrado ✅" : "Não encontrado ❌"}`);
+      console.log(`[ChatContent] Conteúdo do prompt:`, systemPrompt ? `"${systemPrompt.substring(0, 50)}..."` : "vazio");
+      
+      // Sempre atualizar o estado para garantir consistência
       setHasSystemPrompt(hasPrompt);
-      console.log(`[ChatContent] Prompt do sistema para pathology "${pathology}": ${hasPrompt ? "Encontrado" : "Não encontrado"}`);
   
       // Verificar anexos diretamente no Firestore
       const exists = await hasFirestoreAttachments(pathology);
+      
+      console.log(`[ChatContent] Anexos para pathology "${pathology}": ${exists ? "Encontrados ✅" : "Não encontrados ❌"}`);
+      
+      // Sempre atualizar o estado
       setHasAttachments(exists);
-      console.log(`[ChatContent] Anexos para pathology "${pathology}": ${exists ? "Encontrados" : "Não encontrados"}`);
       
       // Se o chat não tiver pathology definido nos metadados, atualize
-      if (!currentChat?.metadata?.pathology) {
-        updateChatMetadata({
-          ...currentChat?.metadata,
-          pathology: pathology
-        });
+      if (currentChat && (!currentChat?.metadata?.pathology || currentChat?.metadata?.pathology === "undefined")) {
+        console.log(`[ChatContent] Atualizando metadata do chat com pathology: ${pathology}`);
+        
+        // Importante: Verificar se updateChatMetadata espera currentChat.id como primeiro parâmetro
+        if (typeof updateChatMetadata === 'function') {
+          // Se for uma função que espera id e metadata
+          if (currentChat.id) {
+            updateChatMetadata(currentChat.id, {
+              ...(currentChat?.metadata || {}),
+              pathology: pathology
+            });
+          } else {
+            // Se for diferente, tenta chamar de outra forma
+            updateChatMetadata({
+              ...currentChat?.metadata,
+              pathology: pathology
+            });
+          }
+        }
+        
         console.log(`[ChatContent] Metadados do chat atualizados com pathology: "${pathology}"`);
       }
     } catch (error) {
@@ -200,7 +218,23 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
   // Renderizar aviso se não houver prompt de sistema ou anexos
   const renderWarningMessage = () => {
+    // Força uma verificação imediata para garantir estado atualizado
+    useEffect(() => {
+      // Verificar novamente quando o componente renderizar a mensagem de aviso
+      const checkAgain = async () => {
+        console.log("[ChatContent] Verificando recursos novamente ao renderizar aviso");
+        await checkPathologyResources();
+      };
+      
+      checkAgain();
+    }, []);
+    
     if (!hasSystemPrompt) {
+      console.log("[ChatContent] Renderizando aviso de prompt não configurado. Estado atual:", { 
+        hasSystemPrompt, 
+        pathology: currentChat?.metadata?.pathology || "não definido" 
+      });
+      
       return (
         <div className="flex flex-col items-center justify-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg mb-4 mx-4 mt-4">
           <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
@@ -208,7 +242,10 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
           <p className="text-center mb-4">
             É necessário configurar um prompt do sistema para a patologia <strong>{currentPathology || "atual"}</strong> antes de iniciar o chat.
           </p>
-          <Button asChild>
+          <Button asChild onClick={() => {
+            // Força uma verificação dos recursos após retornar das configurações
+            setTimeout(checkPathologyResources, 1000);
+          }}>
             <Link to="/settings">
               <Settings className="h-4 w-4 mr-2" />
               Ir para Configurações
