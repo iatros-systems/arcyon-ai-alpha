@@ -90,8 +90,6 @@ export function useSettings() {
           const hasGeminiKey = await hasApiKeyAsync('gemini');
           if (hasDeepseekKey) {
             setPreferredApiProvider("deepseek");
-          } 
-          if (hasGeminiKey) {
             setPreferredApiProvider("gemini");
           }
         }
@@ -260,7 +258,7 @@ export function useSettings() {
     setTopK,
     setMaxTokens,
     setAdvancedMode,
-    setPathology(promptSettings.pathology || "defaultPathology");
+    setPathology,
     setSystemInstructions,
     setCurrentPassword,
     setNewPassword,
