@@ -72,6 +72,53 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
     }
   }, [currentChat, disclaimerShown, addMessage, termsAccepted]);
 
+  // Novo useEffect para sincronizar a patologia do sistema com o chat atual
+  useEffect(() => {
+    // Função para sincronizar a patologia do chat com a configuração do sistema
+    const syncPathologyWithSystem = async () => {
+      try {
+        const systemPromptSettings = await getStoredSystemPromptSettings();
+        const configuredPathology = systemPromptSettings.pathology;
+        
+        // Se temos um chat atual e uma patologia configurada no sistema
+        if (currentChat && configuredPathology && configuredPathology !== 'defaultPathology') {
+          console.log(`[ChatContent] Sincronizando patologia: chat=${currentChat?.metadata?.pathology}, sistema=${configuredPathology}`);
+          
+          // Se o chat não tem patologia ou usa defaultPathology, atualizamos para a configurada
+          if (!currentChat.metadata?.pathology || 
+              currentChat.metadata?.pathology === 'undefined' || 
+              currentChat.metadata?.pathology === 'defaultPathology') {
+              
+            console.log(`[ChatContent] Atualizando patologia do chat para a configurada no sistema: ${configuredPathology}`);
+            
+            // Atualizar os metadados do chat
+            if (currentChat.id) {
+              updateChatMetadata(currentChat.id, {
+                ...(currentChat?.metadata || {}),
+                pathology: configuredPathology
+              });
+            } else {
+              updateChatMetadata({
+                ...currentChat?.metadata,
+                pathology: configuredPathology
+              });
+            }
+            
+            // Verificar recursos da nova patologia
+            await checkPathologyResources();
+          }
+        }
+      } catch (error) {
+        console.error("[ChatContent] Erro ao sincronizar patologia:", error);
+      }
+    };
+    
+    // Executar sincronização quando o chat mudar
+    if (currentChat) {
+      syncPathologyWithSystem();
+    }
+  }, [currentChat]);
+
   // Verificar se há um prompt de sistema e anexos
   useEffect(() => {
     console.log("[ChatContent] Verificando recursos da patologia devido a mudança no chat ou patologia");
