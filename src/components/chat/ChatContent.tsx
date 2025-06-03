@@ -105,8 +105,8 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
     console.log("DEBUG: pathology para anexos:", pathology);
     if (!pathology || pathology === "undefined") {
-      setHasSystemPrompt(false);
-      setHasAttachments(false);
+      setHasSystemPrompt(true);
+      setHasAttachments(true);
       return;
     }
 
