@@ -14,19 +14,65 @@ export interface ApiResponse {
 // Variáveis para armazenar configurações
 let preferredApiProvider: ApiProvider | null = null;
 let showModelThinkingSetting: boolean | null = null;
+let settingsLoaded = false;
+let lastSettingsLoadTime = 0;
+const SETTINGS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos em milissegundos
 
 // Função para carregar configurações do Firestore
-const loadSettings = async () => {
+const loadSettings = async (forceReload = false): Promise<void> => {
   try {
+    // Verificar se precisa recarregar (primeira vez, forçado ou intervalo expirado)
+    const now = Date.now();
+    if (settingsLoaded && !forceReload && (now - lastSettingsLoadTime < SETTINGS_REFRESH_INTERVAL)) {
+      console.log("[loadSettings] Usando configurações em cache. Última atualização há", Math.round((now - lastSettingsLoadTime)/1000), "segundos");
+      return;
+    }
+
+    console.log("[loadSettings] Carregando configurações do Firestore...");
+    
     // Tentar obter configurações do Firestore
     const configDoc = await getApiKeyFromFirestore('config');
     if (configDoc) {
-      const config = JSON.parse(configDoc);
-      preferredApiProvider = config.preferredApiProvider || "gemini";
-      showModelThinkingSetting = config.showModelThinking !== false;
+      try {
+        const config = JSON.parse(configDoc);
+        console.log("[loadSettings] Configurações carregadas do Firestore:", 
+          JSON.stringify({
+            preferredApiProvider: config.preferredApiProvider,
+            showModelThinking: config.showModelThinking
+          }));
+        
+        preferredApiProvider = config.preferredApiProvider || "gemini";
+        showModelThinkingSetting = config.showModelThinking !== false;
+        settingsLoaded = true;
+        lastSettingsLoadTime = now;
+      } catch (error) {
+        console.error("[loadSettings] Erro ao processar configurações JSON:", error);
+        // Manter valores anteriores ou usar padrões
+        if (!preferredApiProvider) preferredApiProvider = "gemini";
+        if (showModelThinkingSetting === null) showModelThinkingSetting = true;
+      }
+    } else {
+      console.log("[loadSettings] Nenhuma configuração encontrada no Firestore, usando valores padrão");
+      // Usar valores padrão
+      preferredApiProvider = "gemini";
+      showModelThinkingSetting = true;
     }
   } catch (error) {
-    console.error("Erro ao carregar configurações do Firestore:", error);
+    console.error("[loadSettings] Erro ao carregar configurações do Firestore:", error);
+    // Manter valores anteriores ou usar padrões
+    if (!preferredApiProvider) preferredApiProvider = "gemini";
+    if (showModelThinkingSetting === null) showModelThinkingSetting = true;
+  } finally {
+    // Mesmo em caso de erro, marcar como carregado para evitar chamadas repetidas
+    settingsLoaded = true;
+    if (lastSettingsLoadTime === 0) lastSettingsLoadTime = Date.now();
+  }
+};
+
+// Função para garantir que as configurações estejam carregadas
+const ensureSettingsLoaded = async (): Promise<void> => {
+  if (!settingsLoaded || (Date.now() - lastSettingsLoadTime > SETTINGS_REFRESH_INTERVAL)) {
+    await loadSettings();
   }
 };
 
@@ -45,6 +91,8 @@ export const sendMessage = async (
   preferredProvider?: ApiProvider,
   attachments?: FileAttachment[]
 ): Promise<ApiResponse> => {
+  await ensureSettingsLoaded();
+  
   // Obtém a API preferida
   const provider = preferredProvider || preferredApiProvider || "gemini";
   
