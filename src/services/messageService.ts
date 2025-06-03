@@ -52,26 +52,7 @@ export const sendMessage = async (
   const showModelThinking = showModelThinkingSetting !== false;
   
   // Verifica se a API preferida está disponível
-  if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
-    try {
-      const response = await sendMessageToDeepSeek(messages);
-      
-      // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
-      if (!showModelThinking) {
-        return { content: response.content };
-      }
-      
-      return response;
-    } catch (error) {
-      console.error("Erro ao enviar mensagem para DeepSeek, tentando Gemini como fallback:", error);
-      // Fallback para Gemini se DeepSeek falhar e Gemini estiver disponível
-      if (hasApiKey()) {
-        const geminiResponse = await sendMessageToGemini(messages, attachments);
-        return { content: geminiResponse };
-      }
-      throw error;
-    }
-  } else if (provider === "gemini" && hasApiKey()) {
+  if (provider === "gemini" && hasApiKey()) {
     try {
       const geminiResponse = await sendMessageToGemini(messages, attachments);
       return { content: geminiResponse };
@@ -87,6 +68,25 @@ export const sendMessage = async (
         }
         
         return response;
+      }
+      throw error;
+    }
+  } else if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
+    try {
+      const response = await sendMessageToDeepSeek(messages);
+      
+      // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
+      if (!showModelThinking) {
+        return { content: response.content };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error("Erro ao enviar mensagem para DeepSeek, tentando Gemini como fallback:", error);
+      // Fallback para Gemini se DeepSeek falhar e Gemini estiver disponível
+      if (hasApiKey()) {
+        const geminiResponse = await sendMessageToGemini(messages, attachments);
+        return { content: geminiResponse };
       }
       throw error;
     }
@@ -126,10 +126,10 @@ export const getActiveApiName = (): string => {
   const provider = preferredApiProvider || "gemini";
   const showModelThinking = showModelThinkingSetting !== false;
   
-  if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
-    return showModelThinking ? "DeepSeek R1 (com raciocínio)" : "DeepSeek R1";
-  } else if (provider === "gemini" && hasApiKey()) {
+ if (provider === "gemini" && hasApiKey()) {
     return "Google Gemini";
+  } else if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
+    return showModelThinking ? "DeepSeek R1 (com raciocínio)" : "DeepSeek R1";
   } else if (hasApiKey()) {
     return "Google Gemini";
   } else if (hasDeepSeekApiKeySync()) {
