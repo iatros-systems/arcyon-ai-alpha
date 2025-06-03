@@ -85,8 +85,15 @@ export const sendMessageToGemini = async (
 
   // Get model parameters from localStorage or use defaults
   const { temperature, topP, topK, maxTokens: maxOutputTokens } = getStoredModelSettings();
+  
+  console.log(`[sendMessageToGemini] Iniciando com ${messages.length} mensagens e ${attachments?.length || 0} anexos`);
+  console.log(`[sendMessageToGemini] Mensagens recebidas:`, messages.map(m => ({ role: m.role, content: m.content.substring(0, 30) + '...' })));
 
   try {
+    // Verificar se há mensagens do sistema
+    const systemMessages = messages.filter(msg => msg.role === "system");
+    console.log(`[sendMessageToGemini] Encontradas ${systemMessages.length} mensagens de sistema`);
+    
     // Format messages for Gemini API
     const formattedMessages = messages.map(msg => {
       // Check if the message contains an image (base64 data)
@@ -98,25 +105,37 @@ export const sendMessageToGemini = async (
       if (role === "assistant") role = "model";
       if (role === "system") role = "user"; // Gemini doesn't have a system role, prepend to first user message
       
-      // Se for uma mensagem do sistema e tiver anexos, adicione-os à mensagem
-      if (role === "user" && msg.role === "system" && attachments && attachments.length > 0) {
+      console.log(`[sendMessageToGemini] Processando mensagem - role original: ${msg.role}, role Gemini: ${role}`);
+      
+      // Se for uma mensagem do sistema, processar independentemente de ter anexos ou não
+      if (role === "user" && msg.role === "system") {
+        console.log(`[sendMessageToGemini] Processando prompt do sistema: "${msg.content.substring(0, 50)}..."`);
+        
         const contentParts = [];
         
         // Adicionar o texto do prompt do sistema
         contentParts.push({ text: msg.content });
         
-        // Adicionar cada anexo como uma parte da mensagem
-        for (const attachment of attachments) {
-          // Determinar o MIME type correto
-          const mimeType = attachment.type || getMimeTypeFromExtension(attachment.name);
+        // Adicionar anexos apenas se existirem
+        if (attachments && attachments.length > 0) {
+          console.log(`[sendMessageToGemini] Adicionando ${attachments.length} anexos ao prompt do sistema`);
           
-          // Adicionar o arquivo como inline data
-          contentParts.push({
-            inlineData: {
-              mimeType: mimeType,
-              data: attachment.base64
-            }
-          });
+          // Adicionar cada anexo como uma parte da mensagem
+          for (const attachment of attachments) {
+            // Determinar o MIME type correto
+            const mimeType = attachment.type || getMimeTypeFromExtension(attachment.name);
+            console.log(`[sendMessageToGemini] Adicionando anexo: ${attachment.name} (${mimeType})`);
+            
+            // Adicionar o arquivo como inline data
+            contentParts.push({
+              inlineData: {
+                mimeType: mimeType,
+                data: attachment.base64
+              }
+            });
+          }
+        } else {
+          console.log(`[sendMessageToGemini] Nenhum anexo para adicionar ao prompt do sistema`);
         }
         
         return {
@@ -125,7 +144,7 @@ export const sendMessageToGemini = async (
         };
       }
       
-      // If this is an image message, format it specially for the Gemini 1.5 API
+      // If this is an image message, format it specially for the Gemini API
       if (isImageMessage && role === "user") {
         const contentParts = [];
         
