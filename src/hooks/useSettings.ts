@@ -116,6 +116,18 @@ export function useSettings() {
     loadSettings();
   }, []);
   
+  useEffect(() => {
+    async function loadSystemPrompt() {
+      if (pathology) {
+        console.log(`[useSettings] Buscando system prompt do Firestore para patologia: "${pathology}"`);
+        const pathologyPrompt = await getPathologySystemPrompt(pathology);
+        setSystemInstructions(pathologyPrompt || "");
+        console.log(`[useSettings] Prompt carregado do Firestore:`, pathologyPrompt);
+      }
+    }
+    loadSystemPrompt();
+  }, [pathology]);
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
