@@ -1,6 +1,6 @@
 import { GeminiResponse } from "@/types";
 import { saveApiKeyToFirestore, getApiKeyFromFirestore } from "./firestoreService";
-import { getStoredModelSettings } from "../utils/settingsStorage";
+import { getStoredModelSettings } from "@/utils/settingsStorage";
 
 // Variável para armazenar a chave da API
 let GEMINI_API_KEY = "";

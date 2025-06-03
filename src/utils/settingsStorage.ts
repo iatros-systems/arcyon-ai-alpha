@@ -57,7 +57,33 @@ export const getStoredModelSettings = async () => {
 
 // Synchronous version for backward compatibility
 export const getStoredModelSettingsSync = () => {
+  try {
+    console.log("[getStoredModelSettingsSync] Obtendo configurações do modelo");
+    // Tentar ler do localStorage
+    const modelSettingsString = localStorage.getItem('modelSettings');
+    if (modelSettingsString) {
+      try {
+        const settings = JSON.parse(modelSettingsString);
+        console.log("[getStoredModelSettingsSync] Configurações encontradas no localStorage");
+        return {
+          temperature: settings.temperature || 0.3,
+          topP: settings.topP || 0.85,
+          topK: settings.topK || 40,
+          maxTokens: settings.maxTokens || 4096,
+          advancedMode: settings.advancedMode || false
+        };
+      } catch (parseError) {
+        console.error("[getStoredModelSettingsSync] Erro ao analisar configurações:", parseError);
+      }
+    } else {
+      console.log("[getStoredModelSettingsSync] Nenhuma configuração encontrada no localStorage");
+    }
+  } catch (error) {
+    console.error("[getStoredModelSettingsSync] Erro ao obter configurações:", error);
+  }
+  
   // Default values
+  console.log("[getStoredModelSettingsSync] Retornando valores padrão");
   return {
     temperature: 0.3,
     topP: 0.85,

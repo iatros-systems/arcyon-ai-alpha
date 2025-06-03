@@ -9,7 +9,8 @@ import {
   getStoredPassword,
   setStoredPassword,
   validatePassword,
-  getPathologySystemPrompt
+  getPathologySystemPrompt,
+  getPathologyAttachments
 } from "@/utils/settingsStorage";
 import { useChatStore } from "@/store/chat-store"; 
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
@@ -96,7 +97,13 @@ export function useSettings() {
         
         // Carregar configurações do system prompt
         const promptSettings = await getStoredSystemPromptSettings();
-        setPathology(promptSettings.pathology);
+        
+        // Garantir que sempre temos um valor de pathology, mesmo que seja o default
+        const defaultPathology = "defaultPathology";
+        setPathology(promptSettings.pathology || defaultPathology);
+        
+        // Log para depuração
+        console.log(`[useSettings] Pathology carregada: "${promptSettings.pathology || defaultPathology}"`);
         
         // Se houver uma patologia selecionada, carregue o prompt específico do Firestore
         if (promptSettings.pathology) {
@@ -104,9 +111,18 @@ export function useSettings() {
           const pathologyPrompt = await getPathologySystemPrompt(promptSettings.pathology);
           console.log(`[useSettings] Loaded system prompt from Firestore: ${pathologyPrompt ? 'Found' : 'Not found'}`);
           setSystemInstructions(pathologyPrompt || "");
+          
+          // Carregar anexos da patologia para verificar se existem
+          const pathologyAttachments = await getPathologyAttachments(promptSettings.pathology);
+          console.log(`[useSettings] Attachments for pathology "${promptSettings.pathology}": ${pathologyAttachments.length}`);
         } else {
-          // Se não houver patologia selecionada, use as instruções gerais
+          // Se não houver patologia selecionada, use as instruções gerais e o valor default
+          console.log(`[useSettings] No pathology selected, using default: "${defaultPathology}"`);
           setSystemInstructions(promptSettings.systemInstructions || "");
+          
+          // Verificar se existem anexos para o valor default
+          const defaultAttachments = await getPathologyAttachments(defaultPathology);
+          console.log(`[useSettings] Attachments for default pathology: ${defaultAttachments.length}`);
         }
       } catch (error) {
         console.error("Erro ao carregar configurações:", error);

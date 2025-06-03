@@ -89,43 +89,44 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
 
   const checkPathologyResources = async () => {
-    const { pathology } = currentChat?.metadata || {};
-    //const pathology: any = currentChat?.metadata?.pathology;
-
+    // Obter pathology dos metadados do chat ou usar um valor padrão
+    let pathology = currentChat?.metadata?.pathology || "defaultPathology";
+    
+    // Se pathology for undefined ou string "undefined", use o valor padrão
+    if (!pathology || pathology === "undefined") {
+      pathology = "defaultPathology";
+    }
 
     console.log("DEBUG: currentChat", currentChat);
     console.log("DEBUG: currentChat?.metadata", currentChat?.metadata);
     console.log("DEBUG: currentChat?.metadata?.pathology", currentChat?.metadata?.pathology);
-
-    /*if (!pathology) {
-      setHasSystemPrompt(false);
-      setHasAttachments(false);
-      return;
-    }*/
-
-    console.log("DEBUG: pathology para anexos:", pathology);
-    if (!pathology || pathology === "undefined") {
-      setHasSystemPrompt(true);
-      setHasAttachments(true);
-      return;
-    }
-
-    
+    console.log("DEBUG: pathology normalizado para anexos:", pathology);
 
     try {
-      // Verificar si hay prompt de sistema
+      // Verificar prompt do sistema
       const systemPrompt = await getPathologySystemPrompt(pathology);
-      setHasSystemPrompt(!!systemPrompt && systemPrompt.trim() !== "");
+      const hasPrompt = !!systemPrompt && systemPrompt.trim() !== "";
+      setHasSystemPrompt(hasPrompt);
+      console.log(`[ChatContent] Prompt do sistema para pathology "${pathology}": ${hasPrompt ? "Encontrado" : "Não encontrado"}`);
   
-      // NUEVO: Verificar anexos directamente en Firestore
+      // Verificar anexos diretamente no Firestore
       const exists = await hasFirestoreAttachments(pathology);
-    setHasAttachments(exists);
-    console.log("Patología usada para anexos:", pathology);
+      setHasAttachments(exists);
+      console.log(`[ChatContent] Anexos para pathology "${pathology}": ${exists ? "Encontrados" : "Não encontrados"}`);
+      
+      // Se o chat não tiver pathology definido nos metadados, atualize
+      if (!currentChat?.metadata?.pathology) {
+        updateChatMetadata({
+          ...currentChat?.metadata,
+          pathology: pathology
+        });
+        console.log(`[ChatContent] Metadados do chat atualizados com pathology: "${pathology}"`);
+      }
     } catch (error) {
-    console.error("Erro ao verificar recursos da patologia:", error);
-    setHasSystemPrompt(false);
-    setHasAttachments(false);
-  }
+      console.error("Erro ao verificar recursos da patologia:", error);
+      setHasSystemPrompt(false);
+      setHasAttachments(false);
+    }
   };
 
   // Função para aceitar os termos

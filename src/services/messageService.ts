@@ -99,28 +99,44 @@ export const sendMessage = async (
   // Verifica se o usuário deseja ver o pensamento do modelo
   const showModelThinking = showModelThinkingSetting !== false;
   
+  console.log(`[messageService] Enviando mensagem para API ${provider} com ${messages.length} mensagens`);
+  console.log(`[messageService] Anexos: ${attachments ? attachments.length : 0}`);
+  
+  // Verifica se existe pelo menos uma mensagem do sistema
+  const hasSystemPrompt = messages.some(msg => msg.role === "system");
+  console.log(`[messageService] Prompt do sistema presente: ${hasSystemPrompt}`);
+  
   // Verifica se a API preferida está disponível
   if (provider === "gemini" && hasApiKey()) {
     try {
+      console.log(`[messageService] Usando Gemini como provedor principal`);
       const geminiResponse = await sendMessageToGemini(messages, attachments);
       return { content: geminiResponse };
     } catch (error) {
-      console.error("Erro ao enviar mensagem para Gemini, tentando DeepSeek como fallback:", error);
+      console.error("[messageService] Erro ao enviar mensagem para Gemini, tentando DeepSeek como fallback:", error);
+      
       // Fallback para DeepSeek se Gemini falhar e DeepSeek estiver disponível
       if (hasDeepSeekApiKeySync()) {
-        const response = await sendMessageToDeepSeek(messages);
-        
-        // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
-        if (!showModelThinking) {
-          return { content: response.content };
+        console.log(`[messageService] Usando DeepSeek como fallback`);
+        try {
+          const response = await sendMessageToDeepSeek(messages);
+          
+          // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
+          if (!showModelThinking) {
+            return { content: response.content };
+          }
+          
+          return response;
+        } catch (deepseekError) {
+          console.error("[messageService] Erro no fallback para DeepSeek:", deepseekError);
+          throw deepseekError;
         }
-        
-        return response;
       }
       throw error;
     }
   } else if (provider === "deepseek" && hasDeepSeekApiKeySync()) {
     try {
+      console.log(`[messageService] Usando DeepSeek como provedor principal`);
       const response = await sendMessageToDeepSeek(messages);
       
       // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
@@ -130,31 +146,58 @@ export const sendMessage = async (
       
       return response;
     } catch (error) {
-      console.error("Erro ao enviar mensagem para DeepSeek, tentando Gemini como fallback:", error);
+      console.error("[messageService] Erro ao enviar mensagem para DeepSeek, tentando Gemini como fallback:", error);
+      
       // Fallback para Gemini se DeepSeek falhar e Gemini estiver disponível
       if (hasApiKey()) {
-        const geminiResponse = await sendMessageToGemini(messages, attachments);
-        return { content: geminiResponse };
+        console.log(`[messageService] Usando Gemini como fallback`);
+        try {
+          const geminiResponse = await sendMessageToGemini(messages, attachments);
+          return { content: geminiResponse };
+        } catch (geminiError) {
+          console.error("[messageService] Erro no fallback para Gemini:", geminiError);
+          throw geminiError;
+        }
       }
       throw error;
     }
   } else {
     // Se a API preferida não estiver disponível, tenta qualquer uma das disponíveis
+    console.log(`[messageService] API preferida ${provider} não disponível, tentando alternativas`);
+    
     if (hasApiKey()) {
-      const geminiResponse = await sendMessageToGemini(messages, attachments);
-      return { content: geminiResponse };
+      console.log(`[messageService] Usando Gemini como alternativa`);
+      try {
+        const geminiResponse = await sendMessageToGemini(messages, attachments);
+        return { content: geminiResponse };
+      } catch (error) {
+        console.error("[messageService] Erro ao usar Gemini como alternativa:", error);
+        
+        // Se Gemini falhar, tenta DeepSeek
+        if (hasDeepSeekApiKeySync()) {
+          console.log(`[messageService] Tentando DeepSeek como última opção`);
+          const response = await sendMessageToDeepSeek(messages);
+          
+          if (!showModelThinking) {
+            return { content: response.content };
+          }
+          
+          return response;
+        }
+        throw error;
+      }
     } else if (hasDeepSeekApiKeySync()) {
+      console.log(`[messageService] Usando DeepSeek como alternativa`);
       const response = await sendMessageToDeepSeek(messages);
       
-      // Se o usuário não deseja ver o pensamento do modelo, remove o conteúdo de raciocínio
       if (!showModelThinking) {
         return { content: response.content };
       }
       
       return response;
-    } else {
-      throw new Error("Nenhuma chave de API configurada. Configure pelo menos uma API nas configurações.");
     }
+    
+    throw new Error("Nenhuma API configurada. Configure pelo menos uma API para enviar mensagens.");
   }
 };
 
