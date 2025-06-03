@@ -179,31 +179,38 @@ export const getSystemPromptFromLocalFile = async (pathology: string): Promise<s
 // Pathology-specific system prompt management
 export const getPathologySystemPrompt = async (pathology: string): Promise<string> => {
   try {
-    if (!pathology) {
-      console.log("No pathology provided to getPathologySystemPrompt");
+    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
+    if (!pathology || pathology === "undefined") {
+      console.log("[getPathologySystemPrompt] Pathology is undefined or invalid, returning empty prompt");
       return "";
     }
-    
+
     console.log(`[getPathologySystemPrompt] Fetching system prompt for pathology: "${pathology}"`);
     
-    // First try to get from Firestore
-    const firestorePrompt = await getSystemPromptFromFirestore(pathology);
-    
-    if (firestorePrompt) {
-      console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from Firestore for pathology: "${pathology}"`);
-      return firestorePrompt;
+    // Try to get from Firestore first
+    try {
+      const firestorePrompt = await getSystemPromptFromFirestore(pathology);
+      if (firestorePrompt) {
+        console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from Firestore for pathology: "${pathology}"`);
+        return firestorePrompt;
+      }
+    } catch (error) {
+      console.error("[getPathologySystemPrompt] Error getting prompt from Firestore:", error);
     }
     
-    // If not found in Firestore, try to get from local file as fallback
     console.log(`[getPathologySystemPrompt] No prompt found in Firestore, trying local file for pathology: "${pathology}"`);
-    const localPrompt = await getSystemPromptFromLocalFile(pathology);
     
-    if (localPrompt) {
-      console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from local file for pathology: "${pathology}"`);
-      return localPrompt;
+    // If not in Firestore, try local file
+    try {
+      const localPrompt = await getSystemPromptFromLocalFile(pathology);
+      if (localPrompt) {
+        console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from local file for pathology: "${pathology}"`);
+        return localPrompt;
+      }
+    } catch (error) {
+      console.error("[getPathologySystemPrompt] Error getting prompt from local file:", error);
     }
     
-    // If not found in Firestore or local file, return empty string
     console.log(`[getPathologySystemPrompt] No system prompt found for pathology "${pathology}" in Firestore or local file`);
     return "";
   } catch (error) {
