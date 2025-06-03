@@ -373,7 +373,14 @@ const PromptSettingsTab = () => {
 
   // Função para processar o próximo arquivo na fila de uploads
   const processNextUpload = async () => {
+    // Log melhorado para debug
     console.log(`[PromptSettingsTab] processNextUpload: índice atual = ${currentUploadIndex}, total = ${pendingUploads.length}`);
+    
+    // Verificação de segurança para garantir que temos uploads para processar
+    if (pendingUploads.length === 0) {
+      console.log('[PromptSettingsTab] Nenhum upload pendente para processar');
+      return;
+    }
     
     if (currentUploadIndex >= pendingUploads.length) {
       // Todos os uploads foram processados
@@ -393,7 +400,6 @@ const PromptSettingsTab = () => {
       setIsConfirmDialogOpen(true);
     } else {
       // Se o arquivo não existe, fazer upload diretamente
-      console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" não existe. Iniciando upload.`);
       try {
         await uploadFileToStorage(attachment, pathology);
         console.log(`[PromptSettingsTab] Upload bem-sucedido para "${attachment.name}"`);
@@ -540,13 +546,52 @@ const PromptSettingsTab = () => {
             exists: item.exists
           }))
         );
-        // Configurar a fila de uploads e iniciar o processamento
-        setPendingUploads(newPendingUploads);
-        setCurrentUploadIndex(0);
-        // Usar setTimeout para garantir que o estado seja atualizado antes de chamar processNextUpload
-        setTimeout(() => {
-          processNextUpload();
-        }, 100);
+        
+        // Configurar a fila de uploads e iniciar o processamento de forma segura
+        // Usa uma função assíncrona local para garantir que o estado seja atualizado
+        const startUploads = async () => {
+          setPendingUploads(newPendingUploads);
+          setCurrentUploadIndex(0);
+          
+          // Esperar um pouco para garantir que o estado foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Verificar explicitamente se temos pendingUploads antes de iniciar
+          console.log(`[PromptSettingsTab] Iniciando uploads de ${newPendingUploads.length} arquivos após delay`);
+          
+          // Usa diretamente newPendingUploads em vez de pendingUploads para garantir que temos os arquivos
+          if (newPendingUploads.length > 0) {
+            // Primeiro upload manualmente para evitar problemas de estado
+            const { attachment, exists } = newPendingUploads[0];
+            console.log(`[PromptSettingsTab] Processando primeiro arquivo: "${attachment.name}", existe = ${exists}`);
+            
+            if (exists) {
+              // Se o arquivo existe, mostrar diálogo de confirmação
+              console.log(`[PromptSettingsTab] Arquivo "${attachment.name}" já existe. Mostrando diálogo de confirmação.`);
+              setIsConfirmDialogOpen(true);
+            } else {
+              // Se o arquivo não existe, fazer upload diretamente
+              try {
+                console.log(`[PromptSettingsTab] Iniciando upload do arquivo "${attachment.name}"`);
+                await uploadFileToStorage(attachment, pathology);
+                console.log(`[PromptSettingsTab] Upload bem-sucedido para "${attachment.name}"`);
+                
+                // Configurar para o próximo arquivo
+                setCurrentUploadIndex(1);
+                processNextUpload();
+              } catch (error) {
+                console.error(`[PromptSettingsTab] Erro ao fazer upload do arquivo "${attachment.name}":`, error);
+                setCurrentUploadIndex(1);
+                processNextUpload();
+              }
+            }
+          } else {
+            console.log('[PromptSettingsTab] Nenhum arquivo para upload após a verificação final');
+          }
+        };
+
+        // Iniciar o processo de upload
+        startUploads();
       }
       
       // Determine which system prompt to use
