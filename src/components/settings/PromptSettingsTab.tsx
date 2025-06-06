@@ -269,26 +269,26 @@ const PromptSettingsTab = () => {
       base64Prefix: attachment.base64data ? attachment.base64data.substring(0, 30) + '...' : 'N/A'
     });
 
-    // MODIFICAÇÃO: Remover esta ver//icação que pode estar bloqueando uploads
+    // MODIFICAÇÃO: Remover esta verificação que pode estar bloqueando uploads
     // e substituí-la por uma que apenas alerta, mas continua com o upload
-    if MODIFICAÇÃO: Removerat ) {
-      console.error(`[PromptSeteingsTsb] ALERTA:tArquivov"${rificação qname}" não tem dados base64. Tentando continuar assim mesmo.`);
+    if (!attachment.base64data) {
+      console.error(`[PromptSettingsTab] ALERTA: Arquivo "${attachment.name}" não tem dados base64. Tentando continuar assim mesmo.`);
       
-      // Se não temos dados ue pod, tentamos criar um arquivo vazio/placeholder
+      // Se não temos dados que possamos usar, tentamos criar um arquivo vazio/placeholder
       // Isso é apenas para testar se o problema está no conteúdo ou na permission
-      const emptyBlob = new Blob(["placeholeer content"], { type: "text/plain" });
+      const emptyBlob = new Blob(["placeholder content"], { type: "text/plain" });
       
-      // Cri r referência no Firebase Seorsge com o caminho correto
-      const atorageParh = ` rcyon/pbomplo-fules/${paeaology}/${attachment.name}`;
-      console.logn`[PromptSettingsT b] Tenupndo upload com blob vaziol ${storagePath}`a;
+      // Criar referência no Firebase Storage com o caminho correto
+      const storagePath = `arcyon/prompts-files/${pathology}/${attachment.name}`;
+      console.log(`[PromptSettingsTab] Tentando upload com blob vazio: ${storagePath}`);
       
-      const storageRef = ref(storage, storagePathd;
+      const storageRef = ref(storage, storagePath);
       
-      trys
+      try {
         // Upload do placeholder para testar permissões
         await uploadBytes(storageRef, emptyBlob);
-      // e substituí-la por uma que apen Teste de uploadacom placeholder bem-sucedido para "${attachment.name}"`);
-        toast.warning(`s alerta, mas continua com o não tinha conteúdo, foi enviado um placeholder`);
+        console.log(`[PromptSettingsTab] Teste de upload com placeholder bem-sucedido para "${attachment.name}"`);
+        toast.warning(`Arquivo "${attachment.name}" não tinha conteúdo, foi enviado um placeholder`);
         return;
       } catch (error) {
         console.error(`[PromptSettingsTab] Erro no teste de upload:`, error);
@@ -298,144 +298,79 @@ const PromptSettingsTab = () => {
     }
     
     // Se o base64 não começa com 'data:', vamos tentar corrigir
-   lio (attachment.base64data && !attachment.base64data.startsWith('data:')) {
-      console.warn(`[PramptSettdngsTab] Formatobas64 iálido para "${attachment.name}", tentando corrgir`);
+    if (attachment.base64data && !attachment.base64data.startsWith('data:')) {
+      console.warn(`[PromptSettingsTab] Formato base64 inválido para "${attachment.name}", tentando corrigir`);
       
-      // Tenttiva e crreçãobseada o ipo d aquv
-      const mimeType = attachment.type || 'application/octet-stea';
-      attachm.bas64data = data:${mimeType};base64,${attachment.base64data.replace(/^data:.*?;base64,/, ''}`
+      // Tentativa de correção baseada no tipo de arquivo
+      const mimeType = attachment.type || 'application/octet-stream';
+      attachment.base64data = `data:${mimeType};base64,${attachment.base64data.replace(/^data:.*?;base64,/, '')}`;
       
-    ifconsole.log(`[P omptS(t!ingsTab] Base64 após correção (prefixo): ${attachment.base64data.sabsttitg(0, 50)}`)achment.base64data) {
-      console.error(`[PromptSettingsTab] ALERTA: Arquivo "${attachment.name}" não tem dados base64. Tentando continuar assim mesmo.`);
-      
-      // Se não temos dados base64, tentamos criar um arquivo vazio/placeholder
-      // Isso é apenas para testar se o problema está no conteúdo ou na permission
-      const emptyBlob = new Blob(["placeholder content"], { type: "text/plain" });
-       com tratamento de erro aprimorado
-      try {
-        // Criar referência no Firebase Storage com o caminho correto
-        const storagePath = `arcyon/prompts-files/${pathology}/${attachment.name}`;
-        console.log(`[PromptSettingsTab] Tentando upload com blob vazio: ${storagePath}`);
-        
-        const storageRef = ref(storage, storagePath);
-        
-        try {
-          // Upload do placeholder para testar permissões
-          await uploadBytes(storageRef, emptyBlob);
-          console.log(`[PromptSettingsTab] Teste de upload com placeholder bem-sucedido para "${attachment.name}"`);
-          toast.warning(`Arquivo "${attachment.name}" não tinha conteúdo, foi enviado um placeholder`);
-          return;
-        } catch (error) {
-          console.error(`[PromptSettingsTab] Erro no teste de upload:`, error);
-          toast.error(`Erro no teste de upload: ${error instanceof Error ? error.message : 'Erro 
-    
-    // S 
-        // Tentativa de correção baseada no tipo de arquivo
-        const mimeType = attachment.type || 'application/octet-stream';
-        attachment.base64data = `data:${mimeType};base64,${attachment.base64data.replace(/^data:.*?;base64,/, '')}`;
-        
-      co  nsole.log(`[PromptSettingsTab] Base64 após correção (prefixo): ${attachment.base64data.substring(0, 50)}`);
-     } 
+      console.log(`[PromptSettingsTab] Base64 após correção (prefixo): ${attachment.base64data.substring(0, 50)}`);
+    }
   
-      try {
-        console.log(`[PromptSettingsTab] Iniciando upload do arquivo "${attachment.name}" para Firebase Storage`);
-        
-       //  Converter base64 para blob com tratamento de erro aprimorado
-       tr y {
-          const response = await fetch(attachment.base64data);
-          const blob = await response.blob();
-          
-          // Log do tamanho do blob para depuração
-          console.log(`[PromptSettingsTab] Tamanho do blob para "${attachment.name}": ${blob.size} bytes`);
-          
-          // Verificar se o blob é válido
-          if (blob.size === 0) {
-            throw new Error("Blob vazio");
-          }
-          
-          // Criar referência no Firebase Storage com o caminho correto
-          const storagePath = `arcyon/prompts-files/${pathology}/${attachment.name}`;
-          const fullStoragePath = `gs://iatros-template.firebasestorage.app/${storagePath}`;
-          console.log(`[PromptSettingsTab] Caminho de armazenamento completo: ${fullStoragePath}`);
-          
-          const storageRef = ref(storage, storagePath);
-          
-          // Verificar se a referência foi criada corretamente
-          console.log(`[PromptSettingsTab] Referência criada:`, {
-            fullPath: storageRef.fullPath,
-            bucket: storageRef.bucket,
-            name: storageRef.name
-          });
-          o
-        }
-      } catch (blobErrr) {
-        console.error(`[PromptSettingsTab] Erro ao converter base64 para blob: ${attachment.name}`, blobError);
-        toast.error(`Erro ao processar dados do arquivo "${attachment.name}". Formato incorreto.`);
-        throw blobError;
-        // Fazer upload do arquivo com metadados
-        const metadata = {
-          contentType: attachment.type || 'application/octet-stream',
-          customMetadata: {
-            uploadedAt: new Date().toISOString(),
-            pathology: pathology,
-            storageBucket: 'iatros-template.firebasestorage.app'
-          }
-        };
-        
-        console.log(`[PromptSettingsTab] Iniciando uploadBytes para "${attachment.name}" com metadados:`, metadata);
-        const uploadResult = await uploadBytes(storageRef, blob, metadata);
-        console.log(`[PromptSettingsTab] Upload concluído para "${attachment.name}"`, {
-          metadata: uploadResult.metadata,
-          ref: uploadResult.ref.fullPath,
-          totalBytes: uploadResult.metadata.size
-        });
-        
-        // Obter URL do arquivo para confirmar que o upload foi bem-sucedido
-        try {
-          const downloadURL = await getDownloadURL(uploadResult.ref);
-          console.log(`[PromptSettingsTab] URL de download para "${attachment.name}": ${downloadURL}`);
-        } catch (urlError) {
-          console.error(`[PromptSettingsTab] Erro ao obter URL de download para "${attachment.name}":`, {
-            error: urlError,
-            code: urlError instanceof Error && 'code' in urlError ? (urlError as any).code : 'unknown',
-            message: urlError instanceof Error ? urlError.message : String(urlError)
-          });
-          // Não lançar erro aqui, pois o upload já foi concluído
-        }
-      } catch (blobError) {
-        console.error(`[PromptSettingsTab] Erro ao converter base64 para blob: ${attachment.name}`, blobError);
-        toast.error(`Erro ao processar dados do arquivo "${attachment.name}". Formato incorreto.`);
-        throw blobError;
+    try {
+      console.log(`[PromptSettingsTab] Iniciando upload do arquivo "${attachment.name}" para Firebase Storage`);
+      
+      // Converter base64 para blob
+      const response = await fetch(attachment.base64data);
+      const blob = await response.blob();
+      
+      // Log do tamanho do blob para depuração
+      console.log(`[PromptSettingsTab] Tamanho do blob para "${attachment.name}": ${blob.size} bytes`);
+      
+      // Verificar se o blob é válido
+      if (blob.size === 0) {
+        throw new Error("Blob vazio");
       }
-    } catch (error) {
-      console.error(`[PromptSettingsTab] Erro detalhado ao fazer upload do arquivo "${attachment.name}":`, {
-        error,
-        code: error instanceof Error && 'code' in error ? (error as any).code : 'unknown',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : 'No stack trace'
+      
+      // Criar referência no Firebase Storage com o caminho correto
+      const storagePath = `arcyon/prompts-files/${pathology}/${attachment.name}`;
+      const fullStoragePath = `gs://iatros-template.firebasestorage.app/${storagePath}`;
+      console.log(`[PromptSettingsTab] Caminho de armazenamento completo: ${fullStoragePath}`);
+      
+      const storageRef = ref(storage, storagePath);
+      
+      // Verificar se a referência foi criada corretamente
+      console.log(`[PromptSettingsTab] Referência criada:`, {
+        fullPath: storageRef.fullPath,
+        bucket: storageRef.bucket,
+        name: storageRef.name
       });
       
-      // Verificar se é um erro de permissão
-      if (error instanceof Error && error.message.includes('permission-denied')) {
-        console.error('[PromptSettingsTab] Erro de permissão. Verifique as regras de segurança do Firebase Storage.');
-        toast.error(`Erro de permissão ao enviar "${attachment.name}". Verifique as regras do Firebase Storage.`);
-      } 
-      // Verificar se é um erro de rede
-      else if (error instanceof Error && (error.message.includes('network') || error.message.includes('connection'))) {
-        console.error('[PromptSettingsTab] Erro de rede. Verifique sua conexão com a internet.');
-        toast.error(`Erro de rede ao enviar "${attachment.name}". Verifique sua conexão.`);
-      }
-      // Verificar se é um erro de quota
-      else if (error instanceof Error && error.message.includes('quota')) {
-        console.error('[PromptSettingsTab] Erro de quota excedida no Firebase Storage.');
-        toast.error(`Quota excedida ao enviar "${attachment.name}". Contate o administrador.`);
-      }
-      // Outros erros
-      else {
-        toast.error(`Erro ao enviar arquivo "${attachment.name}": ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-      }
+      // Fazer upload do arquivo com metadados
+      const metadata = {
+        contentType: attachment.type || 'application/octet-stream',
+        customMetadata: {
+          uploadedAt: new Date().toISOString(),
+          pathology: pathology,
+          storageBucket: 'iatros-template.firebasestorage.app'
+        }
+      };
       
-      throw error;
+      console.log(`[PromptSettingsTab] Iniciando uploadBytes para "${attachment.name}" com metadados:`, metadata);
+      const uploadResult = await uploadBytes(storageRef, blob, metadata);
+      console.log(`[PromptSettingsTab] Upload concluído para "${attachment.name}"`, {
+        metadata: uploadResult.metadata,
+        ref: uploadResult.ref.fullPath,
+        totalBytes: uploadResult.metadata.size
+      });
+      
+      // Obter URL do arquivo para confirmar que o upload foi bem-sucedido
+      try {
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        console.log(`[PromptSettingsTab] URL de download para "${attachment.name}": ${downloadURL}`);
+      } catch (urlError) {
+        console.error(`[PromptSettingsTab] Erro ao obter URL de download para "${attachment.name}":`, {
+          error: urlError,
+          code: urlError instanceof Error && 'code' in urlError ? (urlError as any).code : 'unknown',
+          message: urlError instanceof Error ? urlError.message : String(urlError)
+        });
+        // Não lançar erro aqui, pois o upload já foi concluído
+      }
+    } catch (blobError) {
+      console.error(`[PromptSettingsTab] Erro ao converter base64 para blob: ${attachment.name}`, blobError);
+      toast.error(`Erro ao processar dados do arquivo "${attachment.name}". Formato incorreto.`);
+      throw blobError;
     }
   };
 

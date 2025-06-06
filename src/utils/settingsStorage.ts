@@ -12,6 +12,7 @@ import promptSystemEs from '@/store/prompt-system-es.md?raw';
 
 // Importa lo necesario de Firebase Firestore
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, getMetadata } from "firebase/storage";
 
 // API Key management - Deprecated, use functions from api.ts instead
 export const getStoredApiKey = async (): Promise<string> => {
@@ -283,19 +284,58 @@ export const savePathologySystemPromptSync = (pathology: string, prompt: string)
 // Pathology-specific attachments management
 export const getPathologyAttachments = async (pathology: string): Promise<FileAttachment[]> => {
   try {
-    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
     if (!pathology || pathology === "undefined") {
-      console.log("[getPathologyAttachments] Pathology is undefined, returning empty array");
+      console.log("[getPathologyAttachments] Pathology is undefined or invalid, returning empty attachments array");
+      return [];
+    }
+
+    console.log(`[getPathologyAttachments] Fetching attachments for pathology: "${pathology}"`);
+    
+    // Obter configurações da patologia
+    const systemPromptSettings = await getDataFromFirestore("systemPromptSettings");
+    
+    if (!systemPromptSettings) {
+      console.log(`[getPathologyAttachments] No settings found in Firestore for pathologies, returning empty array`);
       return [];
     }
     
-    const key = `pathology-${pathology}-attachments`;
-    const stored = await getDataFromFirestore(key);
-    if (!stored) return [];
+    // Verificar se existe configuração para esta patologia
+    if (!systemPromptSettings[pathology] || !systemPromptSettings[pathology].attachments) {
+      console.log(`[getPathologyAttachments] No attachments found for pathology "${pathology}"`);
+      return [];
+    }
     
-    return JSON.parse(stored);
+    const attachments = systemPromptSettings[pathology].attachments || [];
+    console.log(`[getPathologyAttachments] Found ${attachments.length} attachments for pathology "${pathology}"`);
+    
+    // Verificar se cada anexo realmente existe no Storage
+    const validatedAttachments: FileAttachment[] = [];
+    const storage = getStorage();
+    
+    for (const attachment of attachments) {
+      try {
+        // Criar referência para verificar se o arquivo existe no Storage
+        const storageRef = ref(storage, `arcyon/prompts-files/${pathology}/${attachment.name}`);
+        
+        try {
+          // Tentar obter metadados do arquivo (verificar se existe)
+          await getMetadata(storageRef);
+          console.log(`[getPathologyAttachments] Attachment "${attachment.name}" exists in Storage`);
+          validatedAttachments.push(attachment);
+        } catch (metadataError) {
+          console.warn(`[getPathologyAttachments] ⚠️ Attachment "${attachment.name}" configured for pathology "${pathology}" does not exist in Firebase Storage. Skipping this attachment.`);
+          // Não adicionar ao array de anexos válidos
+        }
+      } catch (error) {
+        console.error(`[getPathologyAttachments] Error checking attachment "${attachment.name}":`, error);
+        // Não adicionar ao array de anexos válidos
+      }
+    }
+    
+    console.log(`[getPathologyAttachments] Returning ${validatedAttachments.length} valid attachments for pathology "${pathology}"`);
+    return validatedAttachments;
   } catch (error) {
-    console.error("Error getting pathology attachments:", error);
+    console.error(`[getPathologyAttachments] Error getting attachments for pathology "${pathology}":`, error);
     return [];
   }
 };

@@ -60,7 +60,10 @@ export const useChatTextMessaging = () => {
         
         if (systemPrompt && systemPrompt.trim()) {
           console.log(`[useChatTextMessaging] Prompt específico encontrado para patologia "${pathology}"`);
-          console.log(`[useChatTextMessaging] Conteúdo do prompt (primeiros 50 chars): "${systemPrompt.substring(0, 50)}..."`);
+          
+          // Log completo do prompt para validação
+          console.log(`[useChatTextMessaging][VALIDAÇÃO] Conteúdo completo do prompt da patologia:`);
+          console.log(systemPrompt);
           
           // Criar uma cópia das mensagens atuais e adicionar o prompt do sistema como primeira mensagem
           const messagesWithSystemPrompt = [
@@ -68,13 +71,41 @@ export const useChatTextMessaging = () => {
             ...currentChat.messages
           ];
           
+          // Verificar se o prompt contém a string específica do prompt oficial
+          const containsKeyPhrase = systemPrompt.includes("PROMPT OFICIAL V2 - CHAT");
+          console.log(`[useChatTextMessaging][VALIDAÇÃO] O prompt contém a frase 'PROMPT OFICIAL V2 - CHAT': ${containsKeyPhrase}`);
+          
           // Preparar as mensagens para a API com o prompt específico da patologia
           const messagesToSend = prepareMessagesForApi({ messages: messagesWithSystemPrompt });
+          
+          // Validar se o prompt de sistema está presente nas mensagens formatadas
+          const systemMessages = messagesToSend.filter(m => m.role === "system");
+          console.log(`[useChatTextMessaging][VALIDAÇÃO] Número de mensagens system após formatação: ${systemMessages.length}`);
+          if (systemMessages.length > 0) {
+            console.log(`[useChatTextMessaging][VALIDAÇÃO] Primeiros 100 caracteres do prompt system formatado:`);
+            console.log(systemMessages[0].content.substring(0, 100));
+            
+            // Verificar se a primeira mensagem é a do sistema
+            const isFirstMessage = messagesToSend[0].role === "system";
+            console.log(`[useChatTextMessaging][VALIDAÇÃO] Prompt system é a primeira mensagem: ${isFirstMessage}`);
+          }
+          
           console.log(`[useChatTextMessaging] Enviando ${messagesToSend.length} mensagens com prompt específico da patologia`);
           
           // Send message to API with attachments
           const apiName = getActiveApiName();
           console.log(`[useChatTextMessaging] Enviando para ${apiName} com ${pathologyAttachments.length} anexos`);
+          
+          // Log dos anexos que serão enviados
+          if (pathologyAttachments.length > 0) {
+            console.log(`[useChatTextMessaging][VALIDAÇÃO] Anexos que serão enviados:`);
+            pathologyAttachments.forEach((attachment, index) => {
+              console.log(`[useChatTextMessaging][VALIDAÇÃO] Anexo ${index + 1}: ${attachment.name} (${attachment.type})`);
+            });
+          }
+          
+          // Verificar qual API Provider está sendo usado
+          console.log(`[useChatTextMessaging][VALIDAÇÃO] API Provider ativo: ${apiName}`);
           
           const response = await sendMessage(messagesToSend, undefined, pathologyAttachments.length > 0 ? pathologyAttachments : undefined);
           
@@ -82,6 +113,9 @@ export const useChatTextMessaging = () => {
           const endTime = performance.now();
           const responseTimeMs = Math.round(endTime - startTime);
           setResponseTime(responseTimeMs);
+          
+          // Log de sucesso da resposta
+          console.log(`[useChatTextMessaging][VALIDAÇÃO] Resposta recebida com sucesso de ${apiName} em ${responseTimeMs}ms`);
           
           // Add AI response to chat
           if (apiName !== "gemini") {

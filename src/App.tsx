@@ -2,7 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { 
+  createBrowserRouter,
+  createRoutesFromElements,
+  RouterProvider,
+  Route
+} from "react-router-dom";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Settings from "./pages/Settings";
@@ -36,8 +41,6 @@ const App = () => {
   useEffect(() => {
     document.title = "Arcyon - Assistente para Dor Torácica";
   }, []);
-
-  <FirestoreConnectionTest />
 
   // Carregar chaves de API do Firestore
   useEffect(() => {
@@ -89,10 +92,39 @@ const App = () => {
       const timer = setTimeout(() => {
         setIsSettingsAuthenticated(false);
       }, 30 * 60 * 1000); // 30 minutos
-
       return () => clearTimeout(timer);
     }
   }, [isSettingsAuthenticated]);
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        <Route path="/" element={<Index />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/workspace" element={<WorkspaceLayout />}>
+          <Route index element={<WorkspaceHome />} />
+          <Route path="members" element={<WorkspaceMembers />} />
+          <Route path="billing" element={<WorkspaceBilling />} />
+          <Route path="gpt" element={<WorkspaceGpt />} />
+        </Route>
+        <Route 
+          path="/settings" 
+          element={
+            isSettingsAuthenticated ? 
+              <Settings /> : 
+              <SettingsAuth onAuthenticate={handleAuthenticate} />
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </>
+    ),
+    {
+      future: {
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }
+    }
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -100,27 +132,7 @@ const App = () => {
         <SettingsProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/workspace" element={<WorkspaceLayout />}>
-                <Route index element={<WorkspaceHome />} />
-                <Route path="members" element={<WorkspaceMembers />} />
-                <Route path="billing" element={<WorkspaceBilling />} />
-                <Route path="gpt" element={<WorkspaceGpt />} />
-              </Route>
-              <Route 
-                path="/settings" 
-                element={
-                  isSettingsAuthenticated ? 
-                  <Settings /> : 
-                  <SettingsAuth onAuthenticate={handleAuthenticate} />
-                } 
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <RouterProvider router={router} />
         </SettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
