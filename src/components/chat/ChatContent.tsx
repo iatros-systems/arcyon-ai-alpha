@@ -127,11 +127,11 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
 
   const checkPathologyResources = async () => {
     // Obter pathology dos metadados do chat ou usar um valor padrão
-    let pathology = currentChat?.metadata?.pathology || "defaultPathology";
+    let pathology = currentChat?.metadata?.pathology || "iamWithST";
     
     // Se pathology for undefined ou string "undefined", use o valor padrão
     if (!pathology || pathology === "undefined") {
-      pathology = "defaultPathology";
+      pathology = "iamWithST";
     }
 
     console.log("[ChatContent] Verificando recursos para pathology:", pathology);

@@ -273,8 +273,10 @@ export const getSystemPromptFromLocalFile = async (pathology: string): Promise<s
 // Pathology-specific system prompt management
 export const getPathologySystemPrompt = async (pathology: string): Promise<string> => {
   try {
-    if (!pathology) {
-      throw new Error("Pathology is required");
+    // Se pathology não for fornecida ou for inválida, use "iamWithST" como padrão
+    if (!pathology || pathology === "undefined") {
+      console.log("[getPathologySystemPrompt] Pathology inválida ou não definida, usando 'iamWithST' como padrão");
+      pathology = "iamWithST";
     }
     
     // Verificar cache primeiro
@@ -301,6 +303,25 @@ export const getPathologySystemPrompt = async (pathology: string): Promise<strin
       
       return firestorePrompt;
     }
+    
+    // Se não encontrou no Firestore e não é "iamWithST", tentar carregar o prompt de "iamWithST"
+    if (pathology !== "iamWithST") {
+      console.log(`[getPathologySystemPrompt] Prompt não encontrado para "${pathology}", tentando carregar prompt padrão "iamWithST"`);
+      const defaultPrompt = await getSystemPromptFromFirestore("iamWithST");
+      
+      if (defaultPrompt) {
+        console.log(`[getPathologySystemPrompt] Usando prompt de "iamWithST" como fallback para "${pathology}"`);
+        
+        // Armazenar no cache
+        promptsCache[cacheKey] = {
+          value: defaultPrompt,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+        };
+        
+        return defaultPrompt;
+      }
+    }
 
     // Se não encontrou no Firestore, tentar ler do arquivo local
     const localPrompt = await getSystemPromptFromLocalFile(pathology);
@@ -317,8 +338,24 @@ export const getPathologySystemPrompt = async (pathology: string): Promise<strin
       return localPrompt;
     }
 
-    // Se não encontrou em nenhuma fonte, retornar o prompt padrão
-    console.log(`[getPathologySystemPrompt] Nenhum prompt específico encontrado para pathology "${pathology}", usando prompt padrão`);
+    // Se não encontrou em nenhuma fonte e ainda não tentou com "iamWithST", tente uma última vez
+    if (pathology !== "iamWithST") {
+      console.log(`[getPathologySystemPrompt] Tentando carregar prompt local para "iamWithST" como último recurso`);
+      const defaultLocalPrompt = await getSystemPromptFromLocalFile("iamWithST");
+      if (defaultLocalPrompt) {
+        // Armazenar no cache
+        promptsCache[cacheKey] = {
+          value: defaultLocalPrompt,
+          timestamp: Date.now(),
+          expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+        };
+        
+        return defaultLocalPrompt;
+      }
+    }
+
+    // Se não encontrou em nenhuma fonte, retornar string vazia
+    console.log(`[getPathologySystemPrompt] Nenhum prompt específico encontrado para pathology "${pathology}" nem para "iamWithST"`);
     
     // Armazenar no cache
     promptsCache[cacheKey] = {
