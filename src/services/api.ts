@@ -4,6 +4,7 @@ import { getStoredModelSettings } from "@/utils/settingsStorage";
 
 // Variável para armazenar a chave da API
 let GEMINI_API_KEY = "";
+const GEMINI_MODEL_NAME = "gemini-2.5-pro-preview-06-05";
 
 // Função para obter a chave da API
 export const getApiKey = async () => {
@@ -82,6 +83,11 @@ export const sendMessageToGemini = async (
   if (!apiKey) {
     throw new Error("API key is required");
   }
+
+
+  // Log da chave da API para depuração
+  console.log("GEMINI_API_KEY:", apiKey.substring(0, 5) + "..." + apiKey.substring(apiKey.length - 5));
+  console.log("GEMINI_MODEL_NAME:", GEMINI_MODEL_NAME);
 
   // Get model parameters from localStorage or use defaults
   const { temperature, topP, topK, maxTokens: maxOutputTokens } = getStoredModelSettings();
@@ -179,7 +185,8 @@ export const sendMessageToGemini = async (
     });
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=${apiKey}`,
+      //`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent?key=${apiKey}`
       {
         method: "POST",
         headers: {
