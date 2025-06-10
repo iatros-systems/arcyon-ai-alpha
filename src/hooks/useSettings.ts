@@ -10,7 +10,9 @@ import {
   setStoredPassword,
   validatePassword,
   getPathologySystemPrompt,
-  getPathologyAttachments
+  getPathologyAttachments,
+  hasFirestoreAttachments,
+  invalidateAllCaches
 } from "@/utils/settingsStorage";
 import { useChatStore } from "@/store/chat-store"; 
 import { updateChatSystemPrompt } from "@/utils/chatMessageUtils";
@@ -45,6 +47,7 @@ export function useSettings() {
   useEffect(() => {
     // Função para carregar as configurações
     const loadSettings = async () => {
+      console.log("[loadSettings] Carregando configurações do Firestore...");
       try {
         // Carregar a chave da API se disponível
         const apiKeyValue = await getApiKeyFromFirestore('gemini');
@@ -91,38 +94,51 @@ export function useSettings() {
           const hasGeminiKey = await hasApiKeyAsync('gemini');
           if (hasDeepseekKey) {
             setPreferredApiProvider("deepseek");
+          } else if (hasGeminiKey) {
             setPreferredApiProvider("gemini");
           }
         }
         
-        // Carregar configurações do system prompt
+        // Carregar configurações do system prompt (uma única vez, usando cache)
         const promptSettings = await getStoredSystemPromptSettings();
+        console.log("[loadSettings] Configurações carregadas do Firestore:", JSON.stringify({
+          preferredApiProvider,
+          showModelThinking
+        }));
         
-        // Garantir que sempre temos um valor de pathology, mesmo que seja o default
-        const defaultPathology = "defaultPathology";
-        setPathology(promptSettings.pathology || defaultPathology);
+        // Garantir que sempre temos um valor válido de pathology
+        const defaultPathology = "iamWithST"; // Alterado para um valor padrão válido
+        const selectedPathology = promptSettings.pathology && promptSettings.pathology !== "undefined" 
+          ? promptSettings.pathology 
+          : defaultPathology;
+        
+        setPathology(selectedPathology);
         
         // Log para depuração
-        console.log(`[useSettings] Pathology carregada: "${promptSettings.pathology || defaultPathology}"`);
+        console.log(`[useSettings] Pathology carregada: "${selectedPathology}"`);
         
-        // Se houver uma patologia selecionada, carregue o prompt específico do Firestore
-        if (promptSettings.pathology) {
-          console.log(`[useSettings] Loading system prompt for pathology: "${promptSettings.pathology}"`);
-          const pathologyPrompt = await getPathologySystemPrompt(promptSettings.pathology);
-          console.log(`[useSettings] Loaded system prompt from Firestore: ${pathologyPrompt ? 'Found' : 'Not found'}`);
+        // Carregamento otimizado de prompt e anexos para patologia válida
+        if (selectedPathology && selectedPathology !== "undefined") {
+          console.log(`[useSettings] Buscando system prompt do Firestore para patologia: "${selectedPathology}"`);
+          const pathologyPrompt = await getPathologySystemPrompt(selectedPathology);
+          
+          console.log(`[useSettings] Prompt carregado do Firestore: ${pathologyPrompt ? pathologyPrompt.substring(0, 50) + '...' : 'Não encontrado'}`);
           setSystemInstructions(pathologyPrompt || "");
           
-          // Carregar anexos da patologia para verificar se existem
-          const pathologyAttachments = await getPathologyAttachments(promptSettings.pathology);
-          console.log(`[useSettings] Attachments for pathology "${promptSettings.pathology}": ${pathologyAttachments.length}`);
-        } else {
-          // Se não houver patologia selecionada, use as instruções gerais e o valor default
-          console.log(`[useSettings] No pathology selected, using default: "${defaultPathology}"`);
-          setSystemInstructions(promptSettings.systemInstructions || "");
+          // Verificar se há anexos (usando cache quando possível)
+          const hasAttachments = await hasFirestoreAttachments(selectedPathology);
           
-          // Verificar se existem anexos para o valor default
-          const defaultAttachments = await getPathologyAttachments(defaultPathology);
-          console.log(`[useSettings] Attachments for default pathology: ${defaultAttachments.length}`);
+          if (hasAttachments) {
+            // Só carregar os anexos se soubermos que existem
+            const pathologyAttachments = await getPathologyAttachments(selectedPathology);
+            console.log(`[useSettings] Attachments for pathology "${selectedPathology}": ${pathologyAttachments.length}`);
+          } else {
+            console.log(`[useSettings] No attachments found for pathology "${selectedPathology}"`);
+          }
+        } else {
+          // Se não houver patologia válida, use as instruções gerais
+          console.log(`[useSettings] Patologia inválida ou indefinida, usando instruções gerais`);
+          setSystemInstructions(promptSettings.systemInstructions || "");
         }
       } catch (error) {
         console.error("Erro ao carregar configurações:", error);

@@ -150,6 +150,70 @@ export const saveSystemPromptSettings = async (settings: {
   }
 };
 
+// Cache para documentos específicos frequentemente acessados
+interface SystemPromptSettingsCache {
+  value: any;
+  timestamp: number;
+  expiresAt: number;
+}
+
+// Cache para systemPromptSettings
+let systemPromptSettingsCache: SystemPromptSettingsCache | null = null;
+
+// Tempo de expiração do cache (em ms): 5 minutos
+const CACHE_EXPIRATION_TIME = 300 * 1000;
+
+// Função auxiliar para verificar se um item do cache ainda é válido
+const isCacheValid = <T>(cacheItem?: SystemPromptSettingsCache): boolean => {
+  if (!cacheItem) return false;
+  return Date.now() < cacheItem.expiresAt;
+};
+
+// Versão otimizada de getDataFromFirestore para usar cache para documentos frequentes
+export const getDataFromFirestore = async (key: string): Promise<string | null> => {
+  // Se for o documento systemPromptSettings e o cache for válido, use-o
+  if (key === "systemPromptSettings" && systemPromptSettingsCache && isCacheValid(systemPromptSettingsCache)) {
+    console.log("[getDataFromFirestore] Using cached systemPromptSettings");
+    return systemPromptSettingsCache.value;
+  }
+  
+  try {
+    const db = getFirestore();
+    const docRef = doc(db, "appData", key);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      console.log(`[getDataFromFirestore] Document found for key "${key}". Document data:`, docSnap.data());
+      
+      // Se o documento tiver um campo 'value', retorne esse valor
+      if (docSnap.data()?.value) {
+        const valueStr = docSnap.data().value;
+        console.log(`[getDataFromFirestore] Value field found in document. Length: ${valueStr.length} chars`);
+        
+        // Se for systemPromptSettings, armazene no cache
+        if (key === "systemPromptSettings") {
+          systemPromptSettingsCache = {
+            value: valueStr,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+          };
+        }
+        
+        return valueStr;
+      } else {
+        // Se não houver campo 'value', retorne o documento completo como string
+        return JSON.stringify(docSnap.data());
+      }
+    } else {
+      console.log(`[getDataFromFirestore] No document found for key "${key}"`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`[getDataFromFirestore] Error getting document "${key}":`, error);
+    return null;
+  }
+};
+
 // Pathology-specific settings interface
 export interface PathologySettings {
   systemPrompt: string;
@@ -438,30 +502,52 @@ export const savePathologyAttachments = async (pathology: string, attachments: F
   }
 };
 
+// Função para verificar se há anexos para uma patologia específica, 
+// com verificação para evitar chamadas desnecessárias
 export const hasFirestoreAttachments = async (pathology: string): Promise<boolean> => {
-  try {
-    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
-    if (!pathology || pathology === "undefined") {
-      console.log("[hasFirestoreAttachments] Pathology is undefined, returning false");
-      return false;
-    }
-    
-    const firestore = getFirestore();
-    const key = `pathology-${pathology}-attachments`;
-    const docRef = doc(firestore, "appData", key);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) return false;
-    const data = docSnap.data();
-    try {
-      const attachments = JSON.parse(data.value);
-      return Array.isArray(attachments) && attachments.length > 0;
-    } catch {
-      return false;
-    }
-  } catch (error) {
-    console.error("Error checking for Firestore attachments:", error);
+  // Verificação mais rigorosa para evitar chamadas desnecessárias
+  if (!pathology || pathology === "undefined" || pathology === "") {
+    console.log("[hasFirestoreAttachments] Patologia inválida ou indefinida, pulando verificação no Firestore");
     return false;
   }
+
+  const key = `pathology-${pathology}-attachments`;
+  
+  // Verificar cache primeiro
+  const cacheKey = `attachments-${pathology}`;
+  if (isCacheValid(attachmentsCache[cacheKey])) {
+    console.log(`[hasFirestoreAttachments] Usando cache para verificar anexos de "${pathology}"`);
+    return attachmentsCache[cacheKey].value.length > 0;
+  }
+  
+  try {
+    const attachmentsJson = await getDataFromFirestore(key);
+    if (attachmentsJson) {
+      try {
+        const attachments = JSON.parse(attachmentsJson);
+        return Array.isArray(attachments) && attachments.length > 0;
+      } catch (error) {
+        console.error(`[hasFirestoreAttachments] Error parsing attachments JSON for pathology "${pathology}":`, error);
+        return false;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error(`[hasFirestoreAttachments] Error checking attachments for pathology "${pathology}":`, error);
+    return false;
+  }
+};
+
+// Função para invalidar o cache ao iniciar a aplicação
+export const invalidateAllCaches = (): void => {
+  // Limpar cache de systemPromptSettings
+  systemPromptSettingsCache = null;
+  
+  // Limpar outros caches
+  Object.keys(promptsCache).forEach(key => delete promptsCache[key]);
+  Object.keys(attachmentsCache).forEach(key => delete attachmentsCache[key]);
+  
+  console.log("[invalidateAllCaches] Todos os caches foram limpos");
 };
 
 // Password management
