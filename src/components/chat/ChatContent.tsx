@@ -4,7 +4,7 @@ import ChatInput from "@/components/ChatInput";
 import { useChatStore } from "@/store/chat-store";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import { getPathologySystemPrompt, getPathologyAttachments, getStoredSystemPromptSettings } from "@/utils/settingsStorage";
-import { AlertTriangle, FileX, Settings, Info, Shield } from "lucide-react";
+import { AlertTriangle, FileX, Settings, Info, Shield, FileText, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -433,6 +433,70 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
       {renderWarningMessage()}
       
       <div className={`flex-1 overflow-hidden relative ${(!hasSystemPrompt || !hasAttachments || !termsAccepted) ? 'opacity-50 pointer-events-none' : ''}`}>
+        {/* Barra superior com indicadores de status */}
+        <div className="flex items-center justify-end gap-2 p-2 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-800">
+          <TooltipProvider>
+            {/* Ícone Com Prompt - Mostra o prompt carregado */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${hasSystemPrompt ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
+                  <FileText size={14} />
+                  <span>{hasSystemPrompt ? 'Com Prompt' : 'Sem Prompt'}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-xs">
+                {hasSystemPrompt ? (
+                  <div className="text-xs">
+                    <p className="font-semibold">Prompt carregado:</p>
+                    <p className="mt-1 italic text-gray-600 dark:text-gray-300">
+                      Prompt carregado {currentChat?.metadata?.pathology?.includes('defaultPathology') ? 'do arquivo local' : 'do Firestore'}
+                    </p>
+                    <p className="mt-1 text-green-600 dark:text-green-400">
+                      O sistema está usando um prompt configurado.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    Nenhum prompt de sistema configurado para esta patologia.
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Ícone com nome da patologia */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 text-xs">
+                  <Shield size={14} />
+                  <span>{currentChat?.metadata?.pathology || 'Sem Patologia'}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">
+                  Patologia selecionada para este chat: <strong>{currentChat?.metadata?.pathology || 'Nenhuma'}</strong>
+                </p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Ícone indicador de anexos */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${hasAttachments ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'}`}>
+                  <Paperclip size={14} />
+                  <span>{hasAttachments ? 'Com Anexos' : 'Sem Anexos'}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p className="text-xs">
+                  {hasAttachments 
+                    ? 'Documentos anexados ao prompt do sistema.' 
+                    : 'Nenhum anexo configurado para esta patologia.'}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        
         <ChatMessages 
           messages={currentChat?.messages.filter(m => m.role !== "system") || []}
           loading={loading || apiLoading} 
