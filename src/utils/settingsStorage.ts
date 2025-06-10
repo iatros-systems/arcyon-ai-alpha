@@ -150,21 +150,24 @@ export const saveSystemPromptSettings = async (settings: {
   }
 };
 
-// Cache para documentos específicos frequentemente acessados
-interface SystemPromptSettingsCache {
-  value: any;
+// Cache para armazenar resultados de chamadas ao Firestore
+interface CacheItem<T> {
+  value: T;
   timestamp: number;
   expiresAt: number;
 }
 
+// Cache para prompts de sistema e anexos
+const promptsCache: Record<string, CacheItem<string>> = {};
+const attachmentsCache: Record<string, CacheItem<FileAttachment[]>> = {};
 // Cache para systemPromptSettings
-let systemPromptSettingsCache: SystemPromptSettingsCache | null = null;
+let systemPromptSettingsCache: CacheItem<any> | null = null;
 
 // Tempo de expiração do cache (em ms): 5 minutos
 const CACHE_EXPIRATION_TIME = 300 * 1000;
 
 // Função auxiliar para verificar se um item do cache ainda é válido
-const isCacheValid = <T>(cacheItem?: SystemPromptSettingsCache): boolean => {
+const isCacheValid = <T>(cacheItem?: CacheItem<T>): boolean => {
   if (!cacheItem) return false;
   return Date.now() < cacheItem.expiresAt;
 };
@@ -265,26 +268,6 @@ export const getSystemPromptFromLocalFile = async (pathology: string): Promise<s
     console.error(`Error getting system prompt from local file:`, error);
     return null;
   }
-};
-
-// Cache para armazenar resultados de chamadas ao Firestore
-interface CacheItem<T> {
-  value: T;
-  timestamp: number;
-  expiresAt: number;
-}
-
-// Cache para prompts de sistema e anexos
-const promptsCache: Record<string, CacheItem<string>> = {};
-const attachmentsCache: Record<string, CacheItem<FileAttachment[]>> = {};
-
-// Tempo de expiração do cache (em ms): 60 segundos
-const CACHE_EXPIRATION_TIME = 300 * 1000;
-
-// Função auxiliar para verificar se um item do cache ainda é válido
-const isCacheValid = <T>(cacheItem?: CacheItem<T>): boolean => {
-  if (!cacheItem) return false;
-  return Date.now() < cacheItem.expiresAt;
 };
 
 // Pathology-specific system prompt management
