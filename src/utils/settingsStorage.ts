@@ -291,22 +291,28 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
 
     console.log(`[getPathologyAttachments] Fetching attachments for pathology: "${pathology}"`);
     
-    // Obter configurações da patologia
-    const systemPromptSettings = await getDataFromFirestore("systemPromptSettings");
+    // Obter anexos do documento correto no Firestore
+    const key = `pathology-${pathology}-attachments`;
+    const attachmentsJson = await getDataFromFirestore(key);
     
-    if (!systemPromptSettings) {
-      console.log(`[getPathologyAttachments] No settings found in Firestore for pathologies, returning empty array`);
-      return [];
-    }
-    
-    // Verificar se existe configuração para esta patologia
-    if (!systemPromptSettings[pathology] || !systemPromptSettings[pathology].attachments) {
+    if (!attachmentsJson) {
       console.log(`[getPathologyAttachments] No attachments found for pathology "${pathology}"`);
       return [];
     }
     
-    const attachments = systemPromptSettings[pathology].attachments || [];
-    console.log(`[getPathologyAttachments] Found ${attachments.length} attachments for pathology "${pathology}"`);
+    let attachments: FileAttachment[];
+    try {
+      attachments = JSON.parse(attachmentsJson);
+      console.log(`[getPathologyAttachments] Found ${attachments.length} attachments for pathology "${pathology}"`);
+    } catch (parseError) {
+      console.error(`[getPathologyAttachments] Error parsing attachments JSON:`, parseError);
+      return [];
+    }
+    
+    if (!Array.isArray(attachments)) {
+      console.log(`[getPathologyAttachments] Attachments data is not an array, returning empty array`);
+      return [];
+    }
     
     // Verificar se cada anexo realmente existe no Storage
     const validatedAttachments: FileAttachment[] = [];
