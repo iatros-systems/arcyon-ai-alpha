@@ -19,20 +19,28 @@ const SettingsAuth = ({ onAuthenticate }: SettingsAuthProps) => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
   
-  const handleAuthenticate = () => {
+  const handleAuthenticate = async () => {
     setIsAuthenticating(true);
     
-    // Simular uma pequena latência para dar sensação de processamento
-    setTimeout(() => {
-      if (validatePassword(password)) {
+    try {
+      // Simular uma pequena latência para dar sensação de processamento
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Aguardar a resolução da Promise retornada por validatePassword
+      const isValid = await validatePassword(password);
+      
+      if (isValid) {
         toast.success("Autenticação bem-sucedida");
-        onAuthenticate();
+        onAuthenticate(); // Chamar o callback somente se a senha for válida
       } else {
         toast.error("Senha incorreta");
       }
-      
+    } catch (error) {
+      console.error("Erro na autenticação:", error);
+      toast.error("Erro ao verificar senha. Tente novamente.");
+    } finally {
       setIsAuthenticating(false);
-    }, 500);
+    }
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
