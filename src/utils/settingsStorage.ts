@@ -203,82 +203,88 @@ export const getSystemPromptFromLocalFile = async (pathology: string): Promise<s
   }
 };
 
+// Cache para armazenar resultados de chamadas ao Firestore
+interface CacheItem<T> {
+  value: T;
+  timestamp: number;
+  expiresAt: number;
+}
+
+// Cache para prompts de sistema e anexos
+const promptsCache: Record<string, CacheItem<string>> = {};
+const attachmentsCache: Record<string, CacheItem<FileAttachment[]>> = {};
+
+// Tempo de expiração do cache (em ms): 60 segundos
+const CACHE_EXPIRATION_TIME = 300 * 1000;
+
+// Função auxiliar para verificar se um item do cache ainda é válido
+const isCacheValid = <T>(cacheItem?: CacheItem<T>): boolean => {
+  if (!cacheItem) return false;
+  return Date.now() < cacheItem.expiresAt;
+};
+
 // Pathology-specific system prompt management
 export const getPathologySystemPrompt = async (pathology: string): Promise<string> => {
   try {
-    // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
-    if (!pathology || pathology === "undefined") {
-      console.log("[getPathologySystemPrompt] Pathology is undefined or invalid, returning empty prompt");
-      return "";
-    }
-
-    console.log(`[getPathologySystemPrompt] Fetching system prompt for pathology: "${pathology}"`);
-    
-    // Try to get from Firestore first
-    try {
-      const firestorePrompt = await getSystemPromptFromFirestore(pathology);
-      if (firestorePrompt) {
-        console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from Firestore for pathology: "${pathology}"`);
-        return firestorePrompt;
-      }
-    } catch (error) {
-      console.error("[getPathologySystemPrompt] Error getting prompt from Firestore:", error);
+    if (!pathology) {
+      throw new Error("Pathology is required");
     }
     
-    console.log(`[getPathologySystemPrompt] No prompt found in Firestore, trying local file for pathology: "${pathology}"`);
-    
-    // If not in Firestore, try local file
-    try {
-      const localPrompt = await getSystemPromptFromLocalFile(pathology);
-      if (localPrompt) {
-        console.log(`[getPathologySystemPrompt] Successfully retrieved prompt from local file for pathology: "${pathology}"`);
-        return localPrompt;
-      }
-    } catch (error) {
-      console.error("[getPathologySystemPrompt] Error getting prompt from local file:", error);
+    // Verificar cache primeiro
+    const cacheKey = `prompt-${pathology}`;
+    if (isCacheValid(promptsCache[cacheKey])) {
+      console.log(`[getPathologySystemPrompt] Usando prompt em cache para pathology "${pathology}"`);
+      return promptsCache[cacheKey].value;
     }
     
-    console.log(`[getPathologySystemPrompt] No system prompt found for pathology "${pathology}" in Firestore or local file`);
+    console.log(`[getPathologySystemPrompt] Cache inválido ou inexistente para "${pathology}", buscando do Firestore...`);
+    
+    // Se não estiver no cache ou estiver expirado, buscar do Firestore
+    const firestorePrompt = await getSystemPromptFromFirestore(pathology);
+
+    if (firestorePrompt) {
+      console.log(`[getPathologySystemPrompt] Prompt encontrado no Firestore para pathology "${pathology}"`);
+      
+      // Armazenar no cache
+      promptsCache[cacheKey] = {
+        value: firestorePrompt,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+      };
+      
+      return firestorePrompt;
+    }
+
+    // Se não encontrou no Firestore, tentar ler do arquivo local
+    const localPrompt = await getSystemPromptFromLocalFile(pathology);
+    if (localPrompt) {
+      console.log(`[getPathologySystemPrompt] Usando prompt do arquivo local para pathology "${pathology}"`);
+      
+      // Armazenar no cache
+      promptsCache[cacheKey] = {
+        value: localPrompt,
+        timestamp: Date.now(),
+        expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+      };
+      
+      return localPrompt;
+    }
+
+    // Se não encontrou em nenhuma fonte, retornar o prompt padrão
+    console.log(`[getPathologySystemPrompt] Nenhum prompt específico encontrado para pathology "${pathology}", usando prompt padrão`);
+    
+    // Armazenar no cache
+    promptsCache[cacheKey] = {
+      value: "",
+      timestamp: Date.now(),
+      expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+    };
+    
     return "";
   } catch (error) {
-    console.error("[getPathologySystemPrompt] Error getting pathology system prompt:", error);
+    console.error(`[getPathologySystemPrompt] Error getting system prompt for pathology "${pathology}":`, error);
     return "";
   }
-};
-
-// Synchronous version for backward compatibility
-export const getPathologySystemPromptSync = (pathology: string): string => {
-  // Verificação defensiva para evitar acessos síncronos indevidos
-  if (!pathology || pathology === "undefined") {
-    console.log("[getPathologySystemPromptSync] Pathology is undefined or invalid, returning empty prompt");
-    return "";
-  }
-  
-  try {
-    // Implementação original (síncrona)
-    return localStorage.getItem(`pathology-${pathology}-prompt`) || "";
-  } catch (error) {
-    console.error("[getPathologySystemPromptSync] Error:", error);
-    return "";
-  }
-};
-
-export const savePathologySystemPrompt = async (pathology: string, prompt: string): Promise<void> => {
-  try {
-    // Save to Firestore
-    await saveSystemPromptToFirestore(pathology, prompt);
-  } catch (error) {
-    console.error("Error saving pathology system prompt:", error);
-  }
-};
-
-// Synchronous version for backward compatibility
-export const savePathologySystemPromptSync = (pathology: string, prompt: string): void => {
-  // Schedule an async save to Firestore
-  setTimeout(() => {
-    savePathologySystemPrompt(pathology, prompt)
-      .catch(error => console.error("Error in delayed save of pathology system prompt:", error));
-  }, 0);
 };
 
 // Pathology-specific attachments management
@@ -289,6 +295,13 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
       return [];
     }
 
+    // Verificar cache primeiro
+    const cacheKey = `attachments-${pathology}`;
+    if (isCacheValid(attachmentsCache[cacheKey])) {
+      console.log(`[getPathologyAttachments] Usando anexos em cache para pathology "${pathology}"`);
+      return attachmentsCache[cacheKey].value;
+    }
+    
     console.log(`[getPathologyAttachments] Fetching attachments for pathology: "${pathology}"`);
     
     // Obter anexos do documento correto no Firestore
@@ -297,6 +310,14 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
     
     if (!attachmentsJson) {
       console.log(`[getPathologyAttachments] No attachments found for pathology "${pathology}"`);
+      
+      // Armazenar resultado vazio no cache
+      attachmentsCache[cacheKey] = {
+        value: [],
+        timestamp: Date.now(),
+        expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+      };
+      
       return [];
     }
     
@@ -306,11 +327,27 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
       console.log(`[getPathologyAttachments] Found ${attachments.length} attachments for pathology "${pathology}"`);
     } catch (parseError) {
       console.error(`[getPathologyAttachments] Error parsing attachments JSON:`, parseError);
+      
+      // Armazenar resultado vazio no cache em caso de erro
+      attachmentsCache[cacheKey] = {
+        value: [],
+        timestamp: Date.now(),
+        expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+      };
+      
       return [];
     }
     
     if (!Array.isArray(attachments)) {
       console.log(`[getPathologyAttachments] Attachments data is not an array, returning empty array`);
+      
+      // Armazenar resultado vazio no cache
+      attachmentsCache[cacheKey] = {
+        value: [],
+        timestamp: Date.now(),
+        expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+      };
+      
       return [];
     }
     
@@ -339,6 +376,14 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
     }
     
     console.log(`[getPathologyAttachments] Returning ${validatedAttachments.length} valid attachments for pathology "${pathology}"`);
+    
+    // Armazenar no cache
+    attachmentsCache[cacheKey] = {
+      value: validatedAttachments,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + CACHE_EXPIRATION_TIME
+    };
+    
     return validatedAttachments;
   } catch (error) {
     console.error(`[getPathologyAttachments] Error getting attachments for pathology "${pathology}":`, error);
@@ -346,6 +391,35 @@ export const getPathologyAttachments = async (pathology: string): Promise<FileAt
   }
 };
 
+// Função para limpar o cache quando necessário (por exemplo, após uma atualização)
+export const clearSettingsCache = (pathology?: string): void => {
+  if (pathology) {
+    // Limpar apenas o cache para uma patologia específica
+    delete promptsCache[`prompt-${pathology}`];
+    delete attachmentsCache[`attachments-${pathology}`];
+    console.log(`[clearSettingsCache] Cache limpo para pathology "${pathology}"`);
+  } else {
+    // Limpar todo o cache
+    Object.keys(promptsCache).forEach(key => delete promptsCache[key]);
+    Object.keys(attachmentsCache).forEach(key => delete attachmentsCache[key]);
+    console.log(`[clearSettingsCache] Todo o cache foi limpo`);
+  }
+};
+
+// Função para invalidar o cache após salvar novas configurações
+export const savePathologySystemPrompt = async (pathology: string, prompt: string): Promise<void> => {
+  try {
+    await saveSystemPromptToFirestore(pathology, prompt);
+    
+    // Invalidar o cache após a atualização
+    clearSettingsCache(pathology);
+  } catch (error) {
+    console.error(`[savePathologySystemPrompt] Error saving system prompt for pathology ${pathology}:`, error);
+    throw error;
+  }
+};
+
+// Função para invalidar o cache após salvar novos anexos
 export const savePathologyAttachments = async (pathology: string, attachments: FileAttachment[]): Promise<void> => {
   try {
     // Verificação defensiva para evitar acessos ao Firestore com pathology indefinida
@@ -356,6 +430,9 @@ export const savePathologyAttachments = async (pathology: string, attachments: F
     
     const key = `pathology-${pathology}-attachments`;
     await saveDataToFirestore(key, JSON.stringify(attachments));
+    
+    // Invalidar o cache após a atualização
+    clearSettingsCache(pathology);
   } catch (error) {
     console.error("Error saving pathology attachments:", error);
   }

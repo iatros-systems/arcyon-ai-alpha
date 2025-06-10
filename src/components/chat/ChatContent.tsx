@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import ChatMessages from "@/components/ChatMessages";
 import ChatInput from "@/components/ChatInput";
 import { useChatStore } from "@/store/chat-store";
@@ -123,15 +123,6 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
   useEffect(() => {
     console.log("[ChatContent] Verificando recursos da patologia devido a mudança no chat ou patologia");
     checkPathologyResources();
-
-    // Verificar periodicamente
-    const intervalId = setInterval(() => {
-      checkPathologyResources();
-    }, 5000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
   }, [currentChat, currentChat?.metadata?.pathology]);
 
   const checkPathologyResources = async () => {
@@ -193,6 +184,12 @@ const ChatContent = ({ sidebarCollapsed }: ChatContentProps) => {
       setHasAttachments(false);
     }
   };
+
+  // Adicionar uma função para forçar a verificação de recursos quando necessário
+  const forceCheckResources = useCallback(() => {
+    console.log("[ChatContent] Verificação forçada de recursos da patologia");
+    checkPathologyResources();
+  }, []);
 
   // Função para aceitar os termos
   const handleAcceptTerms = () => {
